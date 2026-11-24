@@ -8,6 +8,10 @@ const KEY = 'sync.pending';
 let pending: Record<string, string> = readJSON(KEY, {});
 let onQueued: (() => void) | null = null;
 
+export function resetQueue() {
+  pending = {};
+}
+
 export function queueEntry(clientId: string, date: string) {
   pending = { ...pending, [clientId]: date };
   writeJSON(KEY, pending);

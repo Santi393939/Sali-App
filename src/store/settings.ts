@@ -65,6 +65,12 @@ function sanitize(s: Settings): Settings {
   };
 }
 
+/** Back to first-run defaults (used by Delete all my data). */
+export function resetSettings() {
+  current = { ...DEFAULTS };
+  listeners.forEach((l) => l());
+}
+
 export function getSettings(): Settings {
   return current;
 }

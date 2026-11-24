@@ -12,6 +12,11 @@ let actions: ActionMap = readJSON<ActionMap>(KEY, {});
 
 const EMPTY: ReminderAction = { liked: false, saved: false };
 
+export function resetActions() {
+  actions = {};
+  listeners.forEach((l) => l());
+}
+
 export function getAction(id: string): ReminderAction {
   return actions[id] ?? EMPTY;
 }

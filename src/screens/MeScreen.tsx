@@ -1,7 +1,7 @@
 /** Me: profile, milestone badges and settings. */
 import { router } from 'expo-router';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -14,6 +14,8 @@ import { useTabs } from '@/components/tabs';
 import { feedback } from '@/lib/feedback';
 import { signOut, useAuth } from '@/store/auth';
 import { getLocation } from '@/lib/salliDay';
+import { showToast } from '@/lib/toast';
+import { deleteAllData, shareExport } from '@/store/dataControls';
 import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
 import type { MilestoneState } from '@/store/milestones';
@@ -40,6 +42,7 @@ export default function MeScreen() {
   const featured = rewards.featured;
   const [openMilestone, setOpenMilestone] = useState<MilestoneState | null>(null);
   const [replay, setReplay] = useState<Milestone | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const tabs = useTabs();
   const initial = settings.name.trim().charAt(0).toUpperCase();
 
@@ -217,6 +220,41 @@ export default function MeScreen() {
           </View>
         </Card>
 
+        {/* Privacy & data */}
+        <Card padded={false}>
+          <Text style={[styles.sectionTitle, styles.padded]}>Privacy & data</Text>
+          <Pressable style={styles.row} accessibilityRole="button" onPress={() => router.push('/privacy')}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Privacy policy</Text>
+              <Text style={styles.rowHint}>No ads, no tracking. Here is what Salli keeps</Text>
+            </View>
+            <Chevron />
+          </Pressable>
+          <Pressable
+            style={styles.row}
+            accessibilityRole="button"
+            onPress={async () => {
+              const r = await shareExport();
+              showToast(
+                r === 'failed'
+                  ? { tone: 'quest', title: 'Could not export', sub: 'Please try again' }
+                  : { tone: 'quest', title: r === 'copied' ? 'Copied your data' : 'Data ready to share', sub: 'Everything Salli keeps, as text' },
+              );
+            }}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Export my data</Text>
+              <Text style={styles.rowHint}>A copy of your counts, streaks and settings</Text>
+            </View>
+            <Chevron />
+          </Pressable>
+          <Pressable style={[styles.row, styles.rowLast]} accessibilityRole="button" onPress={() => setConfirmDelete(true)}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.rowLabel, { color: '#B0412E' }]}>Delete all my data</Text>
+              <Text style={styles.rowHint}>Wipes everything from this phone</Text>
+            </View>
+          </Pressable>
+        </Card>
+
         <View style={styles.footer}>
           <Logo size={44} />
           <Text style={styles.footerName}>Salli · صلِّ</Text>
@@ -246,6 +284,30 @@ export default function MeScreen() {
       />
 
       <MilestoneUnlock milestone={replay} onClose={() => setReplay(null)} />
+
+      <Modal visible={confirmDelete} transparent animationType="fade" onRequestClose={() => setConfirmDelete(false)}>
+        <View style={styles.confirmRoot}>
+          <View style={styles.confirm}>
+            <Text style={styles.confirmTitle}>Delete everything?</Text>
+            <Text style={styles.confirmText}>
+              Your counts, streaks, quests, rewards and settings will be removed from this phone. This can&apos;t be undone.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              style={styles.deleteBtn}
+              onPress={async () => {
+                setConfirmDelete(false);
+                await deleteAllData();
+                router.replace('/onboarding');
+              }}>
+              <Text style={styles.deleteText}>Delete all my data</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" style={styles.cancelBtn} onPress={() => setConfirmDelete(false)}>
+              <Text style={styles.cancelText}>Keep my data</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <NumberPadSheet
         visible={goalOpen}
@@ -361,6 +423,14 @@ const styles = themedStyles(() =>
   rowLast: { paddingBottom: spacing.lg },
   rowLabel: { fontFamily: fonts.uiMedium, fontSize: 15, color: colors.ink },
   rowHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginTop: 2 },
+  confirmRoot: { flex: 1, backgroundColor: 'rgba(22,19,15,0.5)', alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  confirm: { width: '100%', maxWidth: 380, backgroundColor: colors.card, borderRadius: radius.card, padding: spacing.xl, gap: spacing.md },
+  confirmTitle: { fontFamily: fonts.display, fontSize: 28, color: colors.ink },
+  confirmText: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, color: colors.muted },
+  deleteBtn: { height: 52, borderRadius: radius.button, backgroundColor: '#B0412E', alignItems: 'center', justifyContent: 'center', marginTop: spacing.sm },
+  deleteText: { fontFamily: fonts.uiSemi, fontSize: 16, color: '#FFFFFF' },
+  cancelBtn: { height: 48, alignItems: 'center', justifyContent: 'center' },
+  cancelText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.link },
   footer: { alignItems: 'center', gap: 4, paddingVertical: spacing.lg },
   footerName: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, marginTop: 4 },
   footerText: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center', maxWidth: 280 },

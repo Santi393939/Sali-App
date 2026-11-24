@@ -52,6 +52,20 @@ export default function RemindersScreen() {
   const [height, setHeight] = useState(0);
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
+  const [filter, setFilter] = useState<'all' | 'saved'>('all');
+  // The saved list is fixed when you open it, so unsaving a card doesn't yank it away mid-read.
+  const [savedIds, setSavedIds] = useState<string[]>([]);
+  const savedCount = REMINDERS.filter((r) => actions[r.id]?.saved).length;
+  const data = filter === 'saved' ? REMINDERS.filter((r) => savedIds.includes(r.id)) : REMINDERS;
+
+  const choose = (f: 'all' | 'saved') => {
+    if (f === filter) return;
+    feedback.selection();
+    if (f === 'saved') setSavedIds(REMINDERS.filter((r) => actions[r.id]?.saved).map((r) => r.id));
+    activeRef.current = 0;
+    setActive(0);
+    setFilter(f);
+  };
 
   const onLayout = (e: LayoutChangeEvent) => setHeight(Math.round(e.nativeEvent.layout.height));
 
@@ -59,32 +73,43 @@ export default function RemindersScreen() {
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!height) return;
       const i = Math.round(e.nativeEvent.contentOffset.y / height);
-      if (i !== activeRef.current && i >= 0 && i < REMINDERS.length) {
+      if (i !== activeRef.current && i >= 0 && i < data.length) {
         activeRef.current = i;
         setActive(i);
         feedback.selection();
-        recordReminderView(REMINDERS[i].id);
+        recordReminderView(data[i].id);
       }
     },
-    [height],
+    [height, data],
   );
 
   return (
     <View style={styles.page} onLayout={onLayout}>
       {tabs.index === TAB_INDEX && <StatusBar style="light" />}
-      {height > 0 && (
+      {height > 0 && filter === 'saved' && data.length === 0 && (
+        <View style={[styles.emptySaved, { height }]}>
+          <BookmarkIcon filled={false} size={44} />
+          <Text style={styles.emptyTitle}>Nothing saved yet</Text>
+          <Text style={styles.emptyText}>Tap the bookmark on any reminder to keep it here for later.</Text>
+          <Pressable onPress={() => choose('all')} accessibilityRole="button" style={styles.emptyBtn}>
+            <Text style={styles.emptyBtnText}>Browse reminders</Text>
+          </Pressable>
+        </View>
+      )}
+      {height > 0 && data.length > 0 && (
         <FlatList
-          data={REMINDERS}
+          key={filter}
+          data={data}
           keyExtractor={(r) => r.id}
           renderItem={({ item, index }) => (
             <ReminderCard
               reminder={item}
               height={height}
-              topInset={insets.top}
+              topInset={insets.top + 52}
               active={index === active}
               liked={actions[item.id]?.liked ?? false}
               saved={actions[item.id]?.saved ?? false}
-              position={`${index + 1} / ${REMINDERS.length}`}
+              position={`${index + 1} / ${data.length}`}
             />
           )}
           getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
@@ -101,6 +126,24 @@ export default function RemindersScreen() {
           maxToRenderPerBatch={2}
         />
       )}
+
+      {/* For you / Saved switch */}
+      <View style={[styles.switchWrap, { top: insets.top + 10 }]} pointerEvents="box-none">
+        <View style={styles.switch}>
+          {(['all', 'saved'] as const).map((f) => (
+            <Pressable
+              key={f}
+              onPress={() => choose(f)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: filter === f }}
+              style={[styles.switchBtn, filter === f && styles.switchBtnOn]}>
+              <Text style={[styles.switchText, filter === f && styles.switchTextOn]}>
+                {f === 'all' ? 'For you' : `Saved${savedCount ? ` · ${savedCount}` : ''}`}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -348,9 +391,9 @@ function HeartIcon({ filled }: { filled: boolean }) {
   );
 }
 
-function BookmarkIcon({ filled }: { filled: boolean }) {
+function BookmarkIcon({ filled, size = 24 }: { filled: boolean; size?: number }) {
   return (
-    <Svg width={24} height={24} viewBox="0 0 24 24" fill={filled ? colors.lightGold : 'none'} stroke={filled ? colors.lightGold : '#FBF6EC'} strokeWidth={1.8} strokeLinejoin="round">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? colors.lightGold : 'none'} stroke={filled ? colors.lightGold : '#FBF6EC'} strokeWidth={1.8} strokeLinejoin="round">
       <Path d="M6 3.5h12v17l-6-4-6 4Z" />
     </Svg>
   );
@@ -369,6 +412,17 @@ const RAIL_W = 64;
 const styles = themedStyles(() =>
   StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.night },
+  switchWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  switch: { flexDirection: 'row', borderRadius: 999, backgroundColor: 'rgba(251,246,236,0.1)', padding: 3 },
+  switchBtn: { paddingHorizontal: 16, height: 34, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  switchBtnOn: { backgroundColor: 'rgba(233,184,96,0.22)' },
+  switchText: { fontFamily: fonts.uiSemi, fontSize: 13, color: 'rgba(251,246,236,0.65)' },
+  switchTextOn: { color: colors.lightGold },
+  emptySaved: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.sm },
+  emptyTitle: { fontFamily: fonts.display, fontSize: 28, color: '#FBF6EC', marginTop: spacing.sm },
+  emptyText: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, color: 'rgba(251,246,236,0.7)', textAlign: 'center', maxWidth: 280 },
+  emptyBtn: { marginTop: spacing.md, height: 46, paddingHorizontal: spacing.xl, borderRadius: radius.button, borderWidth: 1.5, borderColor: colors.saffron, alignItems: 'center', justifyContent: 'center' },
+  emptyBtnText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.lightGold },
   card: { backgroundColor: colors.night, overflow: 'hidden' },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
   tag: {
