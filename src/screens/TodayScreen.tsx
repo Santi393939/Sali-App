@@ -16,6 +16,7 @@ import {
   MaghribCountdown,
   QuestsCard,
   RepairCard,
+  StepUpCard,
   FridayBanner,
   ShareSheet,
   ShieldNotice,
@@ -53,6 +54,7 @@ import {
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles, type } from '@/theme';
 import { isRTL, t } from '@/lib/i18n';
+import { stepUpOffer } from '@/store/habit';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -80,6 +82,9 @@ let nextEventId = 1;
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const today = useToday();
+  const settingsNow = useSettings();
+  // Re-read when counts or the goal change.
+  const stepUp = stepUpOffer(today.date, today.version + settingsNow.dailyGoal);
   const tabs = useTabs();
   const settings = useSettings();
   const countDown = settings.countingStyle === 'down';
@@ -234,6 +239,7 @@ export default function TodayScreen() {
         {today.friday.isFriday && <FridayBanner streak={today.friday.streak} badge={today.friday.badge} />}
 
         {today.repair && <RepairCard repair={today.repair} total={today.total} />}
+        {stepUp && !today.repair && <StepUpCard offer={stepUp} today={today.date} />}
 
         {today.shieldNotice && (
           <ShieldNotice
@@ -297,9 +303,9 @@ export default function TodayScreen() {
 
         {/* Quick add */}
         <View style={styles.quickRow}>
-          <PrimaryButton label="+100" style={styles.quickBtn} onPress={() => add(100, 'quick')} />
-          <PrimaryButton label="+300" style={styles.quickBtn} onPress={() => add(300, 'quick')} />
-          <PrimaryButton label="+1,000" style={styles.quickBtn} onPress={() => add(1000, 'quick')} />
+          {quickAmounts(today.goal).map((n) => (
+            <PrimaryButton key={n} label={`+${n.toLocaleString('en-US')}`} style={styles.quickBtn} onPress={() => add(n, 'quick')} />
+          ))}
           <PrimaryButton label={t('Other')} variant="secondary" style={styles.quickBtn} onPress={openPad} />
         </View>
 
@@ -340,6 +346,13 @@ function BellIcon() {
       <Path d="M10 20.5a2 2 0 0 0 4 0" />
     </Svg>
   );
+}
+
+/** Quick-add amounts sized to the daily goal, so small goals get small steps. */
+function quickAmounts(goal: number) {
+  if (goal < 50) return [1, 5, 10];
+  if (goal < 300) return [10, 33, 100];
+  return [100, 300, 1000];
 }
 
 const styles = themedStyles(() =>

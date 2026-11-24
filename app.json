@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "salli",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "usesAppleSignIn": true,
       "bundleIdentifier": "com.salli.app"
@@ -37,7 +37,11 @@
         {
           "backgroundColor": "#1E5C46",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 180
+          "imageWidth": 180,
+          "dark": {
+            "backgroundColor": "#0F1E17",
+            "image": "./assets/images/splash-icon.png"
+          }
         }
       ],
       "expo-audio",

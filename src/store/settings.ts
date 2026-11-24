@@ -37,7 +37,13 @@ export type Settings = {
   lanternGlass: GlassId;
   /** App language; starts from the phone's language. */
   language: Lang;
+  /** Light or dark; 'system' follows the phone. */
+  appearance: Appearance;
+  /** "Not yet" on the step-up offer: hide it for this goal until that day. */
+  goalNudge: { goal: number; until: string } | null;
 };
+
+export type Appearance = 'system' | 'light' | 'dark';
 
 const KEY = 'settings.v1';
 const DEFAULTS: Settings = {
@@ -56,6 +62,8 @@ const DEFAULTS: Settings = {
   featuredBadge: null,
   lanternGlass: 'amber',
   language: deviceLanguage(),
+  appearance: 'system',
+  goalNudge: null,
 };
 
 export const GOAL_MIN = 1;
@@ -71,13 +79,14 @@ function sanitize(s: Settings): Settings {
     ...s,
     theme: s.theme in THEMES ? s.theme : 'zellige',
     tapSound: s.tapSound in SOUNDS ? s.tapSound : 'tick',
+    appearance: s.appearance === 'light' || s.appearance === 'dark' ? s.appearance : 'system',
     language: s.language === 'ar' || s.language === 'fr' || s.language === 'en' ? s.language : deviceLanguage(),
   };
 }
 
 /** Back to first-run defaults (used by Delete all my data). */
 export function resetSettings() {
-  current = { ...DEFAULTS, language: current.language };
+  current = { ...DEFAULTS, language: current.language, appearance: current.appearance };
   listeners.forEach((l) => l());
 }
 

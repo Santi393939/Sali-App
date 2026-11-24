@@ -33,7 +33,7 @@ import { SOUNDS, THEMES } from '@/content/rewards';
 import { feedback } from '@/lib/feedback';
 import { switchTheme } from '@/lib/themeSwitch';
 import { applyMilestoneRewards } from '@/store/rewards';
-import { fonts, PALETTES, radius, spacing, themedStyles } from '@/theme';
+import { fonts, paletteFor, radius, spacing, themedStyles } from '@/theme';
 
 import { eightPointStarPath, horseshoeArchPath, tilePath } from '../geometry';
 import { Sparks, type Burst } from '../motion';
@@ -106,7 +106,7 @@ function Scene({ milestone: m, onClose }: { milestone: Milestone; onClose: () =>
     setWorn(true);
     // Close first so the theme wash plays over the app, not behind this screen.
     onClose();
-    setTimeout(() => switchTheme(() => applyMilestoneRewards(m), m.theme, PALETTES[m.theme].plaster, m), 60);
+    setTimeout(() => switchTheme(() => applyMilestoneRewards(m), m.theme, paletteFor(m.theme).plaster, m), 60);
   };
 
   return (

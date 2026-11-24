@@ -20,7 +20,7 @@ export type DayRecord = {
   entries: Entry[]; // oldest first
 };
 
-export const DEFAULT_DAILY_GOAL = 1000;
+export const DEFAULT_DAILY_GOAL = 10;
 const PREFIX = 'day.';
 
 /** The goal new days start with (read straight from saved settings to avoid an import cycle). */

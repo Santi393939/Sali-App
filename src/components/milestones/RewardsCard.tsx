@@ -13,7 +13,7 @@ import { feedback } from '@/lib/feedback';
 import { switchTheme } from '@/lib/themeSwitch';
 import { applyMilestoneRewards, resetRewards, type ActiveRewards } from '@/store/rewards';
 import { updateSettings } from '@/store/settings';
-import { colors, fonts, PALETTES, spacing, themedStyles } from '@/theme';
+import { colors, fonts, paletteFor, PALETTES, spacing, themedStyles } from '@/theme';
 
 import { Card } from '../Card';
 import { Lantern } from '../Lantern';
@@ -44,7 +44,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
   };
   const wear = (m: Milestone) => {
     feedback.add('large');
-    switchTheme(() => applyMilestoneRewards(m), m.theme, PALETTES[m.theme].plaster, m);
+    switchTheme(() => applyMilestoneRewards(m), m.theme, paletteFor(m.theme).plaster, m);
   };
   const wearingLatest =
     latest && active.theme === latest.theme && active.sound === latest.sound && active.featured?.amount === latest.amount;
@@ -79,7 +79,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
             accessibilityLabel={t('Default Zellige look') + (!active.featured && active.theme === 'zellige' ? t(', in use') : '')}
             onPress={() => {
               feedback.medium();
-              switchTheme(resetRewards, 'zellige', PALETTES.zellige.plaster);
+              switchTheme(resetRewards, 'zellige', paletteFor('zellige').plaster);
             }}
             style={[styles.badgeSlot, !active.featured && active.theme === 'zellige' && { borderColor: colors.saffron, backgroundColor: colors.highlight }]}>
             <Svg width={38} height={38}>
@@ -118,7 +118,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
                 onPress={() => {
                   if (!open) return locked(t.unlock);
                   feedback.medium();
-                  switchTheme(() => updateSettings({ theme: k }), k, PALETTES[k].plaster);
+                  switchTheme(() => updateSettings({ theme: k }), k, paletteFor(k).plaster);
                 }}>
                 <View style={styles.themePreview}>
                   <Svg width={30} height={36}>

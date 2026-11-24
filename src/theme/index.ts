@@ -77,17 +77,61 @@ export const PALETTES: Record<ThemeId, Palette> = {
   },
 };
 
+/** Mix two #RRGGBB colours: t = 0 gives `a`, t = 1 gives `b`. */
+function mix(a: string, b: string, t: number) {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const ch = (shift: number) => Math.round(((pa >> shift) & 255) * (1 - t) + ((pb >> shift) & 255) * t);
+  return `#${((1 << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).slice(1).toUpperCase()}`;
+}
+
+/**
+ * Dark mode: the same theme at night. Backgrounds come from the theme's own
+ * night colour, text turns light, and the accents are lifted just enough to
+ * read on the dark surfaces. Midnight is already a night theme.
+ */
+function darkOf(p: Palette): Palette {
+  const page = mix(p.night, '#000000', 0.15);
+  const card = mix(p.night, '#FFFFFF', 0.06);
+  return {
+    ...p,
+    plaster: page,
+    card,
+    cardBorder: mix(p.night, '#FFFFFF', 0.16),
+    ink: '#F1E9DB',
+    muted: '#ADA493',
+    night: mix(p.night, '#000000', 0.4),
+    terracotta: mix(p.terracotta, '#FFFFFF', 0.38),
+    cobalt: mix(p.cobalt, '#FFFFFF', 0.35),
+    link: mix(p.zelligeGreen, '#FFFFFF', 0.5),
+    highlight: mix(card, p.saffron, 0.2),
+    statusBar: 'light',
+  };
+}
+
+const DARK_PALETTES = Object.fromEntries(
+  (Object.keys(PALETTES) as ThemeId[]).map((id) => [id, id === 'midnight' ? PALETTES.midnight : darkOf(PALETTES[id])]),
+) as Record<ThemeId, Palette>;
+
 let activeTheme: ThemeId = 'zellige';
+let activeDark = false;
 
 /** Set by the root layout before the app renders (and re-renders on change). */
-export function setActiveTheme(id: ThemeId) {
+export function setActiveTheme(id: ThemeId, dark = false) {
   activeTheme = id;
+  activeDark = dark;
 }
 export const getActiveTheme = () => activeTheme;
+export const isDarkMode = () => activeDark;
+
+/** A theme's palette in light or dark mode (dark defaults to the mode in use). */
+export function paletteFor(id: ThemeId, dark = activeDark): Palette {
+  return (dark ? DARK_PALETTES : PALETTES)[id];
+}
 
 /** The active palette. Read it at render time (not in module-level constants). */
 export const colors: Palette = new Proxy({} as Palette, {
-  get: (_t, key: string) => PALETTES[activeTheme][key as keyof Palette],
+  get: (_t, key: string) => paletteFor(activeTheme)[key as keyof Palette],
 });
 
 /**
@@ -97,7 +141,7 @@ export const colors: Palette = new Proxy({} as Palette, {
 export function themedStyles<T extends object>(make: () => T): T {
   const cache = new Map<string, T>();
   const get = () => {
-    const k = `${activeTheme}-${getLanguage()}`;
+    const k = `${activeTheme}-${activeDark ? 'dark' : 'light'}-${getLanguage()}`;
     let s = cache.get(k);
     if (!s) {
       s = make();

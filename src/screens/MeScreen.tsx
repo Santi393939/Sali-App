@@ -17,10 +17,10 @@ import { getLocation } from '@/lib/salliDay';
 import { showToast } from '@/lib/toast';
 import { deleteAllData, shareExport } from '@/store/dataControls';
 import { useToday } from '@/store/counts';
-import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
+import { GOAL_MAX, updateSettings, useSettings, type CountingStyle, type Appearance } from '@/store/settings';
 import type { MilestoneState } from '@/store/milestones';
 import { useSyncStatus } from '@/store/sync';
-import { colors, fonts, PALETTES, radius, spacing, themedStyles } from '@/theme';
+import { colors, fonts, isDarkMode, paletteFor, radius, spacing, themedStyles } from '@/theme';
 import { LANGUAGES, dateLocale, t, type Lang } from '@/lib/i18n';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -87,7 +87,7 @@ export default function MeScreen() {
                 {t('{n} salawat in {year}', { n: fmt(totals.year), year: today.date.slice(0, 4) })}
               </Text>
               <Text style={styles.lifetime}>{t('{n} all time', { n: fmt(totals.lifetime) })}</Text>
-              {featured && <Text style={[styles.featuredName, { color: featured.palette.face }]}>{featured.title}</Text>}
+              {featured && <Text style={[styles.featuredName, { color: isDarkMode() ? colors.link : featured.palette.face }]}>{featured.title}</Text>}
               <Pressable onPress={() => setShareOpen(true)} accessibilityRole="button" style={styles.shareBtn}>
                 <Text style={styles.shareText}>{t('Share my progress')}</Text>
               </Pressable>
@@ -141,6 +141,19 @@ export default function MeScreen() {
               ]}
               value={settings.countingStyle}
               onChange={(countingStyle) => updateSettings({ countingStyle })}
+            />
+          </View>
+
+          <View style={[styles.row, styles.rowColumn]}>
+            <Text style={styles.rowLabel}>{t('Appearance')}</Text>
+            <Segmented<Appearance>
+              options={[
+                { value: 'system', label: t('Automatic') },
+                { value: 'light', label: t('Light') },
+                { value: 'dark', label: t('Dark') },
+              ]}
+              value={settings.appearance}
+              onChange={(appearance) => updateSettings({ appearance })}
             />
           </View>
 
@@ -296,7 +309,7 @@ export default function MeScreen() {
         onWear={(m) => {
           setOpenMilestone(null);
           feedback.add('large');
-          setTimeout(() => switchTheme(() => applyMilestoneRewards(m), m.theme, PALETTES[m.theme].plaster, m), 220);
+          setTimeout(() => switchTheme(() => applyMilestoneRewards(m), m.theme, paletteFor(m.theme).plaster, m), 220);
         }}
         onReplay={(m) => {
           setOpenMilestone(null);

@@ -12,14 +12,14 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { ThemeVeil } from '@/components/ThemeVeil';
 import { ToastHost } from '@/components/ToastHost';
 import { startReminders } from '@/lib/notifications';
 import { useActiveThemeId } from '@/store/rewards';
 import { startSync } from '@/store/sync';
-import { PALETTES, setActiveTheme } from '@/theme';
+import { paletteFor, setActiveTheme } from '@/theme';
 import { setLanguage } from '@/lib/i18n';
 import { useSettings } from '@/store/settings';
 
@@ -46,10 +46,14 @@ export default function RootLayout() {
   // renders, and rebuild the screens when it changes (the tab you are on and
   // your place on Me are kept).
   const themeId = useActiveThemeId();
-  setActiveTheme(themeId);
   // Read from the theme id (not the shared palette object) so the React
   // Compiler sees these colours change with the theme.
-  const palette = PALETTES[themeId];
+  // Dark mode follows the phone unless chosen in Me › Appearance.
+  const scheme = useColorScheme();
+  const appearance = useSettings().appearance;
+  const dark = appearance === 'dark' || (appearance === 'system' && scheme === 'dark');
+  setActiveTheme(themeId, dark);
+  const palette = paletteFor(themeId, dark);
   // Language works the same way: set before rendering, screens rebuilt on change.
   const lang = useSettings().language;
   setLanguage(lang);
@@ -64,7 +68,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.plaster }}>
       <StatusBar style={palette.statusBar} />
-      <View key={`${themeId}-${lang}`} style={{ flex: 1, backgroundColor: palette.plaster, direction }}>
+      <View key={`${themeId}-${dark ? 'dark' : 'light'}-${lang}`} style={{ flex: 1, backgroundColor: palette.plaster, direction }}>
       <Stack
         screenOptions={{
           headerShown: false,

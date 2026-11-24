@@ -29,3 +29,4 @@ export { FridayBanner } from './FridayBanner';
 export { LampsCard, OilLamp } from './LampsCard';
 export { ShareSheet, type ShareKind } from './ShareSheet';
 export { sallaParts } from './sallaParts';
+export { StepUpCard } from './StepUpCard';

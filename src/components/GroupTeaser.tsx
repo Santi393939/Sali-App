@@ -2,7 +2,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { colors, fonts, spacing, themedStyles } from '@/theme';
+import { colors, fonts, spacing, themedStyles, isDarkMode } from '@/theme';
 
 import { Card } from './Card';
 import { horseshoeArchPath } from './geometry';
@@ -16,7 +16,7 @@ export function ArchWindows({ lit, size = 22 }: { lit: number; size?: number }) 
         <Svg key={i} width={size} height={size * 1.3}>
           <Path
             d={horseshoeArchPath(size, size * 1.3, 1)}
-            fill={i < lit ? colors.lightGold : colors.plaster}
+            fill={i < lit ? colors.lightGold : isDarkMode() ? colors.card : colors.plaster}
             stroke={i < lit ? colors.saffron : colors.cardBorder}
             strokeWidth={1.2}
           />

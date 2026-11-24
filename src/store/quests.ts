@@ -25,21 +25,25 @@ const sumWhere = (day: DayRecord, pred: (e: DayRecord['entries'][number]) => boo
 /** Total tapped on the arch in a Salli day (taps are grouped into entries). */
 export const tapsOn = (day: DayRecord) => sumWhere(day, (e) => e.source === 'tap');
 
+/** A quest amount that fits small goals: never more than the goal (and at least 5). */
+const upTo = (n: number) => (goal: number) => Math.min(n, Math.max(5, goal));
+const half = (goal: number) => Math.min(100, Math.max(5, Math.ceil(goal / 2)));
+
 const DEFS: Record<QuestId, { title: string; target: (goal: number) => number; measure: (day: DayRecord, x: DayExtras, date: string) => number }> = {
   lantern: { title: 'Light today’s lantern', target: (g) => g, measure: (d) => d.total },
-  tap33: { title: 'Tap the arch 33 times', target: () => 33, measure: (d) => tapsOn(d) },
-  tap100: { title: 'Tap the arch 100 times', target: () => 100, measure: (d) => tapsOn(d) },
-  reminder10: { title: 'Send 10 from a reminder', target: () => 10, measure: (d) => sumWhere(d, (e) => e.source === 'reminder') },
+  tap33: { title: 'Tap the arch {n} times', target: upTo(33), measure: (d) => tapsOn(d) },
+  tap100: { title: 'Tap the arch {n} times', target: upTo(100), measure: (d) => tapsOn(d) },
+  reminder10: { title: 'Send {n} from a reminder', target: upTo(10), measure: (d) => sumWhere(d, (e) => e.source === 'reminder') },
   read3: { title: 'Read 3 reminders', target: () => 3, measure: (_d, x) => x.views.length },
   afterAsr: {
-    title: 'Send 100 after Asr',
-    target: () => 100,
+    title: 'Send {n} after Asr',
+    target: half,
     measure: (d, _x, date) => {
       const asr = asrOn(keyToDate(date)).getTime();
       return sumWhere(d, (e) => new Date(e.updatedAt).getTime() >= asr);
     },
   },
-  morning: { title: 'Send 100 before noon', target: () => 100, measure: (d) => sumWhere(d, (e) => new Date(e.createdAt).getHours() < 12) },
+  morning: { title: 'Send {n} before noon', target: half, measure: (d) => sumWhere(d, (e) => new Date(e.createdAt).getHours() < 12) },
   like: { title: 'Like a reminder', target: () => 1, measure: (_d, x) => x.likes },
   jumuah: {
     title: 'Jumu’ah: send salawat at 3 different times',
@@ -81,7 +85,7 @@ export function questsFor(date: string): Quest[] {
     const def = DEFS[id];
     const target = def.target(day.goal);
     const progress = Math.min(target, def.measure(day, x, date));
-    return { id, title: t(def.title), progress, target, done: progress >= target };
+    return { id, title: t(def.title, { n: target }), progress, target, done: progress >= target };
   });
 }
 

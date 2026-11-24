@@ -49,7 +49,7 @@ const styles = themedStyles(() =>
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: colors.card,
+    backgroundColor: colors.onPrimary, // the knob stays light in dark mode too
     shadowColor: '#000',
     shadowOpacity: 0.18,
     shadowRadius: 2,
