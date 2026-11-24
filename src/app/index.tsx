@@ -1,6 +1,6 @@
 /**
  * Today: the daily counter. Counts are saved on the phone instantly (MMKV).
- * No animations yet; those arrive in the Feel step.
+ * Every add plays its motion, haptic and sound together (see CounterHero).
  */
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -9,15 +9,16 @@ import Svg, { Path } from 'react-native-svg';
 
 import {
   Card,
-  HorseshoeArch,
+  CounterHero,
   Lantern,
   NumberPadSheet,
   PlasterPattern,
   PrimaryButton,
-  ProgressStar,
   TodayLog,
   ZelligeBand,
+  type AddEvent,
 } from '@/components';
+import { addKind, feedback } from '@/lib/feedback';
 import { hijriDateArabic } from '@/lib/hijri';
 import { addSalawat, useToday } from '@/store/counts';
 import { colors, fonts, radius, spacing, type } from '@/theme';
@@ -27,13 +28,31 @@ const SAMPLE_GROUP = { name: 'Family', total: 6200, goal: 10000 };
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
-/** Big count shrinks as the number grows so it always fits inside the star. */
-const countSize = (n: number) => (n < 1000 ? 44 : n < 10000 ? 38 : n < 100000 ? 32 : 26);
+/** Wait for the number pad to slide away before celebrating. */
+const PAD_CLOSE_DELAY = 220;
+
+let nextEventId = 1;
 
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const today = useToday();
   const [padOpen, setPadOpen] = useState(false);
+  const [event, setEvent] = useState<AddEvent>();
+
+  /** Save instantly, then play motion, haptic and sound together. */
+  const add = (amount: number, source: 'tap' | 'quick' | 'pad') => {
+    addSalawat(amount, source);
+    const kind = addKind(amount, source);
+    const delay = source === 'pad' ? PAD_CLOSE_DELAY : 0;
+    setEvent({ id: nextEventId++, amount, kind, delay });
+    if (delay) setTimeout(() => feedback.add(kind), delay);
+    else feedback.add(kind);
+  };
+
+  const openPad = () => {
+    feedback.sheetOpen();
+    setPadOpen(true);
+  };
 
   return (
     <View style={styles.page}>
@@ -69,22 +88,7 @@ export default function TodayScreen() {
               </Text>
             </View>
 
-            <Pressable
-              onPress={() => addSalawat(1, 'tap')}
-              accessibilityRole="button"
-              accessibilityLabel={`Add one salawat. ${fmt(today.total)} of ${fmt(today.goal)} today`}
-              style={({ pressed }) => pressed && { opacity: 0.92 }}>
-              <HorseshoeArch width={170} height={214}>
-                <View style={{ marginTop: 18 }}>
-                  <ProgressStar size={132} progress={today.total / today.goal}>
-                    <Text style={[styles.count, { fontSize: countSize(today.total), lineHeight: countSize(today.total) + 4 }]}>
-                      {fmt(today.total)}
-                    </Text>
-                    <Text style={styles.countOf}>of {fmt(today.goal)}</Text>
-                  </ProgressStar>
-                </View>
-              </HorseshoeArch>
-            </Pressable>
+            <CounterHero total={today.total} goal={today.goal} event={event} onTap={() => add(1, 'tap')} />
 
             <View style={styles.heroSide}>
               {today.lit ? (
@@ -107,10 +111,10 @@ export default function TodayScreen() {
 
         {/* Quick add */}
         <View style={styles.quickRow}>
-          <PrimaryButton label="+100" style={styles.quickBtn} onPress={() => addSalawat(100, 'quick')} />
-          <PrimaryButton label="+300" style={styles.quickBtn} onPress={() => addSalawat(300, 'quick')} />
-          <PrimaryButton label="+1,000" style={styles.quickBtn} onPress={() => addSalawat(1000, 'quick')} />
-          <PrimaryButton label="Other" variant="secondary" style={styles.quickBtn} onPress={() => setPadOpen(true)} />
+          <PrimaryButton label="+100" style={styles.quickBtn} onPress={() => add(100, 'quick')} />
+          <PrimaryButton label="+300" style={styles.quickBtn} onPress={() => add(300, 'quick')} />
+          <PrimaryButton label="+1,000" style={styles.quickBtn} onPress={() => add(1000, 'quick')} />
+          <PrimaryButton label="Other" variant="secondary" style={styles.quickBtn} onPress={openPad} />
         </View>
 
         {/* Family Jumu'ah goal (sample until Groups) */}
@@ -135,8 +139,8 @@ export default function TodayScreen() {
         visible={padOpen}
         onClose={() => setPadOpen(false)}
         onAdd={(n) => {
-          addSalawat(n, 'pad');
           setPadOpen(false);
+          add(n, 'pad');
         }}
       />
     </View>
@@ -196,8 +200,6 @@ const styles = StyleSheet.create({
   sideNumber: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 34, color: colors.ink, lineHeight: 38, marginTop: 4 },
   sideLabel: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.muted },
   sideStatus: { fontFamily: fonts.ui, fontSize: 11, color: colors.terracotta, marginTop: 6, textAlign: 'center' },
-  count: { fontFamily: fonts.display, fontVariant: ['lining-nums'], color: colors.card },
-  countOf: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.lightGold },
   tapHint: { fontFamily: fonts.ui, fontSize: 11, color: colors.muted, textAlign: 'center', marginTop: spacing.sm },
   salawat: {
     fontFamily: fonts.arabic,

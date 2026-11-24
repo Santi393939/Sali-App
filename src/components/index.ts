@@ -6,6 +6,7 @@ export { Logo } from './Logo';
 export { PlasterPattern } from './PlasterPattern';
 export { PrimaryButton } from './PrimaryButton';
 export { ProgressStar } from './ProgressStar';
+export { CounterHero, type AddEvent } from './CounterHero';
 export { ZelligeBand } from './ZelligeBand';
 export { NumberPadSheet } from './NumberPadSheet';
 export { TodayLog } from './TodayLog';
