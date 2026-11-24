@@ -8,40 +8,21 @@ import { AppState } from 'react-native';
 
 import { nextMaghrib, previousDayKey, salliDayKey } from '@/lib/salliDay';
 
-import { readJSON, storage, writeJSON } from './storage';
+import { getDay, isLit, saveDay, type Entry, type EntrySource } from './days';
+import { storage } from './storage';
+import { computeStreak, goalProgress, weekKeys, type GoalProgress, type StreakState } from './streaks';
 
-export type EntrySource = 'tap' | 'quick' | 'pad' | 'reminder' | 'telegram';
+export { DEFAULT_DAILY_GOAL, type Entry, type EntrySource } from './days';
 
-export type Entry = {
-  clientId: string;
-  amount: number;
-  source: EntrySource;
-  /** ISO time of the first count in this entry. */
-  createdAt: string;
-  /** ISO time of the latest count (taps are grouped into one entry). */
-  updatedAt: string;
-};
-
-export type DayRecord = {
-  date: string; // Salli day key
-  total: number;
-  goal: number;
-  entries: Entry[]; // oldest first
-};
-
-export const DEFAULT_DAILY_GOAL = 1000;
 /** Max amount for one add, to stop typos like 100000. */
 export const MAX_SINGLE_ADD = 10000;
 /** Taps within this window are grouped into one log entry. */
 const TAP_GROUP_MS = 2 * 60 * 1000;
 
-const GOAL_KEY = 'settings.dailyGoal';
-const dayKey = (date: string) => `day.${date}`;
-
 // ---- tiny subscription so screens re-render when counts change ----
 const listeners = new Set<() => void>();
 let version = 0;
-function emit() {
+export function notifyChange() {
   version++;
   listeners.forEach((l) => l());
 }
@@ -59,25 +40,23 @@ function newId(): string {
   });
 }
 
-export function getDailyGoal(): number {
-  return storage.getNumber(GOAL_KEY) ?? DEFAULT_DAILY_GOAL;
-}
+export type AddResult = {
+  total: number;
+  /** True when this add lit today's lantern (crossed the goal). */
+  litNow: boolean;
+};
 
-export function getDay(date: string): DayRecord {
-  return readJSON<DayRecord>(dayKey(date), { date, total: 0, goal: getDailyGoal(), entries: [] });
-}
-
-/** Add salawat to the current Salli day. Returns the new day total. */
-export function addSalawat(amount: number, source: EntrySource, now = new Date()): number {
-  const n = Math.floor(amount);
-  if (!Number.isFinite(n) || n <= 0) return getDay(salliDayKey(now)).total;
-  const add = Math.min(n, MAX_SINGLE_ADD);
-
+/** Add salawat to the current Salli day. */
+export function addSalawat(amount: number, source: EntrySource, now = new Date()): AddResult {
   const date = salliDayKey(now);
   const day = getDay(date);
+  const n = Math.floor(amount);
+  if (!Number.isFinite(n) || n <= 0) return { total: day.total, litNow: false };
+  const add = Math.min(n, MAX_SINGLE_ADD);
+  const wasLit = isLit(day);
+
   const iso = now.toISOString();
   const last = day.entries[day.entries.length - 1];
-
   if (
     source === 'tap' &&
     last?.source === 'tap' &&
@@ -89,22 +68,21 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
     day.entries.push({ clientId: newId(), amount: add, source, createdAt: iso, updatedAt: iso });
   }
   day.total += add;
-  writeJSON(dayKey(date), day);
-  emit();
-  return day.total;
+  saveDay(day);
+  notifyChange();
+  return { total: day.total, litNow: !wasLit && isLit(day) };
 }
 
-/** Consecutive days (ending today, or yesterday if today isn't lit yet) that met their goal. */
-export function simpleStreak(today: string): number {
-  let key = getDay(today).total >= getDay(today).goal ? today : previousDayKey(today);
-  let streak = 0;
-  for (;;) {
-    const d = getDay(key);
-    if (d.total === 0 || d.total < d.goal) break;
-    streak++;
-    key = previousDayKey(key);
-  }
-  return streak;
+// ---- the streak takeover plays once per lit day ----
+const takeoverKey = (date: string) => `takeover.shown.${date}`;
+export const takeoverShown = (date: string) => storage.getBoolean(takeoverKey(date)) ?? false;
+export const markTakeoverShown = (date: string) => storage.set(takeoverKey(date), true);
+
+// ---- "a shield kept your lantern lit" notice, shown once ----
+const shieldNoticeKey = (date: string) => `shield.noticed.${date}`;
+export function dismissShieldNotice(date: string) {
+  storage.set(shieldNoticeKey(date), true);
+  notifyChange();
 }
 
 export type TodaySnapshot = {
@@ -113,9 +91,13 @@ export type TodaySnapshot = {
   goal: number;
   left: number;
   lit: boolean;
-  streak: number;
   entries: Entry[]; // newest first
   endsAt: Date;
+  streak: StreakState;
+  goalBar: GoalProgress;
+  week: string[];
+  /** Yesterday's key when a shield saved it and the user hasn't been told yet. */
+  shieldNotice: string | null;
 };
 
 let cache: { version: number; date: string; snap: TodaySnapshot } | null = null;
@@ -125,25 +107,33 @@ function snapshot(): TodaySnapshot {
   const date = salliDayKey(now);
   if (cache && cache.version === version && cache.date === date) return cache.snap;
   const day = getDay(date);
-  const goal = day.goal;
+  const streak = computeStreak(date);
+  const yesterday = previousDayKey(date);
+  const shieldNotice =
+    streak.status[yesterday] === 'shield' && !storage.getBoolean(shieldNoticeKey(yesterday)) ? yesterday : null;
   const snap: TodaySnapshot = {
     date,
     total: day.total,
-    goal,
-    left: Math.max(0, goal - day.total),
-    lit: day.total >= goal,
-    streak: simpleStreak(date),
+    goal: day.goal,
+    left: Math.max(0, day.goal - day.total),
+    lit: isLit(day),
     entries: [...day.entries].reverse(),
     endsAt: nextMaghrib(now),
+    streak,
+    goalBar: goalProgress(streak.current),
+    week: weekKeys(date),
+    shieldNotice,
   };
   cache = { version, date, snap };
   return snap;
 }
 
+/** Read today's state outside React (e.g. right after an add). */
+export const getToday = snapshot;
+
 /** Live view of today's counts; re-renders on every add and at Maghrib. */
 export function useToday(): TodaySnapshot {
   const snap = useSyncExternalStore(subscribe, snapshot, snapshot);
-  // Roll over to the new Salli day when Maghrib passes.
   useMaghribRollover(snap.endsAt);
   return snap;
 }
@@ -151,10 +141,10 @@ export function useToday(): TodaySnapshot {
 function useMaghribRollover(endsAt: Date) {
   useEffect(() => {
     const ms = Math.max(1000, endsAt.getTime() - Date.now() + 500);
-    const t = setTimeout(emit, Math.min(ms, 2 ** 31 - 1));
+    const t = setTimeout(notifyChange, Math.min(ms, 2 ** 31 - 1));
     // Timers pause in the background, so re-check whenever the app returns.
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') emit();
+      if (state === 'active') notifyChange();
     });
     return () => {
       clearTimeout(t);

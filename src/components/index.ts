@@ -10,3 +10,5 @@ export { CounterHero, type AddEvent } from './CounterHero';
 export { ZelligeBand } from './ZelligeBand';
 export { NumberPadSheet } from './NumberPadSheet';
 export { TodayLog } from './TodayLog';
+export { ShieldNotice } from './ShieldNotice';
+export { StreakTakeover, type TakeoverData } from './StreakTakeover';

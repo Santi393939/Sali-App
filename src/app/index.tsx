@@ -14,13 +14,23 @@ import {
   NumberPadSheet,
   PlasterPattern,
   PrimaryButton,
+  ShieldNotice,
+  StreakTakeover,
   TodayLog,
   ZelligeBand,
   type AddEvent,
+  type TakeoverData,
 } from '@/components';
 import { addKind, feedback } from '@/lib/feedback';
 import { hijriDateArabic } from '@/lib/hijri';
-import { addSalawat, useToday } from '@/store/counts';
+import {
+  addSalawat,
+  dismissShieldNotice,
+  getToday,
+  markTakeoverShown,
+  takeoverShown,
+  useToday,
+} from '@/store/counts';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 
 /** Sample group numbers until Groups are built (Prompt 8). */
@@ -30,6 +40,22 @@ const fmt = (n: number) => n.toLocaleString('en-US');
 
 /** Wait for the number pad to slide away before celebrating. */
 const PAD_CLOSE_DELAY = 220;
+/** The takeover starts this long after the count lands. */
+const TAKEOVER_AFTER_LAND = 650;
+/** How long the count takes to land for each kind of add. */
+const LAND_MS = { tap: 0, small: 750, medium: 750, large: 750 } as const;
+
+function takeoverData(): TakeoverData {
+  const t = getToday();
+  return {
+    from: t.streak.beforeToday,
+    to: t.streak.current,
+    level: t.streak.level,
+    shields: t.streak.shields,
+    week: t.week.map((key) => ({ key, status: t.streak.status[key] ?? 'missed' })),
+    goal: t.goalBar,
+  };
+}
 
 let nextEventId = 1;
 
@@ -38,15 +64,24 @@ export default function TodayScreen() {
   const today = useToday();
   const [padOpen, setPadOpen] = useState(false);
   const [event, setEvent] = useState<AddEvent>();
+  const [takeover, setTakeover] = useState<TakeoverData | null>(null);
+  const { streak } = today;
 
   /** Save instantly, then play motion, haptic and sound together. */
   const add = (amount: number, source: 'tap' | 'quick' | 'pad') => {
-    addSalawat(amount, source);
+    const { litNow } = addSalawat(amount, source);
     const kind = addKind(amount, source);
     const delay = source === 'pad' ? PAD_CLOSE_DELAY : 0;
     setEvent({ id: nextEventId++, amount, kind, delay });
     if (delay) setTimeout(() => feedback.add(kind), delay);
     else feedback.add(kind);
+
+    // Goal met for the first time today: play the streak takeover once.
+    const date = getToday().date;
+    if (litNow && !takeoverShown(date)) {
+      markTakeoverShown(date);
+      setTimeout(() => setTakeover(takeoverData()), delay + LAND_MS[kind] + TAKEOVER_AFTER_LAND);
+    }
   };
 
   const openPad = () => {
@@ -66,25 +101,33 @@ export default function TodayScreen() {
           </View>
           <View
             style={[styles.streakPill, today.lit && styles.streakPillLit]}
-            accessibilityLabel={`${today.streak} day streak${today.lit ? ', lit today' : ''}`}>
-            <Lantern size={20} lit={today.lit} />
-            <Text style={[styles.streakPillText, today.lit && styles.streakPillTextLit]}>{today.streak}</Text>
+            accessibilityLabel={`${streak.current} day streak${today.lit ? ', lit today' : ''}`}>
+            <Lantern size={20} lit={today.lit} level={streak.level} glow={false} />
+            <Text style={[styles.streakPillText, today.lit && styles.streakPillTextLit]}>{streak.current}</Text>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Reminders" style={styles.bell}>
             <BellIcon />
           </Pressable>
         </View>
 
+        {today.shieldNotice && (
+          <ShieldNotice
+            day={today.shieldNotice}
+            shieldsLeft={streak.shields}
+            onDismiss={() => dismissShieldNotice(today.shieldNotice!)}
+          />
+        )}
+
         {/* Hero */}
         <View style={styles.hero}>
           <PlasterPattern />
           <View style={styles.heroRow}>
             <View style={styles.heroSide}>
-              <Lantern size={46} lit={today.lit} />
-              <Text style={styles.sideNumber}>{today.streak}</Text>
+              <Lantern size={46} lit={today.lit} level={streak.level} />
+              <Text style={styles.sideNumber}>{streak.current}</Text>
               <Text style={styles.sideLabel}>day streak</Text>
               <Text style={[styles.sideStatus, today.lit && { color: colors.zelligeGreen }]}>
-                {today.lit ? 'Lit today' : 'Light it today'}
+                {today.lit ? 'Lit today' : 'Your lantern is waiting'}
               </Text>
             </View>
 
@@ -134,6 +177,8 @@ export default function TodayScreen() {
 
         <TodayLog entries={today.entries} />
       </ScrollView>
+
+      <StreakTakeover data={takeover} onClose={() => setTakeover(null)} />
 
       <NumberPadSheet
         visible={padOpen}

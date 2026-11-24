@@ -1,41 +1,79 @@
 /**
  * The Salli day runs Maghrib to Maghrib, like the Islamic day.
- * Until location-based prayer times arrive (Streaks step), Maghrib falls
- * back to 18:00 local time, as the brief says.
+ * Maghrib is calculated on the phone with the adhan library from the user's
+ * saved city (set during onboarding). With no city saved, it falls back to
+ * 18:00 local time, as the brief says.
  *
  * A Salli day is named by the civil date it mostly covers: the evening of
  * 24 Nov (after Maghrib) already belongs to the Salli day "2026-11-25".
  */
+import { CalculationMethod, Coordinates, PrayerTimes } from 'adhan';
+
+import { readJSON, writeJSON } from '@/store/storage';
 
 export const FALLBACK_MAGHRIB_HOUR = 18;
 
-/** Maghrib for a civil date. Placeholder until the adhan library is added. */
+export type SavedLocation = { latitude: number; longitude: number; city: string };
+
+const LOCATION_KEY = 'settings.location';
+
+export function getLocation(): SavedLocation | null {
+  return readJSON<SavedLocation | null>(LOCATION_KEY, null);
+}
+
+export function setLocation(loc: SavedLocation | null): void {
+  writeJSON(LOCATION_KEY, loc);
+}
+
+/** Maghrib for a civil date: from prayer times when a city is saved, else 18:00. */
 export function maghribOn(date: Date): Date {
+  const loc = getLocation();
+  if (loc) {
+    try {
+      const noon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+      const times = new PrayerTimes(
+        new Coordinates(loc.latitude, loc.longitude),
+        noon,
+        CalculationMethod.MuslimWorldLeague(),
+      );
+      if (times.maghrib instanceof Date && !Number.isNaN(times.maghrib.getTime())) return times.maghrib;
+    } catch {
+      // fall through to the fixed time
+    }
+  }
   const d = new Date(date);
   d.setHours(FALLBACK_MAGHRIB_HOUR, 0, 0, 0);
   return d;
 }
 
-function toKey(d: Date): string {
+export function toDayKey(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
+/** Noon on the civil date named by a day key (safe for date maths). */
+export function keyToDate(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d, 12);
+}
+
 /** The Salli day key (YYYY-MM-DD) for a moment in time. */
 export function salliDayKey(at: Date = new Date()): string {
   const civil = new Date(at);
   if (at.getTime() >= maghribOn(at).getTime()) civil.setDate(civil.getDate() + 1);
-  return toKey(civil);
+  return toDayKey(civil);
 }
 
-/** The key of the Salli day before `key`. */
-export function previousDayKey(key: string): string {
-  const [y, m, d] = key.split('-').map(Number);
-  const prev = new Date(y, m - 1, d - 1, 12);
-  return toKey(prev);
+export function addDays(key: string, n: number): string {
+  const d = keyToDate(key);
+  d.setDate(d.getDate() + n);
+  return toDayKey(d);
 }
+
+export const previousDayKey = (key: string) => addDays(key, -1);
+export const nextDayKey = (key: string) => addDays(key, 1);
 
 /** When the current Salli day ends (the next Maghrib). */
 export function nextMaghrib(at: Date = new Date()): Date {
