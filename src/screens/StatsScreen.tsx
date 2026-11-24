@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, Lantern, MonthCalendar, RangeCard, RecordsCard, PlasterPattern, ScreenHeader, Segmented, ShieldIcon, ZelligeBand } from '@/components';
+import { Card, Lantern, MonthCalendar, RangeCard, RecordsCard, YearBanner, PlasterPattern, ScreenHeader, Segmented, ShieldIcon, ZelligeBand } from '@/components';
 import { useTabs } from '@/components/tabs';
 import { useToday } from '@/store/counts';
 import { personalRecords, weekRange } from '@/store/growth';
@@ -127,6 +127,8 @@ export default function StatsScreen() {
       </Card>
 
       <RecordsCard records={personalRecords(today.version)} longestStreak={streak.best} />
+
+      <YearBanner year={today.date.slice(0, 4)} />
     </ScrollView>
   );
 }

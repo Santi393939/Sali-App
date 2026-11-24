@@ -4,11 +4,19 @@
  * with reactions — and how privacy works. Sample names, clearly marked.
  */
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { ArchWindows, Card, EightPointStar, PlasterPattern, PrimaryButton, ScreenHeader, ZelligeBand } from '@/components';
+import { Medallion } from '@/components/milestones/Medallion';
+import { milestoneByAmount } from '@/content/milestones';
+import { feedback } from '@/lib/feedback';
+import { addDays } from '@/lib/salliDay';
+import { useToday } from '@/store/counts';
+import { getDay, isLit } from '@/store/days';
+import { weekEnd } from '@/store/growth';
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import { t } from '@/lib/i18n';
@@ -21,16 +29,46 @@ const MEMBERS = [
   { name: 'Omar', streak: 15, logged: true },
 ];
 
-const ACTIVITY = () => [
-  { who: t('Amina'), what: t('lit her lantern · 23-day streak'), when: t('12 min'), reactions: [t('Ameen 3'), t('MashaAllah 2')] },
-  { who: t('Omar'), what: t('logged salawat after Asr'), when: t('1 h'), reactions: [t('Ameen 1')] },
-  { who: t('The family'), what: t('passed 6,000 toward the Jumu’ah goal'), when: t('2 h'), reactions: [t('MashaAllah 4')] },
+type Reaction = 'ameen' | 'mashallah';
+type Activity = { id: string; who: string; what: string; when: string; milestone?: number; reactions: Record<Reaction, number> };
+
+const ACTIVITY = (): Activity[] => [
+  { id: 'a1', who: 'Yusuf', what: t('built The Courtyard · 10,000 salawat'), when: t('8 min'), milestone: 10000, reactions: { ameen: 4, mashallah: 3 } },
+  { id: 'a2', who: 'Amina', what: t('lit her lantern · 23-day streak'), when: t('12 min'), reactions: { ameen: 3, mashallah: 2 } },
+  { id: 'a3', who: 'Omar', what: t('logged salawat after Asr'), when: t('1 h'), reactions: { ameen: 1, mashallah: 0 } },
+  { id: 'a4', who: t('The family'), what: t('passed 6,000 toward the Jumu’ah goal'), when: t('2 h'), reactions: { ameen: 0, mashallah: 4 } },
 ];
+
+/** Sample lit days this Jumu'ah week for the preview family (yours are real). */
+const SAMPLE_LIT: Record<string, number> = { Amina: 6, Omar: 5, Yusuf: 4, Khadija: 2 };
+
+/** Lit days so far this Jumu'ah week (Saturday to Friday), and how many days have passed. */
+function yourWeek(today: string) {
+  const end = weekEnd(today);
+  let lit = 0;
+  let days = 0;
+  for (let k = addDays(end, -6); k <= today; k = addDays(k, 1)) {
+    days++;
+    if (isLit(getDay(k))) lit++;
+  }
+  return { lit, days };
+}
 
 export default function GroupScreen() {
   const insets = useSafeAreaInsets();
   const settings = useSettings();
   const you = settings.name.trim() || t('You');
+  const today = useToday();
+  const week = yourWeek(today.date);
+  const board = [
+    ...Object.entries(SAMPLE_LIT).map(([name, lit]) => ({ name, lit: Math.min(lit, week.days), me: false })),
+    { name: you, lit: week.lit, me: true },
+  ].sort((a, b) => b.lit - a.lit || Number(b.me) - Number(a.me));
+  const [mine, setMine] = useState<Record<string, Reaction | undefined>>({});
+  const react = (id: string, r: Reaction) => {
+    feedback.selection();
+    setMine((m) => ({ ...m, [id]: m[id] === r ? undefined : r }));
+  };
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
@@ -84,24 +122,68 @@ export default function GroupScreen() {
         <Text style={styles.note}>{t('Members see the family total and each other’s streaks, never each other’s counts, unless someone turns sharing on.')}</Text>
       </Card>
 
+      {/* Consistency board: lit days, not counts, so every lantern weighs the same */}
+      <Card>
+        <Text style={styles.cardTitle}>{t('This week’s lanterns')}</Text>
+        <Text style={styles.boardSub}>{t('Ranked by lit days this Jumu’ah week, not by how many. Every lantern counts the same.')}</Text>
+        {board.map((m, i) => (
+          <View key={m.name + i} style={[styles.boardRow, m.me && styles.boardMe]}>
+            <Text style={styles.rank}>{i + 1}</Text>
+            <View style={styles.boardAvatar}>
+              <EightPointStar size={34} fill={m.me ? colors.saffron : colors.zelligeGreen} stroke={colors.saffron} strokeWidth={1.2} />
+              <Text style={styles.boardInitial}>{m.name.charAt(0)}</Text>
+            </View>
+            <Text style={styles.boardName} numberOfLines={1}>
+              {m.me ? t('{name} (you)', { name: m.name }) : m.name}
+            </Text>
+            <View style={styles.lamps}>
+              {Array.from({ length: 7 }, (_, d) => (
+                <View key={d} style={[styles.lampDot, d < m.lit && styles.lampDotOn, d >= week.days && styles.lampDotFuture]} />
+              ))}
+            </View>
+            <Text style={styles.boardCount}>
+              {m.lit}/{week.days}
+            </Text>
+          </View>
+        ))}
+      </Card>
+
       {/* Activity */}
       <Card>
         <Text style={styles.cardTitle}>{t('Activity')}</Text>
-        {ACTIVITY().map((a, i) => (
-          <View key={i} style={[styles.event, i > 0 && styles.eventBorder]}>
-            <Text style={styles.eventText}>
-              <Text style={styles.eventWho}>{a.who}</Text> {a.what}
-            </Text>
-            <View style={styles.reactions}>
-              {a.reactions.map((r) => (
-                <View key={r} style={styles.reaction}>
-                  <Text style={styles.reactionText}>{r}</Text>
-                </View>
-              ))}
-              <Text style={styles.when}>{a.when}</Text>
+        {ACTIVITY().map((a, i) => {
+          const m = a.milestone ? milestoneByAmount(a.milestone) : undefined;
+          return (
+            <View key={a.id} style={[styles.event, i > 0 && styles.eventBorder]}>
+              <View style={styles.eventRow}>
+                {m && <Medallion size={40} milestone={m} earned />}
+                <Text style={[styles.eventText, { flex: 1 }]}>
+                  <Text style={styles.eventWho}>{a.who}</Text> {a.what}
+                </Text>
+              </View>
+              <View style={styles.reactions}>
+                {(['ameen', 'mashallah'] as const).map((r) => {
+                  const on = mine[a.id] === r;
+                  const n = a.reactions[r] + (on ? 1 : 0);
+                  return (
+                    <Pressable
+                      key={r}
+                      onPress={() => react(a.id, r)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: on }}
+                      style={({ pressed }) => [styles.reaction, on && styles.reactionOn, pressed && { transform: [{ scale: 0.94 }] }]}>
+                      <Text style={[styles.reactionText, on && { color: colors.onPrimary }]}>
+                        {r === 'ameen' ? t('Ameen') : t('MashaAllah')}
+                        {n > 0 ? ` ${n}` : ''}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+                <Text style={styles.when}>{a.when}</Text>
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </Card>
 
       {/* How it works */}
@@ -167,6 +249,20 @@ const styles = themedStyles(() =>
     eventText: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 20, color: colors.ink },
     eventWho: { fontFamily: fonts.uiSemi },
     reactions: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+    reactionOn: { backgroundColor: colors.zelligeGreen },
+    eventRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    boardSub: { fontFamily: fonts.ui, fontSize: 12, lineHeight: 17, color: colors.muted, marginTop: -4, marginBottom: spacing.sm },
+    boardRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 8, paddingHorizontal: 6, borderRadius: 12 },
+    boardMe: { backgroundColor: colors.highlight },
+    rank: { width: 18, fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 20, color: colors.terracotta, textAlign: 'center' },
+    boardAvatar: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+    boardInitial: { position: 'absolute', fontFamily: fonts.display, fontSize: 15, color: colors.onPrimary },
+    boardName: { flex: 1, fontFamily: fonts.uiMedium, fontSize: 14, color: colors.ink },
+    lamps: { flexDirection: 'row', gap: 3, direction: 'ltr' },
+    lampDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.cardBorder },
+    lampDotOn: { backgroundColor: colors.saffron },
+    lampDotFuture: { opacity: 0.35 },
+    boardCount: { width: 30, fontFamily: fonts.uiSemi, fontSize: 12, color: colors.muted, textAlign: 'right' },
     reaction: { borderRadius: 999, backgroundColor: colors.highlight, paddingHorizontal: 10, paddingVertical: 3 },
     reactionText: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.terracotta },
     when: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginLeft: 'auto' },

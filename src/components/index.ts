@@ -32,3 +32,4 @@ export { sallaParts } from './sallaParts';
 export { StepUpCard } from './StepUpCard';
 export { ChallengeCard } from './ChallengeCard';
 export { RangeCard, RecordsCard } from './GrowthCards';
+export { YearBanner } from './YearBanner';

@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, ShareSheet, Toggle } from '@/components';
+import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, ShareSheet, Toggle, YearBanner } from '@/components';
 import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
 import type { Milestone } from '@/content/milestones';
 import { switchTheme } from '@/lib/themeSwitch';
@@ -94,6 +94,8 @@ export default function MeScreen() {
             </View>
           </View>
         </Card>
+
+        <YearBanner year={today.date.slice(0, 4)} />
 
         <AccountCard />
 

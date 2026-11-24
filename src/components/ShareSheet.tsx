@@ -12,6 +12,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { MILESTONES, type Milestone } from '@/content/milestones';
 import { feedback } from '@/lib/feedback';
 import type { TodaySnapshot } from '@/store/counts';
+import { yearRecap } from '@/store/recap';
 import { useRewards } from '@/store/rewards';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
@@ -24,7 +25,7 @@ import { Segmented } from './Segmented';
 import { ZelligeBand } from './ZelligeBand';
 import { t } from '@/lib/i18n';
 
-export type ShareKind = 'streak' | 'masjid' | 'badge';
+export type ShareKind = 'streak' | 'masjid' | 'badge' | 'year';
 
 type Props = { visible: boolean; initial?: ShareKind; today: TodaySnapshot; onClose: () => void };
 
@@ -83,6 +84,7 @@ export function ShareSheet({ visible, initial = 'streak', today, onClose }: Prop
     { value: 'streak', label: t('Streak') },
     { value: 'masjid', label: t('Masjid') },
     ...(badge ? [{ value: 'badge' as const, label: t('Badge') }] : []),
+    { value: 'year', label: t('Year') },
   ];
 
   return (
@@ -102,6 +104,7 @@ export function ShareSheet({ visible, initial = 'streak', today, onClose }: Prop
                 {kind === 'streak' && <StreakCard today={today} />}
                 {kind === 'masjid' && <MasjidCard lifetime={today.lifetime} />}
                 {kind === 'badge' && badge && <BadgeCard m={badge} />}
+                {kind === 'year' && <YearCard today={today} />}
               </View>
             </View>
 
@@ -171,6 +174,37 @@ function MasjidCard({ lifetime }: { lifetime: number }) {
   );
 }
 
+function YearCard({ today }: { today: TodaySnapshot }) {
+  const r = yearRecap(today.date, today.version);
+  return (
+    <View style={[styles.face, { backgroundColor: colors.night }]}>
+      <PlasterPattern color={colors.lightGold} opacity={0.08} cell={40} />
+      <View style={styles.center}>
+        <Text style={styles.eyebrow}>{t('My {year} in Salli', { year: r.year })}</Text>
+        <Text style={styles.bigNum}>{r.total.toLocaleString('en-US')}</Text>
+        <Text style={styles.bigLabel}>{t('salawat this year')}</Text>
+        <View style={styles.yearRow}>
+          <View style={styles.yearStat}>
+            <Text style={styles.yearValue}>{r.litDays}</Text>
+            <Text style={styles.yearLabel}>{t('lit days')}</Text>
+          </View>
+          <View style={styles.yearStat}>
+            <Text style={styles.yearValue}>{r.longestRun}</Text>
+            <Text style={styles.yearLabel}>{t('longest run')}</Text>
+          </View>
+          <View style={styles.yearStat}>
+            <Text style={styles.yearValue}>{r.litFridays}</Text>
+            <Text style={styles.yearLabel}>{t('lit Fridays')}</Text>
+          </View>
+        </View>
+        <Text style={styles.arabic}>اللهم صل وسلم على نبينا محمد</Text>
+      </View>
+      <CardFooter />
+      <ZelligeBand height={16} />
+    </View>
+  );
+}
+
 function BadgeCard({ m }: { m: Milestone }) {
   return (
     <View style={[styles.face, { backgroundColor: m.palette.stage }]}>
@@ -190,6 +224,10 @@ function BadgeCard({ m }: { m: Milestone }) {
 const styles = themedStyles(() =>
   StyleSheet.create({
     root: { flex: 1, justifyContent: 'flex-end' },
+    yearRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+    yearStat: { alignItems: 'center', minWidth: 64 },
+    yearValue: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 28, color: '#FBF6EC' },
+    yearLabel: { fontFamily: fonts.ui, fontSize: 10, color: colors.lightGold, textTransform: 'uppercase', letterSpacing: 0.6 },
     backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,19,15,0.5)' },
     sheet: {
       backgroundColor: colors.plaster,

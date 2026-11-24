@@ -2,6 +2,7 @@
  * Today: the daily counter. Counts are saved on the phone instantly (MMKV).
  * Every add plays its motion, haptic and sound together (see CounterHero).
  */
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -308,6 +309,9 @@ export default function TodayScreen() {
             </View>
           </View>
           <TasbihBeads taps={today.taps} />
+          <Pressable onPress={() => router.push('/tasbih')} accessibilityRole="button" style={({ pressed }) => [styles.fullBtn, pressed && { opacity: 0.7 }]}>
+            <Text style={styles.fullBtnText}>{t('⤢ Full-screen counter')}</Text>
+          </Pressable>
           <Text style={styles.salawat}>اللهم صل وسلم على نبينا محمد</Text>
           <MaghribCountdown endsAt={today.endsAt} lit={today.lit} />
           <ZelligeBand height={22} />
@@ -418,6 +422,8 @@ const styles = themedStyles(() =>
   sideLabel: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.muted },
   sideStatus: { fontFamily: fonts.ui, fontSize: 11, color: colors.terracotta, marginTop: 6, textAlign: 'center' },
   tapHint: { fontFamily: fonts.ui, fontSize: 11, color: colors.muted, textAlign: 'center', marginTop: spacing.sm },
+  fullBtn: { alignSelf: 'center', borderRadius: 999, borderWidth: 1, borderColor: colors.saffron, paddingHorizontal: 14, paddingVertical: 6, marginTop: spacing.sm },
+  fullBtnText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.link },
   salawat: {
     fontFamily: fonts.arabic,
     fontSize: 20,
