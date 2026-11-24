@@ -2,16 +2,19 @@
  * Five swipeable tabs with a bottom tab bar.
  *
  * Swiping: the page to the right always sits on top. Moving forward, the
- * incoming page slides over the outgoing one, which drifts at 30% speed and
- * dims to 45%; moving back reverses it. The tab pill follows the finger and
- * stretches mid-swipe. A selection tick plays when the swipe crosses into a
- * new tab; landing plays a Medium impact and springs the tab icon.
- * Everything is driven by one shared value (`position`) on the UI thread.
+ * incoming page slides over the outgoing one (with a soft edge shadow), and
+ * the outgoing page drifts at 30% speed and dims; moving back reverses it.
+ * The tab pill follows the finger and stretches mid-swipe. A selection tick
+ * plays when the swipe crosses into a new tab; the page snaps home without
+ * wobble and the landing (Medium impact + icon spring) fires the instant it
+ * arrives. Everything is driven by one shared value (`position`) on the UI
+ * thread.
  */
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   Extrapolation,
   interpolate,
   useAnimatedReaction,
@@ -24,6 +27,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { cancelPresses } from '@/lib/cancelPresses';
 import { feedback } from '@/lib/feedback';
@@ -32,11 +36,19 @@ import { TabBar, type TabSpec } from './TabBar';
 
 export type Tab = TabSpec & { render: () => ReactNode };
 
-type TabsApi = { index: number; goTo: (i: number) => void };
-const TabsContext = createContext<TabsApi>({ index: 0, goTo: () => {} });
+type TabsApi = { index: number; goTo: (i: number) => void; position: SharedValue<number> | null };
+const TabsContext = createContext<TabsApi>({ index: 0, goTo: () => {}, position: null });
 export const useTabs = () => useContext(TabsContext);
 
-const SPRING = { damping: 26, stiffness: 260, mass: 0.9 };
+/** Fast and crisp: no bounce past the page, so it lands with a clean stop. */
+const SPRING = { damping: 28, stiffness: 300, mass: 0.75, overshootClamping: true };
+/** A flick faster than this (px/s) turns the page even on a short drag. */
+const FLICK_VELOCITY = 300;
+/** Without a flick, dragging past this share of the screen turns the page. */
+const COMMIT_DISTANCE = 0.28;
+/** How far the outgoing page darkens (0–1). */
+const DIM = 0.32;
+const EDGE_SHADOW = 18;
 
 export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number }) {
   const { width } = useWindowDimensions();
@@ -45,6 +57,7 @@ export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number 
   const [index, setIndex] = useState(initial);
   const position = useSharedValue(initial);
   const start = useSharedValue(initial);
+  const offset = useSharedValue(0);
   const crossed = useSharedValue(initial);
   const landing = useSharedValue(-1); // tab whose icon is springing
   const bounce = useSharedValue(1);
@@ -68,11 +81,19 @@ export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number 
   const goTo = useCallback(
     (i: number) => {
       const target = Math.max(0, Math.min(last, i));
-      if (target === index && Math.abs(position.get() - target) < 0.001) return;
+      const now = position.get();
+      if (target === index && Math.abs(now - target) < 0.001) return;
       if (reduceMotion) {
         position.set(target);
         land(target);
         return;
+      }
+      // Far jumps skip the pages in between: start one page away, then slide in.
+      const from = Math.round(now);
+      if (Math.abs(target - from) > 1) {
+        const near = target - Math.sign(target - from);
+        crossed.set(target);
+        position.set(near);
       }
       position.set(
         withSpring(target, SPRING, (done) => {
@@ -80,7 +101,7 @@ export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number 
         }),
       );
     },
-    [index, last, position, land, reduceMotion],
+    [index, last, position, crossed, land, reduceMotion],
   );
 
   // Selection tick each time the swipe crosses into a new tab.
@@ -95,39 +116,47 @@ export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number 
   );
 
   const pan = Gesture.Pan()
-    .activeOffsetX([-14, 14])
-    .failOffsetY([-12, 12])
-    .onBegin(() => {
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-14, 14])
+    .onStart((e) => {
+      cancelAnimation(position);
       start.set(position.value);
+      offset.set(e.translationX); // so the page doesn't jump by the activation distance
       crossed.set(Math.round(position.value));
-    })
-    .onStart(() => {
       scheduleOnRN(cancelPresses);
     })
     .onUpdate((e) => {
-      let p = start.value - e.translationX / width;
-      // Rubber-band past the first and last tab.
-      if (p < 0) p = p * 0.25;
-      if (p > last) p = last + (p - last) * 0.25;
+      let p = start.value - (e.translationX - offset.value) / width;
+      // Rubber-band past the first and last tab, firmer the further you pull.
+      if (p < 0) p = -(1 - 1 / (1 - p * 0.9)) * 0.35;
+      if (p > last) p = last + (1 - 1 / (1 + (p - last) * 0.9)) * 0.35;
       position.set(p);
     })
     .onEnd((e) => {
-      const projected = position.value - (e.velocityX / width) * 0.22;
       const from = Math.round(start.value);
-      const target = Math.max(0, Math.min(last, Math.max(from - 1, Math.min(from + 1, Math.round(projected)))));
+      const delta = position.value - from;
+      const v = -e.velocityX / width; // pages per second, + = forward
+      let target = from;
+      if (Math.abs(e.velocityX) > FLICK_VELOCITY && Math.sign(v) === Math.sign(delta || v)) {
+        target = from + Math.sign(v);
+      } else if (Math.abs(delta) > COMMIT_DISTANCE) {
+        target = from + Math.sign(delta);
+      }
+      target = Math.max(0, Math.min(last, target));
       position.set(
-        withSpring(target, { ...SPRING, velocity: -e.velocityX / width }, (done) => {
+        withSpring(target, { ...SPRING, velocity: v }, (done) => {
           if (done) scheduleOnRN(land, target);
         }),
       );
     });
 
-  const api = useMemo(() => ({ index, goTo }), [index, goTo]);
+  const api = useMemo(() => ({ index, goTo, position }), [index, goTo, position]);
 
   return (
     <TabsContext.Provider value={api}>
       <View style={styles.root}>
-        <GestureDetector gesture={pan}>
+        {/* Web: let the browser keep vertical scrolling; we take only sideways swipes. */}
+        <GestureDetector gesture={pan} touchAction="pan-y" userSelect="none">
           <View style={styles.pages}>
             {tabs.map((t, i) => (
               <Page key={t.key} i={i} position={position} width={width} active={i === index}>
@@ -167,10 +196,26 @@ function Page({
   });
   const dimStyle = useAnimatedStyle(() => {
     const d = i - position.value;
-    return { opacity: interpolate(d, [-1, 0], [0.55, 0], Extrapolation.CLAMP) };
+    return { opacity: interpolate(d, [-1, 0], [DIM, 0], Extrapolation.CLAMP) };
+  });
+  // Soft shadow along the left edge while this page is sliding over another.
+  const shadowStyle = useAnimatedStyle(() => {
+    const d = i - position.value;
+    return { opacity: d > 0.001 && d < 1 ? interpolate(d, [0, 0.08, 1], [0, 1, 0.6]) : 0 };
   });
   return (
     <Animated.View style={[StyleSheet.absoluteFill, pageStyle]} pointerEvents={active ? 'auto' : 'none'}>
+      <Animated.View pointerEvents="none" style={[styles.edge, shadowStyle]}>
+        <Svg width={EDGE_SHADOW} height="100%">
+          <Defs>
+            <LinearGradient id={`edge${i}`} x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor="#16130F" stopOpacity={0} />
+              <Stop offset="1" stopColor="#16130F" stopOpacity={0.22} />
+            </LinearGradient>
+          </Defs>
+          <Rect x={0} y={0} width={EDGE_SHADOW} height="100%" fill={`url(#edge${i})`} />
+        </Svg>
+      </Animated.View>
       {children}
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.dim, dimStyle]} />
     </Animated.View>
@@ -180,5 +225,6 @@ function Page({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   pages: { flex: 1, overflow: 'hidden' },
-  dim: { backgroundColor: '#000' },
+  dim: { backgroundColor: '#16130F' },
+  edge: { position: 'absolute', left: -EDGE_SHADOW, top: 0, bottom: 0, width: EDGE_SHADOW },
 });

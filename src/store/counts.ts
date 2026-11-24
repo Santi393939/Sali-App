@@ -40,6 +40,16 @@ function newId(): string {
   });
 }
 
+// ---- tell listeners when an add lights today's lantern ----
+const litListeners = new Set<(source: EntrySource) => void>();
+/** Called whenever an add crosses today's goal. Returns an unsubscribe function. */
+export function onGoalLit(fn: (source: EntrySource) => void) {
+  litListeners.add(fn);
+  return () => {
+    litListeners.delete(fn);
+  };
+}
+
 export type AddResult = {
   total: number;
   /** True when this add lit today's lantern (crossed the goal). */
@@ -70,7 +80,9 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
   day.total += add;
   saveDay(day);
   notifyChange();
-  return { total: day.total, litNow: !wasLit && isLit(day) };
+  const litNow = !wasLit && isLit(day);
+  if (litNow) litListeners.forEach((l) => l(source));
+  return { total: day.total, litNow };
 }
 
 // ---- the streak takeover plays once per lit day ----

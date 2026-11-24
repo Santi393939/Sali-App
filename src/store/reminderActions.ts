@@ -1,0 +1,36 @@
+/** Likes and saves on reminder cards, saved on the phone (synced later as reminder_actions). */
+import { useSyncExternalStore } from 'react';
+
+import { readJSON, writeJSON } from './storage';
+
+export type ReminderAction = { liked: boolean; saved: boolean };
+type ActionMap = Record<string, ReminderAction>;
+
+const KEY = 'reminders.actions';
+const listeners = new Set<() => void>();
+let actions: ActionMap = readJSON<ActionMap>(KEY, {});
+
+const EMPTY: ReminderAction = { liked: false, saved: false };
+
+export function getAction(id: string): ReminderAction {
+  return actions[id] ?? EMPTY;
+}
+
+export function toggleAction(id: string, field: keyof ReminderAction): boolean {
+  const next = { ...getAction(id), [field]: !getAction(id)[field] };
+  actions = { ...actions, [id]: next };
+  writeJSON(KEY, actions);
+  listeners.forEach((l) => l());
+  return next[field];
+}
+
+export function useReminderActions(): ActionMap {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    () => actions,
+    () => actions,
+  );
+}

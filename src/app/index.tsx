@@ -10,25 +10,13 @@ import {
 } from '@/components/tabs';
 import ComingSoonScreen from '@/screens/ComingSoonScreen';
 import MeScreen from '@/screens/MeScreen';
+import RemindersScreen from '@/screens/RemindersScreen';
 import StatsScreen from '@/screens/StatsScreen';
 import TodayScreen from '@/screens/TodayScreen';
 
 const TABS: Tab[] = [
   { key: 'today', label: 'Today', Icon: TodayIcon, render: () => <TodayScreen /> },
-  {
-    key: 'reminders',
-    label: 'Reminders',
-    Icon: RemindersIcon,
-    render: () => (
-      <ComingSoonScreen
-        dark
-        title="Reminders"
-        arabic="تذكير"
-        heading="Short reminders, one swipe at a time"
-        body="Qur'an verses, hadith and short videos on the Prophet ﷺ, with a button to send 10 salawat. This feed is built in the next step."
-      />
-    ),
-  },
+  { key: 'reminders', label: 'Reminders', Icon: RemindersIcon, dark: true, render: () => <RemindersScreen /> },
   {
     key: 'group',
     label: 'Group',

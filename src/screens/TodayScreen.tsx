@@ -2,7 +2,7 @@
  * Today: the daily counter. Counts are saved on the phone instantly (MMKV).
  * Every add plays its motion, haptic and sound together (see CounterHero).
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -29,6 +29,7 @@ import {
   dismissShieldNotice,
   getToday,
   markTakeoverShown,
+  onGoalLit,
   takeoverShown,
   useToday,
 } from '@/store/counts';
@@ -71,6 +72,19 @@ export default function TodayScreen() {
   const [event, setEvent] = useState<AddEvent>();
   const [takeover, setTakeover] = useState<TakeoverData | null>(null);
   const { streak } = today;
+
+  // Adds from other tabs (e.g. "Send 10" on a reminder) can light the lantern too.
+  useEffect(
+    () =>
+      onGoalLit((source) => {
+        if (source !== 'reminder') return; // Today's own adds are timed in add()
+        const date = getToday().date;
+        if (takeoverShown(date)) return;
+        markTakeoverShown(date);
+        setTimeout(() => setTakeover(takeoverData()), 1100);
+      }),
+    [],
+  );
 
   /** Save instantly, then play motion, haptic and sound together. */
   const add = (amount: number, source: 'tap' | 'quick' | 'pad') => {
