@@ -324,7 +324,7 @@ function GoalBar({ goal, fill, shields }: { goal: GoalProgress; fill: SharedValu
 
 // ---------- chunky saffron button with a pressed shadow ----------
 
-function ChunkyButton({ label, onPress }: { label: string; onPress: () => void }) {
+export function ChunkyButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.chunkyWrap}>
       {({ pressed }) => (

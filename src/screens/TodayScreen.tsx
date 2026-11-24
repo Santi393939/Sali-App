@@ -2,7 +2,7 @@
  * Today: the daily counter. Counts are saved on the phone instantly (MMKV).
  * Every add plays its motion, haptic and sound together (see CounterHero).
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -21,7 +21,9 @@ import {
   type AddEvent,
   type TakeoverData,
 } from '@/components';
+import { MilestoneUnlock, NextMilestoneStrip } from '@/components/milestones';
 import { useTabs } from '@/components/tabs';
+import type { Milestone } from '@/content/milestones';
 import { addKind, feedback } from '@/lib/feedback';
 import { hijriDateArabic } from '@/lib/hijri';
 import {
@@ -30,9 +32,11 @@ import {
   getToday,
   markTakeoverShown,
   onGoalLit,
+  onMilestone,
   takeoverShown,
   useToday,
 } from '@/store/counts';
+import { milestoneProgress } from '@/store/milestones';
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 
@@ -71,24 +75,53 @@ export default function TodayScreen() {
   const [padOpen, setPadOpen] = useState(false);
   const [event, setEvent] = useState<AddEvent>();
   const [takeover, setTakeover] = useState<TakeoverData | null>(null);
+  const [unlock, setUnlock] = useState<Milestone | null>(null);
   const { streak } = today;
+  const journey = useMemo(() => milestoneProgress(today.date), [today.date, today.total]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Adds from other tabs (e.g. "Send 10" on a reminder) can light the lantern too.
-  useEffect(
-    () =>
-      onGoalLit((source) => {
-        if (source !== 'reminder') return; // Today's own adds are timed in add()
-        const date = getToday().date;
-        if (takeoverShown(date)) return;
-        markTakeoverShown(date);
-        setTimeout(() => setTakeover(takeoverData()), 1100);
-      }),
-    [],
-  );
+  // Celebrations play one at a time: the streak takeover first, then a
+  // milestone reached on the same add.
+  const streakPending = useRef(false);
+  const queuedMilestone = useRef<Milestone | null>(null);
+
+  const scheduleTakeover = (after: number) => {
+    streakPending.current = true;
+    setTimeout(() => setTakeover(takeoverData()), after);
+  };
+  const scheduleMilestone = (m: Milestone, after: number) => {
+    if (streakPending.current) queuedMilestone.current = m;
+    else setTimeout(() => setUnlock(m), after);
+  };
+  const closeTakeover = () => {
+    setTakeover(null);
+    streakPending.current = false;
+    const m = queuedMilestone.current;
+    queuedMilestone.current = null;
+    if (m) setTimeout(() => setUnlock(m), 350);
+  };
+
+  // Adds from other tabs (e.g. "Send 10" on a reminder) can light the lantern
+  // or reach a milestone too.
+  useEffect(() => {
+    const offLit = onGoalLit((source) => {
+      if (source !== 'reminder') return; // Today's own adds are timed in add()
+      const date = getToday().date;
+      if (takeoverShown(date)) return;
+      markTakeoverShown(date);
+      scheduleTakeover(1100);
+    });
+    const offMilestone = onMilestone((m, source) => {
+      if (source === 'reminder') scheduleMilestone(m, 1100);
+    });
+    return () => {
+      offLit();
+      offMilestone();
+    };
+  }, []);
 
   /** Save instantly, then play motion, haptic and sound together. */
   const add = (amount: number, source: 'tap' | 'quick' | 'pad') => {
-    const { litNow } = addSalawat(amount, source);
+    const { litNow, milestone } = addSalawat(amount, source);
     const kind = addKind(amount, source);
     const delay = source === 'pad' ? PAD_CLOSE_DELAY : 0;
     setEvent({ id: nextEventId++, amount, kind, delay });
@@ -97,10 +130,13 @@ export default function TodayScreen() {
 
     // Goal met for the first time today: play the streak takeover once.
     const date = getToday().date;
+    const after = delay + LAND_MS[kind] + TAKEOVER_AFTER_LAND;
     if (litNow && !takeoverShown(date)) {
       markTakeoverShown(date);
-      setTimeout(() => setTakeover(takeoverData()), delay + LAND_MS[kind] + TAKEOVER_AFTER_LAND);
+      scheduleTakeover(after);
     }
+    // Reached a lifetime milestone: reveal the new part of the masjid.
+    if (milestone) scheduleMilestone(milestone, after);
   };
 
   const openPad = () => {
@@ -196,10 +232,13 @@ export default function TodayScreen() {
           </Card>
         </Pressable>
 
+        <NextMilestoneStrip progress={journey} onPress={() => tabs.goTo(4)} />
+
         <TodayLog entries={today.entries} />
       </ScrollView>
 
-      <StreakTakeover data={takeover} onClose={() => setTakeover(null)} />
+      <StreakTakeover data={takeover} onClose={closeTakeover} />
+      <MilestoneUnlock milestone={unlock} onClose={() => setUnlock(null)} />
 
       <NumberPadSheet
         visible={padOpen}

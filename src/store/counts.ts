@@ -10,7 +10,10 @@ import { nextMaghrib, previousDayKey, salliDayKey } from '@/lib/salliDay';
 
 import { getDay, isLit, saveDay, type Entry, type EntrySource } from './days';
 import { storage } from './storage';
+import { crossedMilestone } from './milestones';
+import { lifetimeTotals } from './stats';
 import { queueEntry } from './syncQueue';
+import type { Milestone } from '@/content/milestones';
 import { computeStreak, goalProgress, weekKeys, type GoalProgress, type StreakState } from './streaks';
 
 export { DEFAULT_DAILY_GOAL, type Entry, type EntrySource } from './days';
@@ -51,10 +54,21 @@ export function onGoalLit(fn: (source: EntrySource) => void) {
   };
 }
 
+// ---- tell listeners when an add reaches a lifetime milestone ----
+const milestoneListeners = new Set<(m: Milestone, source: EntrySource) => void>();
+export function onMilestone(fn: (m: Milestone, source: EntrySource) => void) {
+  milestoneListeners.add(fn);
+  return () => {
+    milestoneListeners.delete(fn);
+  };
+}
+
 export type AddResult = {
   total: number;
   /** True when this add lit today's lantern (crossed the goal). */
   litNow: boolean;
+  /** Lifetime milestone reached by this add, if any. */
+  milestone: Milestone | null;
 };
 
 /** Add salawat to the current Salli day. */
@@ -62,7 +76,7 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
   const date = salliDayKey(now);
   const day = getDay(date);
   const n = Math.floor(amount);
-  if (!Number.isFinite(n) || n <= 0) return { total: day.total, litNow: false };
+  if (!Number.isFinite(n) || n <= 0) return { total: day.total, litNow: false, milestone: null };
   const add = Math.min(n, MAX_SINGLE_ADD);
   const wasLit = isLit(day);
 
@@ -84,7 +98,10 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
   notifyChange();
   const litNow = !wasLit && isLit(day);
   if (litNow) litListeners.forEach((l) => l(source));
-  return { total: day.total, litNow };
+  const after = lifetimeTotals(date).lifetime;
+  const milestone = crossedMilestone(after - add, after);
+  if (milestone) milestoneListeners.forEach((l) => l(milestone, source));
+  return { total: day.total, litNow, milestone };
 }
 
 // ---- the streak takeover plays once per lit day ----

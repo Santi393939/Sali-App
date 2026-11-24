@@ -170,7 +170,14 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
             </Animated.Text>
             <Ornament />
             <Animated.View style={[styles.englishBlock, englishStyle]}>
-              <Text style={styles.english}>{reminder.english}</Text>
+              <Text style={styles.english}>
+                {reminder.english.split('ﷺ').map((part, i) => (
+                  <Text key={i}>
+                    {i > 0 && <Text style={styles.salla}>ﷺ</Text>}
+                    {part}
+                  </Text>
+                ))}
+              </Text>
               <Text style={styles.source}>{reminder.sourceRef}</Text>
             </Animated.View>
           </>
@@ -389,6 +396,7 @@ const styles = StyleSheet.create({
   ornament: { alignItems: 'center', marginVertical: spacing.lg },
   englishBlock: { alignSelf: 'stretch', alignItems: 'center' },
   english: { fontFamily: fonts.ui, fontSize: 17, lineHeight: 27, color: 'rgba(251,246,236,0.92)', textAlign: 'center' },
+  salla: { fontFamily: fonts.arabic, fontSize: 18 },
   source: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.saffron, textAlign: 'center', marginTop: spacing.md, letterSpacing: 0.3 },
 
   rail: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', gap: spacing.xl, paddingBottom: spacing.lg },

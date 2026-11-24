@@ -6,17 +6,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { Card, EightPointStar, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
-import { eightPointStarPath } from '@/components/geometry';
+import { JourneyCard, MilestoneSheet } from '@/components/milestones';
+import { useTabs } from '@/components/tabs';
 import { feedback } from '@/lib/feedback';
 import { signOut, useAuth } from '@/store/auth';
 import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
-import { lifetimeTotals, MILESTONES } from '@/store/stats';
+import { milestoneProgress, type MilestoneState } from '@/store/milestones';
+import { lifetimeTotals } from '@/store/stats';
 import { useSyncStatus } from '@/store/sync';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
-const short = (n: number) => (n >= 1000000 ? `${n / 1000000}M` : `${n / 1000}k`);
 
 export default function MeScreen() {
   const insets = useSafeAreaInsets();
@@ -24,7 +25,9 @@ export default function MeScreen() {
   const settings = useSettings();
   const [goalOpen, setGoalOpen] = useState(false);
   const totals = useMemo(() => lifetimeTotals(today.date), [today.date, today.total]); // eslint-disable-line react-hooks/exhaustive-deps
-  const next = MILESTONES.find((m) => totals.lifetime < m);
+  const journey = useMemo(() => milestoneProgress(today.date), [today.date, today.total]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [openMilestone, setOpenMilestone] = useState<MilestoneState | null>(null);
+  const tabs = useTabs();
   const initial = settings.name.trim().charAt(0).toUpperCase();
 
   return (
@@ -64,27 +67,8 @@ export default function MeScreen() {
 
         <AccountCard />
 
-        {/* Milestones */}
-        <Card>
-          <Text style={styles.sectionTitle}>Milestones</Text>
-          <View style={styles.badges}>
-            {MILESTONES.map((m) => (
-              <Badge key={m} label={short(m)} earned={totals.lifetime >= m} />
-            ))}
-          </View>
-          {next ? (
-            <>
-              <View style={styles.track}>
-                <View style={[styles.fill, { width: `${(totals.lifetime / next) * 100}%` }]} />
-              </View>
-              <Text style={styles.nextText}>
-                {fmt(next - totals.lifetime)} to your {short(next)} badge
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.nextText}>Every badge earned. ما شاء الله</Text>
-          )}
-        </Card>
+        {/* Milestones: the masjid journey */}
+        <JourneyCard progress={journey} today={today.date} onOpen={setOpenMilestone} />
 
         {/* Settings */}
         <Card padded={false}>
@@ -169,6 +153,17 @@ export default function MeScreen() {
         </Card>
       </ScrollView>
 
+      <MilestoneSheet
+        milestone={openMilestone}
+        progress={journey}
+        today={today.date}
+        onClose={() => setOpenMilestone(null)}
+        onCountNow={() => {
+          setOpenMilestone(null);
+          tabs.goTo(0);
+        }}
+      />
+
       <NumberPadSheet
         visible={goalOpen}
         title="Daily goal"
@@ -237,32 +232,6 @@ function timeAgo(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function Badge({ label, earned }: { label: string; earned: boolean }) {
-  const s = 64;
-  return (
-    <View style={styles.badge} accessibilityLabel={`${label} badge${earned ? ', earned' : ''}`}>
-      <Svg width={s} height={s}>
-        <Path
-          d={eightPointStarPath(s / 2, s / 2, s / 2 - 2)}
-          fill={earned ? colors.zelligeGreen : colors.plaster}
-          stroke={earned ? colors.saffron : colors.cardBorder}
-          strokeWidth={2}
-        />
-        <Path
-          d={eightPointStarPath(s / 2, s / 2, s / 2 - 9)}
-          fill="none"
-          stroke={earned ? colors.lightGold : colors.cardBorder}
-          strokeOpacity={earned ? 0.6 : 1}
-          strokeDasharray={earned ? undefined : '3 3'}
-        />
-      </Svg>
-      <View style={[StyleSheet.absoluteFill, styles.center]}>
-        <Text style={[styles.badgeText, earned && styles.badgeTextEarned]}>{label}</Text>
-      </View>
-    </View>
-  );
-}
-
 function PersonGlyph() {
   return (
     <Svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke={colors.card} strokeWidth={1.8} strokeLinecap="round">
@@ -291,13 +260,6 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontFamily: fonts.display, fontSize: 24, color: colors.ink },
   padded: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: spacing.md, marginTop: spacing.md },
-  badge: { width: '31%', alignItems: 'center', height: 64 },
-  badgeText: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.muted },
-  badgeTextEarned: { color: colors.lightGold },
-  track: { height: 8, borderRadius: 4, backgroundColor: colors.plaster, marginTop: spacing.lg, overflow: 'hidden' },
-  fill: { height: 8, borderRadius: 4, backgroundColor: colors.saffron },
-  nextText: { fontFamily: fonts.ui, fontSize: 13, color: colors.muted, marginTop: spacing.sm },
 
   row: {
     flexDirection: 'row',

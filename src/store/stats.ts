@@ -84,4 +84,3 @@ export function lifetimeTotals(today: string): { lifetime: number; year: number 
   return { lifetime, year: thisYear };
 }
 
-export const MILESTONES = [1000, 10000, 50000, 100000, 250000, 1000000] as const;
