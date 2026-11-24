@@ -11,8 +11,8 @@
  * spring) fires the instant it arrives. Everything is driven by one shared
  * value (`position`) on the UI thread.
  */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -36,7 +36,7 @@ import { TabBar, type TabSpec } from './TabBar';
 
 export type Tab = TabSpec & { render: () => ReactNode };
 
-type TabsApi = { index: number; goTo: (i: number) => void; position: SharedValue<number> | null };
+type TabsApi = { index: number; goTo: (i: number, opts?: { instant?: boolean }) => void; position: SharedValue<number> | null };
 const TabsContext = createContext<TabsApi>({ index: 0, goTo: () => {}, position: null });
 export const useTabs = () => useContext(TabsContext);
 
@@ -83,11 +83,15 @@ export function TabPager({ tabs, initial: initialProp }: { tabs: Tab[]; initial?
   );
 
   const goTo = useCallback(
-    (i: number) => {
+    (i: number, opts?: { instant?: boolean }) => {
       const target = Math.max(0, Math.min(last, i));
       const now = position.get();
       if (target === index && Math.abs(now - target) < 0.001) return;
-      if (reduceMotion) {
+      // Instant: used when a sheet is closing over the pager (e.g. "Count now"),
+      // so the change happens underneath it instead of sliding through tabs.
+      if (reduceMotion || opts?.instant) {
+        cancelAnimation(position);
+        crossed.set(target);
         position.set(target);
         land(target);
         return;
@@ -154,6 +158,25 @@ export function TabPager({ tabs, initial: initialProp }: { tabs: Tab[]; initial?
       );
     });
 
+  // Web: when focus returns to a button on a page that has moved off screen
+  // (e.g. after a sheet closes), the browser scrolls this clipped container
+  // sideways to show it, shifting every page. Pages are placed by transforms
+  // only, so keep the container itself pinned.
+  const pagesRef = useRef<ComponentRef<typeof View>>(null);
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const el = pagesRef.current as unknown as HTMLElement | null;
+    if (!el?.addEventListener) return;
+    const pin = () => {
+      if (el.scrollLeft || el.scrollTop) {
+        el.scrollLeft = 0;
+        el.scrollTop = 0;
+      }
+    };
+    el.addEventListener('scroll', pin);
+    return () => el.removeEventListener('scroll', pin);
+  }, []);
+
   const api = useMemo(() => ({ index, goTo, position }), [index, goTo, position]);
 
   return (
@@ -161,7 +184,7 @@ export function TabPager({ tabs, initial: initialProp }: { tabs: Tab[]; initial?
       <View style={styles.root}>
         {/* Web: let the browser keep vertical scrolling; we take only sideways swipes. */}
         <GestureDetector gesture={pan} touchAction="pan-y" userSelect="none">
-          <View style={styles.pages}>
+          <View ref={pagesRef} style={styles.pages}>
             {tabs.map((t, i) => (
               <Page key={t.key} i={i} position={position} width={width} active={i === index}>
                 {t.render()}
