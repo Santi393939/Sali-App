@@ -138,10 +138,10 @@ export default function MeScreen({ view = 'main' }: { view?: MeView }) {
 
             {recapDay && <YearBanner year={recapDay.slice(0, 4)} />}
 
-            <AccountCard />
-
             {/* Milestones: the masjid journey */}
             <JourneyCard progress={journey} today={today.date} onOpen={setOpenMilestone} />
+
+            <AccountCard />
 
             {/* Everything else, one tap away */}
             <Card padded={false}>
