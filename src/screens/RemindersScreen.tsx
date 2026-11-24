@@ -79,7 +79,7 @@ export default function RemindersScreen() {
               reminder={item}
               height={height}
               topInset={insets.top}
-              active={index === active && tabs.index === TAB_INDEX}
+              active={index === active}
               liked={actions[item.id]?.liked ?? false}
               saved={actions[item.id]?.saved ?? false}
               position={`${index + 1} / ${REMINDERS.length}`}

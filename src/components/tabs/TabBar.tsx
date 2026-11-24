@@ -49,15 +49,19 @@ export function TabBar({ tabs, position, landing, bounce, onPress }: Props) {
     };
   });
 
-  // The pill follows the finger and stretches up to 50% mid-swipe.
+  // "Worm" pill: between two tabs the leading edge eases out (runs ahead) and
+  // the trailing edge eases in (catches up), so it stretches to 1.5 tabs
+  // mid-swipe and settles back to one tab. Works in both directions.
   const pillStyle = useAnimatedStyle(() => {
-    const p = position.value;
-    const frac = p - Math.floor(p);
-    const stretch = Math.sin(frac * Math.PI) * 0.5 * tabW;
-    const k = darknessAt(p, darkTabs);
+    const p = Math.max(-0.5, Math.min(tabs.length - 0.5, position.value));
+    const k0 = Math.floor(p);
+    const t = p - k0;
+    const left = (k0 + t * t) * tabW;
+    const right = (k0 + 1 + (1 - (1 - t) * (1 - t))) * tabW;
+    const k = darknessAt(position.value, darkTabs);
     return {
-      width: tabW - PILL_INSET * 2 + stretch,
-      transform: [{ translateX: p * tabW + PILL_INSET - stretch / 2 }],
+      width: right - left - PILL_INSET * 2,
+      transform: [{ translateX: left + PILL_INSET }],
       backgroundColor: interpolateColor(k, [0, 1], ['rgba(30,92,70,0.10)', 'rgba(233,184,96,0.14)']),
     };
   });

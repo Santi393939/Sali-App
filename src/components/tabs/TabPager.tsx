@@ -1,14 +1,15 @@
 /**
  * Five swipeable tabs with a bottom tab bar.
  *
- * Swiping: the page to the right always sits on top. Moving forward, the
- * incoming page slides over the outgoing one (with a soft edge shadow), and
- * the outgoing page drifts at 30% speed and dims; moving back reverses it.
- * The tab pill follows the finger and stretches mid-swipe. A selection tick
- * plays when the swipe crosses into a new tab; the page snaps home without
- * wobble and the landing (Medium impact + icon spring) fires the instant it
- * arrives. Everything is driven by one shared value (`position`) on the UI
- * thread.
+ * Swiping: pages move 1:1 with the finger in both directions, like a native
+ * pager, so what you touch stays under your finger; the page leaving dims
+ * slightly. (The brief's slide-over with a 30% drift was tried first, but the
+ * page under the finger lagging behind it felt wrong.) The tab pill follows
+ * the finger as a "worm": its leading edge runs ahead and the trailing edge
+ * catches up. A selection tick plays when the swipe crosses into a new tab;
+ * the page snaps home without wobble and the landing (Medium impact + icon
+ * spring) fires the instant it arrives. Everything is driven by one shared
+ * value (`position`) on the UI thread.
  */
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -27,7 +28,6 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { cancelPresses } from '@/lib/cancelPresses';
 import { feedback } from '@/lib/feedback';
@@ -46,9 +46,8 @@ const SPRING = { damping: 28, stiffness: 300, mass: 0.75, overshootClamping: tru
 const FLICK_VELOCITY = 300;
 /** Without a flick, dragging past this share of the screen turns the page. */
 const COMMIT_DISTANCE = 0.28;
-/** How far the outgoing page darkens (0–1). */
-const DIM = 0.32;
-const EDGE_SHADOW = 18;
+/** How far a page darkens as it leaves (0–1). */
+const DIM = 0.14;
 
 export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number }) {
   const { width } = useWindowDimensions();
@@ -187,35 +186,16 @@ function Page({
   const pageStyle = useAnimatedStyle(() => {
     const d = i - position.value; // >0: page is to the right
     const visible = d > -1 && d < 1;
-    const x = d >= 0 ? d * width : d * width * 0.3;
     return {
-      transform: [{ translateX: visible ? x : d > 0 ? width : -width }],
-      zIndex: i,
+      transform: [{ translateX: visible ? d * width : d > 0 ? width : -width }],
       opacity: visible ? 1 : 0,
     };
   });
-  const dimStyle = useAnimatedStyle(() => {
-    const d = i - position.value;
-    return { opacity: interpolate(d, [-1, 0], [DIM, 0], Extrapolation.CLAMP) };
-  });
-  // Soft shadow along the left edge while this page is sliding over another.
-  const shadowStyle = useAnimatedStyle(() => {
-    const d = i - position.value;
-    return { opacity: d > 0.001 && d < 1 ? interpolate(d, [0, 0.08, 1], [0, 1, 0.6]) : 0 };
-  });
+  const dimStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(Math.abs(i - position.value), [0, 1], [0, DIM], Extrapolation.CLAMP),
+  }));
   return (
     <Animated.View style={[StyleSheet.absoluteFill, pageStyle]} pointerEvents={active ? 'auto' : 'none'}>
-      <Animated.View pointerEvents="none" style={[styles.edge, shadowStyle]}>
-        <Svg width={EDGE_SHADOW} height="100%">
-          <Defs>
-            <LinearGradient id={`edge${i}`} x1="0" y1="0" x2="1" y2="0">
-              <Stop offset="0" stopColor="#16130F" stopOpacity={0} />
-              <Stop offset="1" stopColor="#16130F" stopOpacity={0.22} />
-            </LinearGradient>
-          </Defs>
-          <Rect x={0} y={0} width={EDGE_SHADOW} height="100%" fill={`url(#edge${i})`} />
-        </Svg>
-      </Animated.View>
       {children}
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.dim, dimStyle]} />
     </Animated.View>
@@ -226,5 +206,4 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   pages: { flex: 1, overflow: 'hidden' },
   dim: { backgroundColor: '#16130F' },
-  edge: { position: 'absolute', left: -EDGE_SHADOW, top: 0, bottom: 0, width: EDGE_SHADOW },
 });
