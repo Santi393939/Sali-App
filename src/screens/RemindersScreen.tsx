@@ -1,7 +1,8 @@
 /**
  * Reminders: a full-screen vertical feed, one card per swipe (snap).
  * Each card: type tag, Arabic (Amiri, gold), divider ornament, English, source.
- * Right rail: like (count), save, share. Bottom: "Send 10 salawat now".
+ * Under the text, a centred row: like (count), save, share.
+ * Bottom: "Send 10 salawat now". Everything is centred on the screen.
  */
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -164,9 +165,11 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
           <VideoSlot />
         ) : (
           <>
-            <Animated.Text style={[styles.arabic, arabicStyle]}>{reminder.arabic}</Animated.Text>
+            <Animated.Text style={[styles.arabic, reminder.arabic.length > 90 && styles.arabicLong, arabicStyle]}>
+              {reminder.arabic}
+            </Animated.Text>
             <Ornament />
-            <Animated.View style={englishStyle}>
+            <Animated.View style={[styles.englishBlock, englishStyle]}>
               <Text style={styles.english}>{reminder.english}</Text>
               <Text style={styles.source}>{reminder.sourceRef}</Text>
             </Animated.View>
@@ -174,7 +177,7 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
         )}
       </View>
 
-      {/* Right rail */}
+      {/* Actions */}
       <View style={styles.rail}>
         <LikeButton id={reminder.id} liked={liked} count={reminder.baseLikes + (liked ? 1 : 0)} />
         <RailButton
@@ -356,7 +359,7 @@ const RAIL_W = 64;
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.night },
   card: { backgroundColor: colors.night, overflow: 'hidden' },
-  top: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
+  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -370,10 +373,11 @@ const styles = StyleSheet.create({
   tagText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.lightGold, letterSpacing: 0.4 },
   review: { borderRadius: radius.pill, backgroundColor: 'rgba(251,246,236,0.08)', paddingHorizontal: 10, paddingVertical: 5 },
   reviewText: { fontFamily: fonts.uiMedium, fontSize: 11, color: 'rgba(251,246,236,0.6)' },
-  counter: { marginLeft: 'auto', fontFamily: fonts.uiMedium, fontSize: 12, color: 'rgba(251,246,236,0.45)' },
+  counter: { fontFamily: fonts.uiMedium, fontSize: 12, color: 'rgba(251,246,236,0.45)' },
 
-  middle: { flex: 1, justifyContent: 'center', paddingLeft: spacing.xl, paddingRight: RAIL_W + spacing.md },
+  middle: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   arabic: {
+    alignSelf: 'stretch',
     fontFamily: fonts.arabic,
     fontSize: 30,
     lineHeight: 58,
@@ -381,12 +385,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     writingDirection: 'rtl',
   },
+  arabicLong: { fontSize: 26, lineHeight: 50 },
   ornament: { alignItems: 'center', marginVertical: spacing.lg },
+  englishBlock: { alignSelf: 'stretch', alignItems: 'center' },
   english: { fontFamily: fonts.ui, fontSize: 17, lineHeight: 27, color: 'rgba(251,246,236,0.92)', textAlign: 'center' },
   source: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.saffron, textAlign: 'center', marginTop: spacing.md, letterSpacing: 0.3 },
 
-  rail: { position: 'absolute', right: spacing.sm, bottom: 120, width: RAIL_W, alignItems: 'center', gap: spacing.lg },
-  railBtn: { alignItems: 'center', gap: 4, minWidth: 44 },
+  rail: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', gap: spacing.xl, paddingBottom: spacing.lg },
+  railBtn: { alignItems: 'center', gap: 4, minWidth: RAIL_W },
   railCircle: {
     width: 48,
     height: 48,
@@ -397,10 +403,13 @@ const styles = StyleSheet.create({
   },
   railLabel: { fontFamily: fonts.uiMedium, fontSize: 12, color: 'rgba(251,246,236,0.8)' },
 
-  bottom: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, paddingRight: RAIL_W + spacing.md, alignItems: 'center' },
+  bottom: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, alignItems: 'center' },
   plusTen: {
     position: 'absolute',
     top: -8,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
     fontFamily: fonts.display,
     fontVariant: ['lining-nums'],
     fontSize: 28,

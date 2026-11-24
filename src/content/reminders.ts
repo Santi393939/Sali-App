@@ -33,7 +33,7 @@ export const REMINDERS: Reminder[] = [
     id: 'quran-33-56',
     kind: 'quran',
     arabic:
-      'إِنَّ ٱللَّهَ وَمَلَٰٓئِكَتَهُۥ يُصَلُّونَ عَلَى ٱلنَّبِيِّ ۚ يَٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُوا۟ صَلُّوا۟ عَلَيْهِ وَسَلِّمُوا۟ تَسْلِيمًا',
+      'إِنَّ ٱللَّهَ وَمَلَٰٓئِكَتَهُۥ يُصَلُّونَ عَلَى ٱلنَّبِيِّ يَٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُوا۟ صَلُّوا۟ عَلَيْهِ وَسَلِّمُوا۟ تَسْلِيمًا',
     english:
       'Indeed, Allah and His angels send blessings upon the Prophet. O you who have believed, send blessings upon him and greet him with peace.',
     sourceRef: 'Sūrat al-Aḥzāb 33:56',
