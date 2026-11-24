@@ -132,7 +132,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
       </Section>
 
       {/* Tap sounds */}
-      <Section label="Tap sounds" hint="Tap one to hear it" last>
+      <Section label="Sound sets" hint="Tap, +100 and +1,000 · tap to hear" last>
         <View style={styles.grid}>
           {(Object.keys(SOUNDS) as SoundId[]).map((k) => {
             const s = SOUNDS[k];
@@ -146,7 +146,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
                 lockedFor={open ? null : s.unlock}
                 onPress={() => {
                   if (!open) return locked(s.unlock);
-                  feedback.previewSound(k);
+                  feedback.previewSet(k);
                   choose({ tapSound: k });
                 }}>
                 <SoundGlyph color={colors.statusBar === 'light' ? colors.lightGold : (owner?.palette.face ?? colors.link)} />

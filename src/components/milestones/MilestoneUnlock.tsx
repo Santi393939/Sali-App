@@ -157,8 +157,8 @@ function Scene({ milestone: m, onClose }: { milestone: Milestone; onClose: () =>
           title={`${theme.name} theme`}
           sub="Arch, star and tiles across the app"
         />
-        <Pressable onPress={() => feedback.previewSound(m.sound)} accessibilityRole="button" accessibilityLabel={`Play ${SOUNDS[m.sound].name}`}>
-          <RewardRow art={<PlayGlyph color={p.glow} />} title={SOUNDS[m.sound].name} sub="New tap sound · tap to hear it" />
+        <Pressable onPress={() => feedback.previewSet(m.sound)} accessibilityRole="button" accessibilityLabel={`Play ${SOUNDS[m.sound].name}`}>
+          <RewardRow art={<PlayGlyph color={p.glow} />} title={SOUNDS[m.sound].name} sub="New sound set for every count · tap to hear it" />
         </Pressable>
         <RewardRow art={<Medallion size={26} milestone={m} earned />} title={`“${m.title}”`} sub="Your title, shown with this badge" />
       </Animated.View>

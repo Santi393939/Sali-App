@@ -10,7 +10,8 @@ import * as Haptics from 'expo-haptics';
 import { getRewards } from '@/store/rewards';
 import { getSettings } from '@/store/settings';
 
-type SoundName = 'tick' | 'cluster' | 'chime' | 'success' | 'drop' | 'knock' | 'clink' | 'bell' | 'gong' | 'birds';
+type Family = 'knock' | 'clink' | 'drop' | 'bell' | 'gong' | 'birds';
+type SoundName = 'tick' | 'cluster' | 'chime' | 'success' | Family | `${Family}-cluster` | `${Family}-big`;
 
 const SOURCES: Record<SoundName, number> = {
   tick: require('../../assets/sounds/tick.wav'),
@@ -23,6 +24,18 @@ const SOURCES: Record<SoundName, number> = {
   bell: require('../../assets/sounds/bell.wav'),
   gong: require('../../assets/sounds/gong.wav'),
   birds: require('../../assets/sounds/birds.wav'),
+  'knock-cluster': require('../../assets/sounds/knock-cluster.wav'),
+  'knock-big': require('../../assets/sounds/knock-big.wav'),
+  'clink-cluster': require('../../assets/sounds/clink-cluster.wav'),
+  'clink-big': require('../../assets/sounds/clink-big.wav'),
+  'drop-cluster': require('../../assets/sounds/drop-cluster.wav'),
+  'drop-big': require('../../assets/sounds/drop-big.wav'),
+  'bell-cluster': require('../../assets/sounds/bell-cluster.wav'),
+  'bell-big': require('../../assets/sounds/bell-big.wav'),
+  'gong-cluster': require('../../assets/sounds/gong-cluster.wav'),
+  'gong-big': require('../../assets/sounds/gong-big.wav'),
+  'birds-cluster': require('../../assets/sounds/birds-cluster.wav'),
+  'birds-big': require('../../assets/sounds/birds-big.wav'),
 };
 
 const VOLUME: Record<SoundName, number> = {
@@ -36,7 +49,26 @@ const VOLUME: Record<SoundName, number> = {
   bell: 0.4,
   gong: 0.5,
   birds: 0.4,
+  'knock-cluster': 0.5,
+  'knock-big': 0.55,
+  'clink-cluster': 0.4,
+  'clink-big': 0.45,
+  'drop-cluster': 0.45,
+  'drop-big': 0.5,
+  'bell-cluster': 0.4,
+  'bell-big': 0.45,
+  'gong-cluster': 0.5,
+  'gong-big': 0.55,
+  'birds-cluster': 0.4,
+  'birds-big': 0.45,
 };
+
+/** The sound set in use: its tap, burst (+100/+300) and flourish (+1,000). */
+function soundSet(): { tap: SoundName; burst: SoundName; big: SoundName } {
+  const id = getRewards().sound;
+  if (id === 'tick') return { tap: 'tick', burst: 'cluster', big: 'chime' };
+  return { tap: id, burst: `${id}-cluster`, big: `${id}-big` };
+}
 
 const players: Partial<Record<SoundName, AudioPlayer>> = {};
 
@@ -77,19 +109,19 @@ export const feedback = {
     switch (kind) {
       case 'tap':
         safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
-        play(getRewards().sound);
+        play(soundSet().tap);
         break;
       case 'small':
         safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-        play('cluster');
+        play(soundSet().burst);
         break;
       case 'medium':
         safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
-        play('cluster');
+        play(soundSet().burst);
         break;
       case 'large':
         safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
-        play('chime');
+        play(soundSet().big);
         break;
     }
   },
@@ -123,7 +155,7 @@ export const feedback = {
   /** A tasbih round of 33 taps completed. */
   round(big = false) {
     safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
-    play(big ? 'chime' : 'clink');
+    play(big ? soundSet().big : soundSet().burst);
   },
   /** A daily quest completed. */
   quest(all = false) {
@@ -141,6 +173,17 @@ export const feedback = {
   /** Preview a tap sound (Rewards on Me). */
   previewSound(sound: SoundName) {
     play(sound);
+  },
+  /** Preview a whole set: tap, then the burst, then the flourish. */
+  previewSet(id: 'tick' | Family): () => void {
+    const set = id === 'tick' ? { tap: 'tick', burst: 'cluster', big: 'chime' } : { tap: id, burst: `${id}-cluster`, big: `${id}-big` };
+    play(set.tap as SoundName);
+    const a = setTimeout(() => play(set.burst as SoundName), 420);
+    const b = setTimeout(() => play(set.big as SoundName), 1050);
+    return () => {
+      clearTimeout(a);
+      clearTimeout(b);
+    };
   },
   /**
    * Each milestone's unlock has its own rhythm, growing with the milestone.
