@@ -3,6 +3,7 @@ import { useSyncExternalStore } from 'react';
 
 import { salliDayKey, setLocation, type SavedLocation } from '@/lib/salliDay';
 
+import type { GlassId } from '@/content/extras';
 import { SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 
 import { notifyChange } from './counts';
@@ -31,6 +32,8 @@ export type Settings = {
   tapSound: SoundId;
   /** Amount of the milestone shown on the profile, or null. */
   featuredBadge: number | null;
+  /** Lantern glass colour (unlocked by lamps every 5,000). */
+  lanternGlass: GlassId;
 };
 
 const KEY = 'settings.v1';
@@ -48,6 +51,7 @@ const DEFAULTS: Settings = {
   theme: 'zellige',
   tapSound: 'tick',
   featuredBadge: null,
+  lanternGlass: 'amber',
 };
 
 export const GOAL_MIN = 1;

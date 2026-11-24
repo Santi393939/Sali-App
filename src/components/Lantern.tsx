@@ -1,5 +1,6 @@
 import Svg, { Circle, Defs, Line, Path, RadialGradient, Stop } from 'react-native-svg';
 
+import { useRewards } from '@/store/rewards';
 import type { LanternLevel } from '@/store/streaks';
 import { colors } from '@/theme';
 
@@ -11,6 +12,8 @@ type Props = {
   level?: LanternLevel;
   /** Soft glow behind the lantern when lit. */
   glow?: boolean;
+  /** Show a specific glass colour (reward previews). */
+  glassColor?: string;
 };
 
 /** Metal colour per lantern level: [main, shade]. */
@@ -28,9 +31,10 @@ const UNLIT: [string, string] = ['#9A9285', '#7C7468'];
  * Placeholder Moroccan lantern (fanous) until the commissioned Rive file
  * arrives. Drawn on a 40 × 64 grid.
  */
-export function Lantern({ size, lit = false, level = 'brass', glow = true }: Props) {
+export function Lantern({ size, lit = false, level = 'brass', glow = true, glassColor }: Props) {
   const [metal, trim] = lit ? LANTERN_FINISH[level] : UNLIT;
-  const glass = lit ? colors.lightGold : '#D9D2C4';
+  const chosen = useRewards().glass;
+  const glass = lit ? (glassColor ?? chosen) : '#D9D2C4';
   const tassel = lit ? colors.terracotta : '#8E8579';
   return (
     <Svg width={size * (40 / 64)} height={size} viewBox="0 0 40 64">

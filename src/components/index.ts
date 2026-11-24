@@ -25,3 +25,5 @@ export { CityPicker } from './CityPicker';
 export { MonthCalendar } from './MonthCalendar';
 export { ArchWindows, GroupTeaser } from './GroupTeaser';
 export { StreakSheet } from './StreakSheet';
+export { FridayBanner } from './FridayBanner';
+export { LampsCard, OilLamp } from './LampsCard';

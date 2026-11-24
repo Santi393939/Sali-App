@@ -1,4 +1,5 @@
 /** Which rewards are unlocked and in use (a choice only applies once earned). */
+import { GLASSES, lampsFor } from '@/content/extras';
 import { milestoneByAmount, type Milestone } from '@/content/milestones';
 import { FEATURED_BADGE_UNLOCK, SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 
@@ -11,6 +12,7 @@ export type ActiveRewards = {
   theme: ThemeId;
   sound: SoundId;
   featured: Milestone | null;
+  glass: string;
 };
 
 export function activeRewards(s: Settings, lifetime: number): ActiveRewards {
@@ -19,6 +21,10 @@ export function activeRewards(s: Settings, lifetime: number): ActiveRewards {
     theme: lifetime >= THEMES[s.theme].unlock ? s.theme : 'zellige',
     sound: lifetime >= SOUNDS[s.tapSound].unlock ? s.tapSound : 'tick',
     featured: featured && lifetime >= FEATURED_BADGE_UNLOCK && lifetime >= featured.amount ? featured : null,
+    glass: (() => {
+      const g = GLASSES.find((x) => x.id === s.lanternGlass) ?? GLASSES[0];
+      return lampsFor(lifetime) >= g.lamp ? g.color : GLASSES[0].color;
+    })(),
   };
 }
 

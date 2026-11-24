@@ -9,7 +9,7 @@ import { getDay, type DayRecord } from './days';
 import { readJSON, writeJSON } from './storage';
 import { markQuestDay, questDays } from './streaks';
 
-export type QuestId = 'lantern' | 'tap33' | 'tap100' | 'reminder10' | 'read3' | 'afterAsr' | 'morning' | 'like';
+export type QuestId = 'lantern' | 'tap33' | 'tap100' | 'reminder10' | 'read3' | 'afterAsr' | 'morning' | 'like' | 'jumuah';
 
 export type Quest = { id: QuestId; title: string; progress: number; target: number; done: boolean };
 
@@ -40,6 +40,23 @@ const DEFS: Record<QuestId, { title: string; target: (goal: number) => number; m
   },
   morning: { title: 'Send 100 before noon', target: () => 100, measure: (d) => sumWhere(d, (e) => new Date(e.createdAt).getHours() < 12) },
   like: { title: 'Like a reminder', target: () => 1, measure: (_d, x) => x.likes },
+  jumuah: {
+    title: 'Jumu’ah: send salawat at 3 different times',
+    target: () => 3,
+    measure: (d) => {
+      // Separate moments at least 30 minutes apart.
+      const times = d.entries.map((e) => new Date(e.createdAt).getTime()).sort((a, b) => a - b);
+      let moments = 0;
+      let last = -Infinity;
+      for (const t of times) {
+        if (t - last >= 30 * 60 * 1000) {
+          moments++;
+          last = t;
+        }
+      }
+      return moments;
+    },
+  },
 };
 
 const POOL: QuestId[] = ['tap33', 'reminder10', 'read3', 'afterAsr', 'morning', 'tap100', 'like'];
@@ -51,6 +68,8 @@ export function questIdsFor(date: string): QuestId[] {
   const a = POOL[h % POOL.length];
   let b = POOL[(h >>> 5) % POOL.length];
   if (b === a) b = POOL[(POOL.indexOf(a) + 3) % POOL.length];
+  // Fridays bring the special Jumu'ah quest.
+  if (keyToDate(date).getDay() === 5) return ['lantern', 'jumuah', a];
   return ['lantern', a, b];
 }
 

@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import {
   CounterHero,
@@ -16,6 +16,7 @@ import {
   MaghribCountdown,
   QuestsCard,
   RepairCard,
+  FridayBanner,
   GroupTeaser,
   ShieldNotice,
   StreakSheet,
@@ -30,6 +31,7 @@ import { MilestoneUnlock, NextMilestoneStrip } from '@/components/milestones';
 import { useTabs } from '@/components/tabs';
 import type { Milestone } from '@/content/milestones';
 import { ROUND } from '@/components/TasbihBeads';
+import { GLASSES, LAMP_STEP } from '@/content/extras';
 import { addKind, feedback } from '@/lib/feedback';
 import { showToast } from '@/lib/toast';
 import { onQuestEvent } from '@/store/quests';
@@ -41,6 +43,8 @@ import {
   getToday,
   markTakeoverShown,
   onGoalLit,
+  onFridayBadge,
+  onLampLit,
   onStreakRepaired,
   onMilestone,
   takeoverShown,
@@ -138,11 +142,26 @@ export default function TodayScreen() {
     const offRepair = onStreakRepaired(({ streak: kept }) => {
       showToast({ tone: 'big', title: 'Streak repaired!', sub: `Your ${kept}-day streak is lit again` });
     });
+    const offLamp = onLampLit((lamps) => {
+      feedback.quest(true);
+      const glass = GLASSES.find((g) => g.lamp === lamps);
+      showToast({
+        tone: 'big',
+        title: `Lamp ${lamps} lit · ${(lamps * LAMP_STEP).toLocaleString('en-US')}`,
+        sub: glass ? `New lantern glass: ${glass.name} · choose it in Me` : 'Another lamp burns in your masjid',
+      });
+    });
+    const offFriday = onFridayBadge(() => {
+      feedback.quest(true);
+      showToast({ tone: 'big', title: 'Jumu’ah Keeper earned!', sub: 'Four Fridays in a row with your lantern lit' });
+    });
     return () => {
       offLit();
       offMilestone();
       offQuest();
       offRepair();
+      offLamp();
+      offFriday();
     };
   }, []);
 
@@ -210,6 +229,8 @@ export default function TodayScreen() {
           </Pressable>
         </View>
 
+        {today.friday.isFriday && <FridayBanner streak={today.friday.streak} badge={today.friday.badge} />}
+
         {today.repair && <RepairCard repair={today.repair} total={today.total} />}
 
         {today.shieldNotice && (
@@ -223,6 +244,18 @@ export default function TodayScreen() {
         {/* Hero */}
         <View style={styles.hero}>
           <PlasterPattern />
+          {today.friday.isFriday && (
+            <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+              <Defs>
+                <RadialGradient id="friGlow" cx="50%" cy="38%" r="55%">
+                  <Stop offset="0" stopColor={colors.lightGold} stopOpacity={0.85} />
+                  <Stop offset="0.6" stopColor={colors.lightGold} stopOpacity={0.25} />
+                  <Stop offset="1" stopColor={colors.lightGold} stopOpacity={0} />
+                </RadialGradient>
+              </Defs>
+              <Rect x={0} y={0} width="100%" height="100%" fill="url(#friGlow)" />
+            </Svg>
+          )}
           <View style={styles.heroRow}>
             <View style={styles.heroSide}>
               <Lantern size={46} lit={today.lit} level={streak.level} />

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
+import { GLASSES, LAMP_STEP, lampsFor } from '@/content/extras';
 import { MILESTONES, type Milestone } from '@/content/milestones';
 import { SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 import { feedback } from '@/lib/feedback';
@@ -15,6 +16,7 @@ import { updateSettings } from '@/store/settings';
 import { colors, fonts, PALETTES, spacing, themedStyles } from '@/theme';
 
 import { Card } from '../Card';
+import { Lantern } from '../Lantern';
 import { eightPointStarPath, horseshoeArchPath } from '../geometry';
 import { ZelligeBand } from '../ZelligeBand';
 import { Medallion } from './Medallion';
@@ -131,6 +133,32 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
         </View>
       </Section>
 
+      {/* Lantern glass (a new colour with each lamp, every 5,000) */}
+      <Section label="Lantern glass" hint="A new colour with each lamp">
+        <View style={styles.grid}>
+          {GLASSES.map((g) => {
+            const open = lampsFor(lifetime) >= g.lamp;
+            return (
+              <Chip
+                key={g.id}
+                label={g.name}
+                selected={active.glass === g.color}
+                lockedFor={null}
+                lockText={open ? undefined : `${((g.lamp * LAMP_STEP) / 1000).toLocaleString('en-US')}k`}
+                onPress={() => {
+                  if (!open) {
+                    feedback.selection();
+                    return;
+                  }
+                  choose({ lanternGlass: g.id });
+                }}>
+                <Lantern size={34} lit glow={false} glassColor={g.color} />
+              </Chip>
+            );
+          })}
+        </View>
+      </Section>
+
       {/* Tap sounds */}
       <Section label="Sound sets" hint="Tap, +100 and +1,000 · tap to hear" last>
         <View style={styles.grid}>
@@ -177,12 +205,15 @@ function Chip({
   label,
   selected,
   lockedFor,
+  lockText,
   onPress,
   children,
 }: {
   label: string;
   selected: boolean;
   lockedFor: number | null;
+  /** Lock label for rewards not tied to a big milestone. */
+  lockText?: string;
   onPress: () => void;
   children: ReactNode;
 }) {
@@ -194,14 +225,14 @@ function Chip({
       accessibilityState={{ selected, disabled: !!owner }}
       accessibilityLabel={`${label}${owner ? `, unlocks at ${owner.short}` : selected ? ', in use' : ''}`}
       style={({ pressed }) => [styles.chip, selected && styles.chipSelected, pressed && { transform: [{ scale: 0.97 }] }]}>
-      <View style={[styles.chipArt, owner && { opacity: 0.3 }]}>{children}</View>
+      <View style={[styles.chipArt, (owner || lockText) && { opacity: 0.3 }]}>{children}</View>
       <Text style={[styles.chipLabel, owner && { color: colors.muted }]} numberOfLines={1}>
         {label}
       </Text>
-      {owner ? (
+      {owner || lockText ? (
         <View style={styles.lockRow}>
           <LockIcon />
-          <Text style={styles.lockText}>{owner.short}</Text>
+          <Text style={styles.lockText}>{owner ? owner.short : lockText}</Text>
         </View>
       ) : selected ? (
         <Text style={styles.inUse}>In use</Text>

@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, EightPointStar, Logo, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
+import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
 import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
 import type { Milestone } from '@/content/milestones';
 import { switchTheme } from '@/lib/themeSwitch';
@@ -94,6 +94,13 @@ export default function MeScreen() {
 
         {/* Milestones: the masjid journey */}
         <JourneyCard progress={journey} today={today.date} onOpen={setOpenMilestone} />
+
+        <LampsCard
+          lamps={today.lamps.lit}
+          nextIn={today.lamps.nextIn}
+          fridayStreak={today.friday.streak}
+          fridayBadge={today.friday.badge}
+        />
 
         <RewardsCard
           lifetime={today.lifetime}

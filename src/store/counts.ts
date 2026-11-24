@@ -14,10 +14,13 @@ import { crossedMilestone, milestoneProgress, type MilestoneProgress } from './m
 import { lifetimeTotals } from './stats';
 import { checkQuests, questsFor, setQuestChangeHandler, tapsOn, type Quest } from './quests';
 import { queueEntry } from './syncQueue';
+import { FRIDAY_BADGE_RUN, lampsFor } from '@/content/extras';
 import type { Milestone } from '@/content/milestones';
 import {
   computeStreak,
   goalProgress,
+  fridayStreak,
+  isFriday,
   markRepaired,
   REPAIR_MULTIPLIER,
   repairOffer,
@@ -87,6 +90,24 @@ export function onMilestone(fn: (m: Milestone, source: EntrySource) => void) {
   };
 }
 
+// ---- lamps (every 5,000) and the Jumu'ah Keeper badge ----
+const lampListeners = new Set<(lamps: number) => void>();
+export function onLampLit(fn: (lamps: number) => void) {
+  lampListeners.add(fn);
+  return () => {
+    lampListeners.delete(fn);
+  };
+}
+const FRIDAY_BADGE_KEY = 'friday.badge';
+export const hasFridayBadge = () => storage.getBoolean(FRIDAY_BADGE_KEY) ?? false;
+const fridayListeners = new Set<() => void>();
+export function onFridayBadge(fn: () => void) {
+  fridayListeners.add(fn);
+  return () => {
+    fridayListeners.delete(fn);
+  };
+}
+
 export type AddResult = {
   total: number;
   /** True when this add lit today's lantern (crossed the goal). */
@@ -133,6 +154,15 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
   const after = lifetimeTotals(date).lifetime;
   const milestone = crossedMilestone(after - add, after);
   if (milestone) milestoneListeners.forEach((l) => l(milestone, source));
+  // A lamp every 5,000 (big milestones have their own moment).
+  const lamps = lampsFor(after);
+  if (!milestone && lamps > lampsFor(after - add)) lampListeners.forEach((l) => l(lamps));
+  // Four lit Fridays in a row earns the Jumu'ah Keeper badge.
+  if (litNow && isFriday(date) && !hasFridayBadge() && fridayStreak(computeStreak(date).status, date) >= FRIDAY_BADGE_RUN) {
+    storage.set(FRIDAY_BADGE_KEY, true);
+    notifyChange();
+    fridayListeners.forEach((l) => l());
+  }
   return { total: day.total, litNow, milestone };
 }
 
@@ -172,6 +202,8 @@ export type TodaySnapshot = {
   taps: number;
   /** Yesterday can still be relit by reaching `target` today. */
   repair: { day: string; streak: number; target: number } | null;
+  friday: { isFriday: boolean; streak: number; badge: boolean };
+  lamps: { lit: number; nextIn: number };
 };
 
 let cache: { version: number; date: string; snap: TodaySnapshot } | null = null;
@@ -204,12 +236,15 @@ function snapshot(): TodaySnapshot {
     quests: questsFor(date),
     taps: tapsOn(day),
     repair: null,
+    friday: { isFriday: isFriday(date), streak: fridayStreak(streak.status, date), badge: hasFridayBadge() },
+    lamps: { lit: 0, nextIn: 0 },
   };
   const offer = repairOffer(date);
   if (offer) snap.repair = { ...offer, target: day.goal * REPAIR_MULTIPLIER };
   const totals = lifetimeTotals(date);
   snap.lifetime = totals.lifetime;
   snap.yearTotal = totals.year;
+  snap.lamps = { lit: lampsFor(totals.lifetime), nextIn: 5000 - (totals.lifetime % 5000) };
   cache = { version, date, snap };
   return snap;
 }

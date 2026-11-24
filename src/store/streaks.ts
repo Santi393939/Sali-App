@@ -10,7 +10,7 @@
  *  - Streak goals: 7, 14, 30, 50, 100, 365 days (then every 365).
  *  - Lantern levels: Bronze (7), Silver (30), Gold (100), Emerald (365).
  */
-import { addDays, nextDayKey } from '@/lib/salliDay';
+import { addDays, keyToDate, nextDayKey } from '@/lib/salliDay';
 
 import { getDay, isLit, savedDayKeys } from './days';
 import { readJSON, storage, writeJSON } from './storage';
@@ -229,6 +229,22 @@ export function repairOffer(today: string): RepairOffer | null {
     else if (st !== 'shield' && st !== 'repaired') break;
   }
   return streak >= REPAIR_MIN_STREAK ? { day, streak } : null;
+}
+
+/** Is this Salli day a Friday (Jumu'ah)? */
+export const isFriday = (date: string) => keyToDate(date).getDay() === 5;
+
+/** Fridays in a row with the lantern lit (today counts once it is lit). */
+export function fridayStreak(status: Record<string, DayStatus>, today: string): number {
+  let k = today;
+  while (!isFriday(k)) k = addDays(k, -1);
+  if (k === today && status[today] !== 'lit') k = addDays(k, -7);
+  let n = 0;
+  while (status[k] === 'lit') {
+    n++;
+    k = addDays(k, -7);
+  }
+  return n;
 }
 
 /** The 7 Salli days ending today, oldest first. */
