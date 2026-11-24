@@ -17,7 +17,6 @@ import {
   QuestsCard,
   RepairCard,
   FridayBanner,
-  GroupTeaser,
   ShareSheet,
   ShieldNotice,
   StreakSheet,
@@ -293,6 +292,9 @@ export default function TodayScreen() {
           <ZelligeBand height={22} />
         </View>
 
+        {/* Next milestone, right under today's count */}
+        <NextMilestoneStrip progress={journey} onPress={() => tabs.goTo(4)} />
+
         {/* Quick add */}
         <View style={styles.quickRow}>
           <PrimaryButton label="+100" style={styles.quickBtn} onPress={() => add(100, 'quick')} />
@@ -301,11 +303,7 @@ export default function TodayScreen() {
           <PrimaryButton label={t('Other')} variant="secondary" style={styles.quickBtn} onPress={openPad} />
         </View>
 
-        <GroupTeaser onPress={() => tabs.goTo(2)} />
-
         <QuestsCard quests={today.quests} questDays={streak.questDays} />
-
-        <NextMilestoneStrip progress={journey} onPress={() => tabs.goTo(4)} />
 
         <TodayLog entries={today.entries} />
       </ScrollView>
