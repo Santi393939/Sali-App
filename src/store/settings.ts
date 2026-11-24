@@ -1,7 +1,7 @@
 /** User settings saved on the phone. */
 import { useSyncExternalStore } from 'react';
 
-import { salliDayKey } from '@/lib/salliDay';
+import { salliDayKey, setLocation, type SavedLocation } from '@/lib/salliDay';
 
 import { SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 
@@ -18,6 +18,10 @@ export type Settings = {
   countingStyle: CountingStyle;
   asrReminder: boolean;
   fridayReminders: boolean;
+  /** Gentle nudge an hour before Maghrib if the lantern isn't lit. */
+  preMaghribReminder: boolean;
+  /** Finished the first-run welcome. */
+  onboarded: boolean;
   shareCountWithGroup: boolean;
   /** Rewards (each needs its milestone; checked where used). */
   theme: ThemeId;
@@ -33,6 +37,8 @@ const DEFAULTS: Settings = {
   countingStyle: 'up',
   asrReminder: true,
   fridayReminders: true,
+  preMaghribReminder: true,
+  onboarded: false,
   shareCountWithGroup: false, // off by default, per the brief
   theme: 'zellige',
   tapSound: 'tick',
@@ -59,10 +65,13 @@ export function getSettings(): Settings {
 }
 
 type ChangeListener = (fields: (keyof Settings)[]) => void;
-let changeListener: ChangeListener | null = null;
-/** The sync engine registers here to upload changed settings. */
-export function setSettingsChangeListener(fn: ChangeListener | null) {
-  changeListener = fn;
+const changeListeners = new Set<ChangeListener>();
+/** Sync and reminders register here to react to changed settings. */
+export function addSettingsChangeListener(fn: ChangeListener) {
+  changeListeners.add(fn);
+  return () => {
+    changeListeners.delete(fn);
+  };
 }
 
 export function updateSettings(patch: Partial<Settings>, opts: { fromServer?: boolean } = {}) {
@@ -70,7 +79,7 @@ export function updateSettings(patch: Partial<Settings>, opts: { fromServer?: bo
   writeJSON(KEY, current);
   if (patch.dailyGoal != null) applyGoalToToday(patch.dailyGoal);
   listeners.forEach((l) => l());
-  if (!opts.fromServer) changeListener?.(Object.keys(patch) as (keyof Settings)[]);
+  if (!opts.fromServer) changeListeners.forEach((l) => l(Object.keys(patch) as (keyof Settings)[]));
 }
 
 /** A new goal applies from today; past days keep the goal they had. */
@@ -87,6 +96,15 @@ export function subscribeSettings(l: () => void) {
   return () => {
     listeners.delete(l);
   };
+}
+
+/** Save the city used for Maghrib/Asr; the Salli day and streaks follow it. */
+export function setCity(loc: SavedLocation | null) {
+  setLocation(loc);
+  invalidateStreakCache();
+  notifyChange();
+  listeners.forEach((l) => l());
+  changeListeners.forEach((l) => l(['onboarded'])); // nudges listeners (e.g. reminders) to refresh
 }
 
 export function useSettings(): Settings {

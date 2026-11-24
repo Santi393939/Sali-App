@@ -13,7 +13,7 @@
 import { addDays, nextDayKey } from '@/lib/salliDay';
 
 import { getDay, isLit, savedDayKeys } from './days';
-import { storage } from './storage';
+import { readJSON, storage, writeJSON } from './storage';
 
 export const MAX_SHIELDS = 2;
 export const PERFECT_WEEK = 7;
@@ -33,7 +33,8 @@ export function levelFor(streak: number): LanternLevel {
   return LEVELS.find((l) => streak >= l.from)!.level;
 }
 
-export type DayStatus = 'lit' | 'shield' | 'missed' | 'pending';
+/** 'repaired': a missed day relit by reaching double the goal the next day. */
+export type DayStatus = 'lit' | 'shield' | 'repaired' | 'missed' | 'pending';
 
 export type StreakState = {
   current: number;
@@ -48,6 +49,8 @@ export type StreakState = {
   /** Days where a shield was used automatically. */
   shieldDays: string[];
   level: LanternLevel;
+  /** Days with all quests done (every 5 earns a shield). */
+  questDays: number;
 };
 
 export type GoalProgress = {
@@ -94,9 +97,36 @@ type PastState = {
   lastLitDate: string | null;
   status: Record<string, DayStatus>;
   shieldDays: string[];
+  quests: number;
 };
 
 let pastCache: { today: string; state: PastState } | null = null;
+
+// ---- streak repair: relight a missed day by reaching 2× the goal the next day ----
+const REPAIRED_KEY = 'streak.repaired';
+/** Smallest streak worth offering a repair for. */
+export const REPAIR_MIN_STREAK = 3;
+export const REPAIR_MULTIPLIER = 2;
+
+export const repairedDays = () => new Set(readJSON<string[]>(REPAIRED_KEY, []));
+export function markRepaired(day: string) {
+  const set = repairedDays();
+  set.add(day);
+  writeJSON(REPAIRED_KEY, [...set]);
+  invalidateStreakCache();
+}
+
+// ---- daily quests: every 5 days with all quests done earns a shield ----
+const QUEST_DAYS_KEY = 'quests.doneDays';
+export const QUEST_DAYS_PER_SHIELD = 5;
+export const questDays = () => new Set(readJSON<string[]>(QUEST_DAYS_KEY, []));
+export function markQuestDay(day: string) {
+  const set = questDays();
+  if (set.has(day)) return;
+  set.add(day);
+  writeJSON(QUEST_DAYS_KEY, [...set]);
+  invalidateStreakCache();
+}
 
 export function invalidateStreakCache() {
   pastCache = null;
@@ -111,11 +141,18 @@ function walkPast(today: string): PastState {
   let shields = 0;
   let run = 0; // lit days in a row toward the next shield
   let lastLitDate: string | null = null;
+  let quests = 0; // quest-complete days so far
   const status: Record<string, DayStatus> = {};
   const shieldDays: string[] = [];
+  const repaired = repairedDays();
+  const questDone = questDays();
 
   if (keys.length > 0) {
     for (let key = keys[0]; key < today; key = nextDayKey(key)) {
+      if (questDone.has(key)) {
+        quests++;
+        if (quests % QUEST_DAYS_PER_SHIELD === 0) shields = Math.min(MAX_SHIELDS, shields + 1);
+      }
       if (isLit(getDay(key))) {
         current++;
         best = Math.max(best, current);
@@ -126,6 +163,9 @@ function walkPast(today: string): PastState {
           shields = Math.min(MAX_SHIELDS, shields + 1);
           run = 0;
         }
+      } else if (current > 0 && repaired.has(key)) {
+        status[key] = 'repaired';
+        run = 0;
       } else if (current > 0 && shields > 0) {
         shields--;
         status[key] = 'shield';
@@ -139,7 +179,7 @@ function walkPast(today: string): PastState {
     }
   }
 
-  const state = { current, best, shields, lastLitDate, status, shieldDays, run };
+  const state = { current, best, shields, lastLitDate, status, shieldDays, run, quests };
   pastCache = { today, state };
   return state;
 }
@@ -150,6 +190,9 @@ export function computeStreak(today: string): StreakState {
   const current = past.current + (todayLit ? 1 : 0);
   let shields = past.shields;
   if (todayLit && past.run + 1 === PERFECT_WEEK) shields = Math.min(MAX_SHIELDS, shields + 1);
+  const questsToday = questDays().has(today);
+  const questCount = past.quests + (questsToday ? 1 : 0);
+  if (questsToday && questCount % QUEST_DAYS_PER_SHIELD === 0) shields = Math.min(MAX_SHIELDS, shields + 1);
 
   const storedBest = storage.getNumber(BEST_KEY) ?? 0;
   const best = Math.max(storedBest, past.best, current);
@@ -165,7 +208,27 @@ export function computeStreak(today: string): StreakState {
     status: { ...past.status, [today]: todayLit ? 'lit' : 'pending' },
     shieldDays: past.shieldDays,
     level: levelFor(current),
+    questDays: questCount,
   };
+}
+
+export type RepairOffer = { day: string; streak: number };
+
+/**
+ * Yesterday was missed and broke a streak of 3+ days (no shield left):
+ * reaching 2× today's goal relights it. Null when there is nothing to repair.
+ */
+export function repairOffer(today: string): RepairOffer | null {
+  const past = walkPast(today);
+  const day = addDays(today, -1);
+  if (past.status[day] !== 'missed') return null;
+  let streak = 0;
+  for (let k = addDays(day, -1); ; k = addDays(k, -1)) {
+    const st = past.status[k];
+    if (st === 'lit') streak++;
+    else if (st !== 'shield' && st !== 'repaired') break;
+  }
+  return streak >= REPAIR_MIN_STREAK ? { day, streak } : null;
 }
 
 /** The 7 Salli days ending today, oldest first. */

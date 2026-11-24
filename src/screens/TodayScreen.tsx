@@ -14,7 +14,11 @@ import {
   NumberPadSheet,
   PlasterPattern,
   PrimaryButton,
+  MaghribCountdown,
+  QuestsCard,
+  RepairCard,
   ShieldNotice,
+  TasbihBeads,
   StreakTakeover,
   TodayLog,
   ZelligeBand,
@@ -24,7 +28,11 @@ import {
 import { MilestoneUnlock, NextMilestoneStrip } from '@/components/milestones';
 import { useTabs } from '@/components/tabs';
 import type { Milestone } from '@/content/milestones';
+import { ROUND } from '@/components/TasbihBeads';
 import { addKind, feedback } from '@/lib/feedback';
+import { showToast } from '@/lib/toast';
+import { onQuestEvent } from '@/store/quests';
+import { QUEST_DAYS_PER_SHIELD } from '@/store/streaks';
 import { hijriDateArabic } from '@/lib/hijri';
 import {
   addSalawat,
@@ -32,6 +40,7 @@ import {
   getToday,
   markTakeoverShown,
   onGoalLit,
+  onStreakRepaired,
   onMilestone,
   takeoverShown,
   useToday,
@@ -112,15 +121,37 @@ export default function TodayScreen() {
     const offMilestone = onMilestone((m, source) => {
       if (source === 'reminder') scheduleMilestone(m, 1100);
     });
+    // Quests: a toast for each, a bigger one when all three are done.
+    const offQuest = onQuestEvent(({ quest, allDone, questDays }) => {
+      feedback.quest(allDone);
+      if (allDone) {
+        const left = QUEST_DAYS_PER_SHIELD - (questDays % QUEST_DAYS_PER_SHIELD);
+        showToast({
+          tone: 'big',
+          title: 'All of today’s quests done!',
+          sub: questDays % QUEST_DAYS_PER_SHIELD === 0 ? 'You earned a streak shield' : `${left} more quest ${left === 1 ? 'day' : 'days'} to a streak shield`,
+        });
+      } else {
+        showToast({ tone: 'quest', title: 'Quest complete', sub: quest.title });
+      }
+    });
+    // A repair made from another tab (e.g. Send 10) still celebrates.
+    const offRepair = onStreakRepaired(({ streak: kept }) => {
+      showToast({ tone: 'big', title: 'Streak repaired!', sub: `Your ${kept}-day streak is lit again` });
+    });
     return () => {
       offLit();
       offMilestone();
+      offQuest();
+      offRepair();
     };
   }, []);
 
   /** Save instantly, then play motion, haptic and sound together. */
   const add = (amount: number, source: 'tap' | 'quick' | 'pad') => {
+    const repairing = getToday().repair; // a repair offer before this add
     const { litNow, milestone } = addSalawat(amount, source);
+    const repairedNow = !!repairing && !getToday().repair;
     const kind = addKind(amount, source);
     const delay = source === 'pad' ? PAD_CLOSE_DELAY : 0;
     setEvent({ id: nextEventId++, amount, kind, delay });
@@ -130,9 +161,20 @@ export default function TodayScreen() {
     // Goal met for the first time today: play the streak takeover once.
     const date = getToday().date;
     const after = delay + LAND_MS[kind] + TAKEOVER_AFTER_LAND;
-    if (litNow && !takeoverShown(date)) {
-      markTakeoverShown(date);
-      scheduleTakeover(after);
+    // While a repair is on offer, wait for it: the takeover then shows the saved streak.
+    if ((litNow && !repairing) || repairedNow) {
+      if (!takeoverShown(date)) {
+        markTakeoverShown(date);
+        scheduleTakeover(after);
+      }
+    }
+    // Tasbih: every 33 taps on the arch completes a round; 99 completes the tasbih.
+    if (source === 'tap') {
+      const taps = getToday().taps;
+      if (taps % ROUND === 0) {
+        feedback.round(taps % (ROUND * 3) === 0);
+        if (taps % (ROUND * 3) === 0) showToast({ tone: 'quest', title: 'Tasbih complete', sub: `${taps} taps on the arch today · سبحان الله` });
+      }
     }
     // Reached a lifetime milestone: reveal the new part of the masjid.
     if (milestone) scheduleMilestone(milestone, after);
@@ -159,10 +201,12 @@ export default function TodayScreen() {
             <Lantern size={20} lit={today.lit} level={streak.level} glow={false} />
             <Text style={[styles.streakPillText, today.lit && styles.streakPillTextLit]}>{streak.current}</Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Reminders" style={styles.bell}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Reminder settings" style={styles.bell} onPress={() => tabs.goTo(4)}>
             <BellIcon />
           </Pressable>
         </View>
+
+        {today.repair && <RepairCard repair={today.repair} total={today.total} />}
 
         {today.shieldNotice && (
           <ShieldNotice
@@ -203,8 +247,9 @@ export default function TodayScreen() {
               )}
             </View>
           </View>
-          <Text style={styles.tapHint}>Tap the arch to count</Text>
+          <TasbihBeads taps={today.taps} />
           <Text style={styles.salawat}>اللهم صل وسلم على نبينا محمد</Text>
+          <MaghribCountdown endsAt={today.endsAt} lit={today.lit} />
           <ZelligeBand height={22} />
         </View>
 
@@ -230,6 +275,8 @@ export default function TodayScreen() {
             <Text style={styles.cardMeta}>Ends Friday at Maghrib</Text>
           </Card>
         </Pressable>
+
+        <QuestsCard quests={today.quests} questDays={streak.questDays} />
 
         <NextMilestoneStrip progress={journey} onPress={() => tabs.goTo(4)} />
 

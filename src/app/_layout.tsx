@@ -14,11 +14,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 
 import { ThemeVeil } from '@/components/ThemeVeil';
+import { ToastHost } from '@/components/ToastHost';
+import { startReminders } from '@/lib/notifications';
 import { useActiveThemeId } from '@/store/rewards';
 import { startSync } from '@/store/sync';
 import { PALETTES, setActiveTheme } from '@/theme';
 
 startSync();
+startReminders();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -58,8 +61,10 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: palette.plaster },
         }}>
         <Stack.Screen name="sign-in" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="city" options={{ presentation: 'modal' }} />
       </Stack>
       </View>
+      <ToastHost />
       <ThemeVeil />
     </GestureHandlerRootView>
   );

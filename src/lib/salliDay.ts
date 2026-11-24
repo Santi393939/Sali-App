@@ -25,24 +25,36 @@ export function setLocation(loc: SavedLocation | null): void {
   writeJSON(LOCATION_KEY, loc);
 }
 
+export const FALLBACK_ASR = { hour: 15, minute: 30 };
+
+function prayerTimesOn(date: Date): PrayerTimes | null {
+  const loc = getLocation();
+  if (!loc) return null;
+  try {
+    const noon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
+    return new PrayerTimes(new Coordinates(loc.latitude, loc.longitude), noon, CalculationMethod.MuslimWorldLeague());
+  } catch {
+    return null;
+  }
+}
+
+const valid = (d: unknown): d is Date => d instanceof Date && !Number.isNaN(d.getTime());
+
 /** Maghrib for a civil date: from prayer times when a city is saved, else 18:00. */
 export function maghribOn(date: Date): Date {
-  const loc = getLocation();
-  if (loc) {
-    try {
-      const noon = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12);
-      const times = new PrayerTimes(
-        new Coordinates(loc.latitude, loc.longitude),
-        noon,
-        CalculationMethod.MuslimWorldLeague(),
-      );
-      if (times.maghrib instanceof Date && !Number.isNaN(times.maghrib.getTime())) return times.maghrib;
-    } catch {
-      // fall through to the fixed time
-    }
-  }
+  const t = prayerTimesOn(date);
+  if (t && valid(t.maghrib)) return t.maghrib;
   const d = new Date(date);
   d.setHours(FALLBACK_MAGHRIB_HOUR, 0, 0, 0);
+  return d;
+}
+
+/** Asr for a civil date: from prayer times when a city is saved, else 15:30. */
+export function asrOn(date: Date): Date {
+  const t = prayerTimesOn(date);
+  if (t && valid(t.asr)) return t.asr;
+  const d = new Date(date);
+  d.setHours(FALLBACK_ASR.hour, FALLBACK_ASR.minute, 0, 0);
   return d;
 }
 

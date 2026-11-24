@@ -13,6 +13,7 @@ import { applyMilestoneRewards, useRewards } from '@/store/rewards';
 import { useTabs } from '@/components/tabs';
 import { feedback } from '@/lib/feedback';
 import { signOut, useAuth } from '@/store/auth';
+import { getLocation } from '@/lib/salliDay';
 import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
 import type { MilestoneState } from '@/store/milestones';
@@ -128,12 +129,33 @@ export default function MeScreen() {
             />
           </View>
 
+          <Pressable style={styles.row} accessibilityRole="button" onPress={() => router.push('/city')}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>City</Text>
+              <Text style={styles.rowHint}>Sets Maghrib (when your day turns) and reminder times</Text>
+            </View>
+            <Text style={styles.rowCity}>{getLocation()?.city ?? 'Not set'}</Text>
+            <Chevron />
+          </Pressable>
+
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
               <Text style={styles.rowLabel}>After-Asr reminder</Text>
               <Text style={styles.rowHint}>A gentle nudge if your lantern is waiting</Text>
             </View>
             <Toggle label="After-Asr reminder" value={settings.asrReminder} onChange={(asrReminder) => updateSettings({ asrReminder })} />
+          </View>
+
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Before-Maghrib reminder</Text>
+              <Text style={styles.rowHint}>An hour before the day turns, if your lantern is waiting</Text>
+            </View>
+            <Toggle
+              label="Before-Maghrib reminder"
+              value={settings.preMaghribReminder}
+              onChange={(preMaghribReminder) => updateSettings({ preMaghribReminder })}
+            />
           </View>
 
           <View style={styles.row}>
@@ -316,6 +338,7 @@ const styles = themedStyles(() =>
   rowLast: { paddingBottom: spacing.lg },
   rowLabel: { fontFamily: fonts.uiMedium, fontSize: 15, color: colors.ink },
   rowHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginTop: 2 },
+  rowCity: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.terracotta },
   rowValue: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 22, color: colors.terracotta },
 
   telegram: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

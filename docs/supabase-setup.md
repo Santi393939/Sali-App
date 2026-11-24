@@ -34,3 +34,9 @@ The app works fully offline without it; signing in adds sync and groups.
 The migration was tested on Postgres 16 with a stand-in `auth` schema:
 streaks with shields, no double counting by `client_id`, and privacy between
 group members (counts hidden unless sharing is on; entries never visible).
+
+## To add in the accounts step
+
+Streak repairs (`streak.repaired`) and quest days (`quests.doneDays`, every 5 earns
+a shield) are worked out on the phone. The server's `recompute_streak` doesn't know
+them yet; add two small tables and teach it the same rules so the bot and groups agree.

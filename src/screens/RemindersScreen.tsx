@@ -38,6 +38,7 @@ import { useTabs } from '@/components/tabs';
 import { KIND_LABEL, REMINDERS, type Reminder } from '@/content/reminders';
 import { feedback } from '@/lib/feedback';
 import { addSalawat } from '@/store/counts';
+import { recordReminderLike, recordReminderView } from '@/store/quests';
 import { toggleAction, useReminderActions } from '@/store/reminderActions';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
@@ -62,6 +63,7 @@ export default function RemindersScreen() {
         activeRef.current = i;
         setActive(i);
         feedback.selection();
+        recordReminderView(REMINDERS[i].id);
       }
     },
     [height],
@@ -283,6 +285,7 @@ function LikeButton({ id, liked, count }: { id: string; liked: boolean; count: n
       onPress={() => {
         const now = toggleAction(id, 'liked');
         feedback.medium();
+        if (now) recordReminderLike();
         if (now) {
           pop.set(withSequence(withTiming(1.35, { duration: 110 }), withSpring(1, { damping: 8, stiffness: 320 })));
         }

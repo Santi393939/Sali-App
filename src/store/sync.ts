@@ -23,7 +23,7 @@ import { getSession, onSessionChange } from './auth';
 import { notifyChange } from './counts';
 import { getDay, saveDay, savedDayKeys, type EntrySource } from './days';
 import { getAction, setActionChangeListener } from './reminderActions';
-import { getSettings, setSettingsChangeListener, updateSettings, type Settings } from './settings';
+import { addSettingsChangeListener, getSettings, updateSettings, type Settings } from './settings';
 import { readJSON, storage, writeJSON } from './storage';
 import { invalidateStreakCache } from './streaks';
 import { clearQueued, pendingEntries, queueEntry, setQueueListener } from './syncQueue';
@@ -272,7 +272,7 @@ export function startSync() {
   if (started || !supabase) return;
   started = true;
   setQueueListener(() => requestSync());
-  setSettingsChangeListener((fields) => {
+  addSettingsChangeListener((fields) => {
     const synced = fields.filter((f) => f === 'name' || f === 'dailyGoal' || f === 'shareCountWithGroup');
     // Names are typed a letter at a time: wait for a pause before uploading.
     if (synced.length) debounce(`settings:${synced.join()}`, () => void pushSettings(synced), synced.includes('name') ? 1200 : 0);

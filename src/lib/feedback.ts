@@ -117,6 +117,16 @@ export const feedback = {
     const timers = steps.map(([ms, fn]) => setTimeout(fn, ms));
     return () => timers.forEach(clearTimeout);
   },
+  /** A tasbih round of 33 taps completed. */
+  round(big = false) {
+    safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+    play(big ? 'chime' : 'clink');
+  },
+  /** A daily quest completed. */
+  quest(all = false) {
+    safe(() => (all ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)));
+    play(all ? 'success' : 'cluster');
+  },
   /** Crossing into a new tab mid-swipe. */
   selection() {
     safe(() => Haptics.selectionAsync());

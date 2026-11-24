@@ -12,9 +12,19 @@ import { getDay, isLit, saveDay, type Entry, type EntrySource } from './days';
 import { storage } from './storage';
 import { crossedMilestone, milestoneProgress, type MilestoneProgress } from './milestones';
 import { lifetimeTotals } from './stats';
+import { checkQuests, questsFor, setQuestChangeHandler, tapsOn, type Quest } from './quests';
 import { queueEntry } from './syncQueue';
 import type { Milestone } from '@/content/milestones';
-import { computeStreak, goalProgress, weekKeys, type GoalProgress, type StreakState } from './streaks';
+import {
+  computeStreak,
+  goalProgress,
+  markRepaired,
+  REPAIR_MULTIPLIER,
+  repairOffer,
+  weekKeys,
+  type GoalProgress,
+  type StreakState,
+} from './streaks';
 
 export { DEFAULT_DAILY_GOAL, type Entry, type EntrySource } from './days';
 
@@ -33,6 +43,17 @@ export function notifyChange() {
 export function subscribeCounts(l: () => void) {
   return subscribe(l);
 }
+setQuestChangeHandler(() => notifyChange());
+
+// ---- streak repaired (2× goal the day after a miss) ----
+const repairListeners = new Set<(r: { day: string; streak: number }) => void>();
+export function onStreakRepaired(fn: (r: { day: string; streak: number }) => void) {
+  repairListeners.add(fn);
+  return () => {
+    repairListeners.delete(fn);
+  };
+}
+
 function subscribe(l: () => void) {
   listeners.add(l);
   return () => listeners.delete(l);
@@ -82,6 +103,7 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
   if (!Number.isFinite(n) || n <= 0) return { total: day.total, litNow: false, milestone: null };
   const add = Math.min(n, MAX_SINGLE_ADD);
   const wasLit = isLit(day);
+  const offer = repairOffer(date);
 
   const iso = now.toISOString();
   const last = day.entries[day.entries.length - 1];
@@ -101,6 +123,13 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
   notifyChange();
   const litNow = !wasLit && isLit(day);
   if (litNow) litListeners.forEach((l) => l(source));
+  // Streak repair: reaching 2× the goal relights yesterday.
+  if (offer && day.total >= day.goal * REPAIR_MULTIPLIER) {
+    markRepaired(offer.day);
+    notifyChange();
+    repairListeners.forEach((l) => l(offer));
+  }
+  checkQuests(date);
   const after = lifetimeTotals(date).lifetime;
   const milestone = crossedMilestone(after - add, after);
   if (milestone) milestoneListeners.forEach((l) => l(milestone, source));
@@ -138,6 +167,11 @@ export type TodaySnapshot = {
   milestones: MilestoneProgress;
   /** Changes on every count; pass it to anything that reads saved days. */
   version: number;
+  quests: Quest[];
+  /** Taps on the arch today (for tasbih rounds). */
+  taps: number;
+  /** Yesterday can still be relit by reaching `target` today. */
+  repair: { day: string; streak: number; target: number } | null;
 };
 
 let cache: { version: number; date: string; snap: TodaySnapshot } | null = null;
@@ -167,7 +201,12 @@ function snapshot(): TodaySnapshot {
     yearTotal: 0,
     milestones: milestoneProgress(date),
     version,
+    quests: questsFor(date),
+    taps: tapsOn(day),
+    repair: null,
   };
+  const offer = repairOffer(date);
+  if (offer) snap.repair = { ...offer, target: day.goal * REPAIR_MULTIPLIER };
   const totals = lifetimeTotals(date);
   snap.lifetime = totals.lifetime;
   snap.yearTotal = totals.year;

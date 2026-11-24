@@ -264,7 +264,7 @@ function WeekRow({ week, stamp }: { week: TakeoverData['week']; stamp: SharedVal
                 </Animated.View>
               ) : d.status === 'lit' ? (
                 <Check color={colors.deepGreen} />
-              ) : d.status === 'shield' ? (
+              ) : d.status === 'shield' || d.status === 'repaired' ? (
                 <ShieldIcon size={14} color={colors.lightGold} />
               ) : null}
             </View>

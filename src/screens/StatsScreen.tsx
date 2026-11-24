@@ -182,7 +182,7 @@ function MonthHeatmap({ today, status }: { today: string; status: Record<string,
           if (!key) return <View key={`e${i}`} style={styles.calCell} />;
           const day = getDay(key);
           const lit = status[key] === 'lit';
-          const shield = status[key] === 'shield';
+          const shield = status[key] === 'shield' || status[key] === 'repaired';
           const future = key > today;
           const ratio = Math.min(1, day.total / day.goal);
           return (
