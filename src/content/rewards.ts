@@ -20,7 +20,7 @@ export const THEMES: Record<ThemeId, Theme> = {
   cedar: { name: 'Cedar', unlock: 1000, arch: '#7A4A2A', star: '#5E3820', band: { star: '#8C4A2F', centre: '#E9B860', diamond: '#1E5C46' } },
   fes: { name: 'Fes blue', unlock: 10000, arch: '#1D3E8A', star: '#152E66', band: { star: '#1E5C46', centre: '#E9B860', diamond: '#1D3E8A' } },
   turquoise: { name: 'Turquoise', unlock: 50000, arch: '#1F7A7A', star: '#165E5E', band: { star: '#2A9D9D', centre: '#FBF6EC', diamond: '#1D3E8A' } },
-  gilded: { name: 'Gilded', unlock: 100000, arch: '#174836', star: '#0F3326', band: { star: '#C98E2B', centre: '#1E5C46', diamond: '#1D3E8A' } },
+  gilded: { name: 'Marrakech', unlock: 100000, arch: '#A8382E', star: '#842A22', band: { star: '#1E6B6B', centre: '#F0C46A', diamond: '#A8382E' } },
   midnight: { name: 'Midnight', unlock: 250000, arch: '#1A2240', star: '#10162B', band: { star: '#2C3A73', centre: '#E9B860', diamond: '#C98E2B' } },
   garden: { name: 'Riad garden', unlock: 1000000, arch: '#2E6B4F', star: '#1F4D38', band: { star: '#B5576B', centre: '#E9B860', diamond: '#2E6B4F' } },
 };

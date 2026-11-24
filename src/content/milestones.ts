@@ -99,7 +99,7 @@ export const MILESTONES: Milestone[] = [
     arabic: 'الصومعة',
     icon: 'minaret',
     shape: 'star8',
-    palette: { face: '#174836', rim: '#E9B860', accent: '#E9B860', icon: '#FBF6EC', stage: '#0B2A1F', glow: '#FFE3A3' },
+    palette: { face: '#A8382E', rim: '#E9B860', accent: '#F0C46A', icon: '#FDF5F0', stage: '#3A1210', glow: '#FFD9A0' },
     effect: 'beam',
     title: 'Raiser of the Minaret',
     theme: 'gilded',

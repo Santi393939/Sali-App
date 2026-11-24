@@ -56,11 +56,11 @@ export const PALETTES: Record<ThemeId, Palette> = {
     plaster: '#E4F1EF', card: '#F6FBFA', cardBorder: '#C3DEDA', ink: '#0F2826', muted: '#4A6664', night: '#0A1E1F',
     onPrimary: '#F6FBFA', highlight: '#FBF0D9', primaryRing: '#4BA3A0', link: '#1F7A7A', statusBar: 'dark',
   },
-  // The Minaret — deep green dressed in gold leaf
+  // The Minaret — Marrakech red: the Koutoubia's red-ochre walls, turquoise and gold tiles
   gilded: {
-    zelligeGreen: '#174836', deepGreen: '#0F3326', saffron: '#B8862A', lightGold: '#E9C46A', cobalt: '#1D3E8A', terracotta: '#8C4A2F',
-    plaster: '#F3EAD3', card: '#FCF6E6', cardBorder: '#E6D19C', ink: '#1D190F', muted: '#5E5640', night: '#0B1A14',
-    onPrimary: '#FCF6E6', highlight: '#F7E6B5', primaryRing: '#C9A24A', link: '#174836', statusBar: 'dark',
+    zelligeGreen: '#A8382E', deepGreen: '#842A22', saffron: '#C98E2B', lightGold: '#F0C46A', cobalt: '#1E6B6B', terracotta: '#9A4A1E',
+    plaster: '#F6E6DC', card: '#FDF5F0', cardBorder: '#EBCFC2', ink: '#2A1512', muted: '#6E4F47', night: '#1E0B09',
+    onPrimary: '#FDF5F0', highlight: '#FBE2C8', primaryRing: '#CF6A5C', link: '#A8382E', statusBar: 'dark',
   },
   // The Dome — a full night theme in midnight and gold
   midnight: {
