@@ -619,4 +619,10 @@ export const AR: Record<string, string> = {
   "Family": "العائلة",
   "Friends": "الأصدقاء",
   "Goal reached ✓": "تحقق الهدف ✓",
+  "‹ Me": "‹ أنا",
+  "Rewards & themes": "المكافآت والسِّمات",
+  "Badge sets, themes, lantern glass, sounds and lamps": "مجموعات الشارات والسِّمات وزجاج الفانوس والأصوات والقناديل",
+  "Goal, reminders, language, appearance, privacy": "الهدف والتذكيرات واللغة والمظهر والخصوصية",
+  "Sync across phones and join groups": "زامن بين الهواتف وانضم إلى المجموعات",
+  "Saved on this phone for now": "محفوظة على هذا الهاتف حاليًا",
 };

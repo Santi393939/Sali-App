@@ -628,4 +628,10 @@ export const FR: Record<string, string> = {
   "Family": "Famille",
   "Friends": "Amis",
   "Goal reached ✓": "Objectif atteint ✓",
+  "‹ Me": "‹ Moi",
+  "Rewards & themes": "Récompenses et thèmes",
+  "Badge sets, themes, lantern glass, sounds and lamps": "Ensembles de badges, thèmes, verre de lanterne, sons et lampes",
+  "Goal, reminders, language, appearance, privacy": "Objectif, rappels, langue, apparence, confidentialité",
+  "Sync across phones and join groups": "Synchronisez vos téléphones et rejoignez des groupes",
+  "Saved on this phone for now": "Enregistré sur ce téléphone pour l’instant",
 };

@@ -79,6 +79,8 @@ export default function RootLayout() {
         <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
         <Stack.Screen name="tasbih" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="recap" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="rewards" />
+        <Stack.Screen name="settings" />
       </Stack>
       </View>
       <ToastHost />
