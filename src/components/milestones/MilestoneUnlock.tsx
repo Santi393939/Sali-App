@@ -31,8 +31,9 @@ import Svg, { Circle, Defs, Ellipse, Path, RadialGradient, Rect, Stop } from 're
 import { MILESTONES, type Milestone } from '@/content/milestones';
 import { SOUNDS, THEMES } from '@/content/rewards';
 import { feedback } from '@/lib/feedback';
+import { switchTheme } from '@/lib/themeSwitch';
 import { applyMilestoneRewards } from '@/store/rewards';
-import { fonts, radius, spacing, themedStyles } from '@/theme';
+import { fonts, PALETTES, radius, spacing, themedStyles } from '@/theme';
 
 import { eightPointStarPath, horseshoeArchPath, tilePath } from '../geometry';
 import { Sparks, type Burst } from '../motion';
@@ -100,9 +101,10 @@ function Scene({ milestone: m, onClose }: { milestone: Milestone; onClose: () =>
   const theme = THEMES[m.theme];
   const wear = () => {
     feedback.add('large');
-    applyMilestoneRewards(m);
     setWorn(true);
-    setTimeout(onClose, 550);
+    // Close first so the theme wash plays over the app, not behind this screen.
+    onClose();
+    setTimeout(() => switchTheme(() => applyMilestoneRewards(m), m.theme, PALETTES[m.theme].plaster, m), 60);
   };
 
   return (

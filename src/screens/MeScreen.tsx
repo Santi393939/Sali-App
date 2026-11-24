@@ -8,7 +8,8 @@ import Svg, { Path } from 'react-native-svg';
 import { Card, EightPointStar, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
 import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
 import type { Milestone } from '@/content/milestones';
-import { useRewards } from '@/store/rewards';
+import { switchTheme } from '@/lib/themeSwitch';
+import { applyMilestoneRewards, useRewards } from '@/store/rewards';
 import { useTabs } from '@/components/tabs';
 import { feedback } from '@/lib/feedback';
 import { signOut, useAuth } from '@/store/auth';
@@ -16,7 +17,7 @@ import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
 import type { MilestoneState } from '@/store/milestones';
 import { useSyncStatus } from '@/store/sync';
-import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { colors, fonts, PALETTES, radius, spacing, themedStyles } from '@/theme';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -187,6 +188,11 @@ export default function MeScreen() {
         onCountNow={() => {
           setOpenMilestone(null);
           tabs.goTo(0);
+        }}
+        onWear={(m) => {
+          setOpenMilestone(null);
+          feedback.add('large');
+          setTimeout(() => switchTheme(() => applyMilestoneRewards(m), m.theme, PALETTES[m.theme].plaster, m), 220);
         }}
         onReplay={(m) => {
           setOpenMilestone(null);

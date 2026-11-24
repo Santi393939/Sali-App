@@ -50,3 +50,8 @@ export function useActiveThemeId(): ThemeId {
 export function applyMilestoneRewards(m: Milestone) {
   updateSettings({ theme: m.theme, tapSound: m.sound, featuredBadge: m.amount });
 }
+
+/** Back to the default look. */
+export function resetRewards() {
+  updateSettings({ theme: 'zellige', tapSound: 'tick', featuredBadge: null });
+}

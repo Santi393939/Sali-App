@@ -20,11 +20,13 @@ type Props = {
   onCountNow: () => void;
   /** Replay an earned milestone's unlock moment. */
   onReplay?: (m: MilestoneState) => void;
+  /** Wear an earned milestone's theme, sound and title. */
+  onWear?: (m: MilestoneState) => void;
 };
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
-export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow, onReplay }: Props) {
+export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow, onReplay, onWear }: Props) {
   const insets = useSafeAreaInsets();
   const reduce = useReducedMotion();
   const [shown, setShown] = useState<MilestoneState | null>(milestone);
@@ -106,8 +108,15 @@ export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow
                 <Text style={[styles.titleText, { color: m.palette.face }]}>{m.title}</Text>
               </View>
             )}
-            {m.earned && onReplay ? (
-              <PrimaryButton label="Replay the moment" onPress={() => onReplay(m)} />
+            {m.earned && onWear ? (
+              <View style={{ gap: spacing.xs }}>
+                <PrimaryButton label="Wear this set" onPress={() => onWear(m)} />
+                {onReplay && (
+                  <Pressable onPress={() => onReplay(m)} accessibilityRole="button" style={styles.replay}>
+                    <Text style={styles.replayText}>Replay the moment</Text>
+                  </Pressable>
+                )}
+              </View>
             ) : (
               <PrimaryButton label={m.earned ? 'Close' : 'Count now'} onPress={m.earned ? onClose : onCountNow} />
             )}
@@ -146,6 +155,8 @@ const styles = themedStyles(() =>
   track: { height: 10, borderRadius: 5, backgroundColor: colors.card, overflow: 'hidden', borderWidth: 1, borderColor: colors.cardBorder },
   fill: { height: '100%', borderRadius: 5, backgroundColor: colors.saffron },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
+  replay: { height: 44, alignItems: 'center', justifyContent: 'center' },
+  replayText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.link },
   titleBox: { alignItems: 'center', marginTop: -spacing.sm },
   titleText: { fontFamily: fonts.display, fontSize: 22 },
   small: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center' },

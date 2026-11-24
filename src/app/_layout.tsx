@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { View } from 'react-native';
 
+import { ThemeVeil } from '@/components/ThemeVeil';
 import { useActiveThemeId } from '@/store/rewards';
 import { startSync } from '@/store/sync';
 import { PALETTES, setActiveTheme } from '@/theme';
@@ -59,6 +60,7 @@ export default function RootLayout() {
         <Stack.Screen name="sign-in" options={{ presentation: 'modal' }} />
       </Stack>
       </View>
+      <ThemeVeil />
     </GestureHandlerRootView>
   );
 }

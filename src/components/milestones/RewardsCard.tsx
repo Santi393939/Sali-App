@@ -9,12 +9,13 @@ import Svg, { Path } from 'react-native-svg';
 import { MILESTONES, type Milestone } from '@/content/milestones';
 import { SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 import { feedback } from '@/lib/feedback';
-import { applyMilestoneRewards, type ActiveRewards } from '@/store/rewards';
+import { switchTheme } from '@/lib/themeSwitch';
+import { applyMilestoneRewards, resetRewards, type ActiveRewards } from '@/store/rewards';
 import { updateSettings } from '@/store/settings';
-import { colors, fonts, spacing, themedStyles } from '@/theme';
+import { colors, fonts, PALETTES, spacing, themedStyles } from '@/theme';
 
 import { Card } from '../Card';
-import { horseshoeArchPath } from '../geometry';
+import { eightPointStarPath, horseshoeArchPath } from '../geometry';
 import { ZelligeBand } from '../ZelligeBand';
 import { Medallion } from './Medallion';
 
@@ -38,6 +39,10 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
     feedback.selection();
     onLocked(amount);
   };
+  const wear = (m: Milestone) => {
+    feedback.add('large');
+    switchTheme(() => applyMilestoneRewards(m), m.theme, PALETTES[m.theme].plaster, m);
+  };
   const wearingLatest =
     latest && active.theme === latest.theme && active.sound === latest.sound && active.featured?.amount === latest.amount;
 
@@ -50,10 +55,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
 
       {latest && !wearingLatest && (
         <Pressable
-          onPress={() => {
-            feedback.add('large');
-            applyMilestoneRewards(latest);
-          }}
+          onPress={() => wear(latest)}
           accessibilityRole="button"
           style={({ pressed }) => [styles.wearAll, { backgroundColor: latest.palette.face }, pressed && { opacity: 0.9 }]}>
           <Medallion size={40} milestone={latest} earned />
@@ -66,20 +68,32 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
         </Pressable>
       )}
 
-      {/* Title & badge */}
-      <Section label="Title & badge" hint={active.featured ? active.featured.title : 'Shown beside your name'}>
+      {/* Badge sets: tap a badge to wear its theme, sound and title */}
+      <Section label="Badge sets" hint={active.featured ? active.featured.title : 'Tap a badge to wear its set'}>
         <View style={styles.badgeRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Default Zellige look${!active.featured && active.theme === 'zellige' ? ', in use' : ''}`}
+            onPress={() => {
+              feedback.medium();
+              switchTheme(resetRewards, 'zellige', PALETTES.zellige.plaster);
+            }}
+            style={[styles.badgeSlot, !active.featured && active.theme === 'zellige' && { borderColor: colors.saffron, backgroundColor: colors.highlight }]}>
+            <Svg width={38} height={38}>
+              <Path d={eightPointStarPath(19, 19, 17)} fill={PALETTES.zellige.zelligeGreen} stroke={PALETTES.zellige.saffron} strokeWidth={1.5} />
+            </Svg>
+          </Pressable>
           {MILESTONES.map((m) => {
             const has = lifetime >= m.amount;
-            const selected = active.featured?.amount === m.amount;
+            const selected = active.featured?.amount === m.amount && active.theme === m.theme;
             return (
               <Pressable
                 key={m.amount}
                 accessibilityRole="button"
-                accessibilityLabel={`${m.title}${selected ? ', in use' : ''}${has ? '' : ', locked'}`}
-                onPress={() => (has ? choose({ featuredBadge: selected ? null : m.amount }) : locked(m.amount))}
+                accessibilityLabel={`${m.name} set${selected ? ', in use' : ''}${has ? '' : ', locked'}`}
+                onPress={() => (has ? wear(m) : locked(m.amount))}
                 style={[styles.badgeSlot, selected && { borderColor: m.palette.rim, backgroundColor: colors.highlight }]}>
-                <Medallion size={42} milestone={m} earned={has} />
+                <Medallion size={38} milestone={m} earned={has} />
               </Pressable>
             );
           })}
@@ -98,7 +112,11 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
                 label={t.name}
                 selected={active.theme === k}
                 lockedFor={open ? null : t.unlock}
-                onPress={() => (open ? choose({ theme: k }) : locked(t.unlock))}>
+                onPress={() => {
+                  if (!open) return locked(t.unlock);
+                  feedback.medium();
+                  switchTheme(() => updateSettings({ theme: k }), k, PALETTES[k].plaster);
+                }}>
                 <View style={styles.themePreview}>
                   <Svg width={30} height={36}>
                     <Path d={horseshoeArchPath(30, 36, 1)} fill={t.arch} stroke={colors.saffron} strokeWidth={1.2} />
@@ -229,7 +247,7 @@ const styles = themedStyles(() =>
   sectionLabel: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.ink },
   sectionHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, flexShrink: 1, textAlign: 'right' },
   badgeRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  badgeSlot: { padding: 3, borderRadius: 26, borderWidth: 2, borderColor: 'transparent' },
+  badgeSlot: { padding: 2, borderRadius: 24, borderWidth: 2, borderColor: 'transparent' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' },
   chip: {
     width: '31%',
