@@ -1,6 +1,6 @@
 /** Me: profile, milestone badges and settings. */
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -16,11 +16,18 @@ import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
 import type { MilestoneState } from '@/store/milestones';
 import { useSyncStatus } from '@/store/sync';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
+/** Your place on Me, kept when a theme change rebuilds the screens. */
+let meScrollY = 0;
+
 export default function MeScreen() {
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  useEffect(() => {
+    if (meScrollY > 0) scrollRef.current?.scrollTo({ y: meScrollY, animated: false });
+  }, []);
   const insets = useSafeAreaInsets();
   const today = useToday();
   const settings = useSettings();
@@ -37,6 +44,9 @@ export default function MeScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
+        ref={scrollRef}
+        onScroll={(e) => (meScrollY = e.nativeEvent.contentOffset.y)}
+        scrollEventThrottle={64}
         contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}
         keyboardShouldPersistTaps="handled">
         <ScreenHeader title="Me" arabic="حسابي" />
@@ -256,7 +266,7 @@ function timeAgo(iso: string) {
 
 function PersonGlyph() {
   return (
-    <Svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke={colors.card} strokeWidth={1.8} strokeLinecap="round">
+    <Svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke={colors.onPrimary} strokeWidth={1.8} strokeLinecap="round">
       <Path d="M12 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM5.5 20c1-3.2 3.4-5 6.5-5s5.5 1.8 6.5 5" />
     </Svg>
   );
@@ -270,14 +280,15 @@ function Chevron() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   content: { paddingHorizontal: spacing.lg, paddingBottom: 32, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
   center: { alignItems: 'center', justifyContent: 'center' },
   profile: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   avatar: { width: 84, height: 84 },
   featured: { position: 'absolute', right: -8, bottom: -6 },
   featuredName: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.saffron, marginTop: 4 },
-  initial: { fontFamily: fonts.display, fontSize: 34, color: colors.card },
+  initial: { fontFamily: fonts.display, fontSize: 34, color: colors.onPrimary },
   name: { fontFamily: fonts.display, fontSize: 28, color: colors.ink, padding: 0, minHeight: 36, outlineStyle: 'none' } as object,
   yearTotal: { fontFamily: fonts.uiMedium, fontSize: 14, color: colors.ink },
   lifetime: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginTop: 2 },
@@ -318,4 +329,5 @@ const styles = StyleSheet.create({
   },
   soon: { borderRadius: radius.pill, borderWidth: 1, borderColor: colors.cardBorder, paddingHorizontal: 10, paddingVertical: 4 },
   soonText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.muted },
-});
+}),
+);

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, fonts } from '@/theme';
+import { colors, fonts, hexA, themedStyles } from '@/theme';
 
 export type TabSpec = {
   key: string;
@@ -40,12 +40,17 @@ export function TabBar({ tabs, position, landing, bounce, onPress }: Props) {
   const inner = Math.min(width, 560) - BAR_PAD * 2;
   const tabW = inner / tabs.length;
   const darkTabs = tabs.flatMap((t, i) => (t.dark ? [i] : []));
+  // Plain strings for the worklets (the theme palette can't cross to the UI thread).
+  const cCard = colors.card;
+  const cNight = colors.night;
+  const cBorder = colors.cardBorder;
+  const cPill = hexA(colors.zelligeGreen, 0.12);
 
   const barStyle = useAnimatedStyle(() => {
     const k = darknessAt(position.value, darkTabs);
     return {
-      backgroundColor: interpolateColor(k, [0, 1], [colors.card, colors.night]),
-      borderTopColor: interpolateColor(k, [0, 1], [colors.cardBorder, '#2C251D']),
+      backgroundColor: interpolateColor(k, [0, 1], [cCard, cNight]),
+      borderTopColor: interpolateColor(k, [0, 1], [cBorder, '#2C251D']),
     };
   });
 
@@ -62,7 +67,7 @@ export function TabBar({ tabs, position, landing, bounce, onPress }: Props) {
     return {
       width: right - left - PILL_INSET * 2,
       transform: [{ translateX: left + PILL_INSET }],
-      backgroundColor: interpolateColor(k, [0, 1], ['rgba(30,92,70,0.10)', 'rgba(233,184,96,0.14)']),
+      backgroundColor: interpolateColor(k, [0, 1], [cPill, 'rgba(233,184,96,0.14)']),
     };
   });
 
@@ -114,10 +119,13 @@ function TabButton({
     const a = Math.max(0, 1 - Math.abs(position.value - i));
     return { opacity: a * darknessAt(position.value, darkTabs) };
   });
+  const cMuted = colors.muted;
+  const cPrimary = colors.link;
+  const cGold = colors.lightGold;
   const labelStyle = useAnimatedStyle(() => {
     const k = darknessAt(position.value, darkTabs);
-    const inactive = interpolateColor(k, [0, 1], [colors.muted, DARK_INACTIVE]);
-    const active = interpolateColor(k, [0, 1], [colors.zelligeGreen, colors.lightGold]);
+    const inactive = interpolateColor(k, [0, 1], [cMuted, DARK_INACTIVE]);
+    const active = interpolateColor(k, [0, 1], [cPrimary, cGold]);
     return { color: interpolateColor(Math.min(1, Math.abs(position.value - i)), [0, 1], [active, inactive]) };
   });
   const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: landing.value === i ? bounce.value : 1 }] }));
@@ -130,7 +138,7 @@ function TabButton({
           <Icon color={DARK_INACTIVE} />
         </Animated.View>
         <Animated.View style={[StyleSheet.absoluteFill, lightActive]}>
-          <Icon color={colors.zelligeGreen} />
+          <Icon color={colors.link} />
         </Animated.View>
         <Animated.View style={[StyleSheet.absoluteFill, darkActive]}>
           <Icon color={colors.lightGold} />
@@ -143,7 +151,8 @@ function TabButton({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   bar: {
     borderTopWidth: 1,
     paddingTop: 6,
@@ -161,4 +170,5 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 7, gap: 2, minHeight: 52 },
   label: { fontFamily: fonts.uiSemi, fontSize: 11, color: colors.muted, textAlign: 'center' },
-});
+}),
+);

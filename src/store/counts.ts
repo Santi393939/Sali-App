@@ -30,6 +30,9 @@ export function notifyChange() {
   version++;
   listeners.forEach((l) => l());
 }
+export function subscribeCounts(l: () => void) {
+  return subscribe(l);
+}
 function subscribe(l: () => void) {
   listeners.add(l);
   return () => listeners.delete(l);

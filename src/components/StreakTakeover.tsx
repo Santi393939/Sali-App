@@ -33,7 +33,7 @@ import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg'
 import { feedback } from '@/lib/feedback';
 import { keyToDate } from '@/lib/salliDay';
 import type { DayStatus, GoalProgress, LanternLevel } from '@/store/streaks';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { eightPointStarPath } from './geometry';
 import { Lantern } from './Lantern';
@@ -414,7 +414,8 @@ function Ember({ x, y, ember, ignite }: { x: number; y: number; ember: EmberSpec
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.deepGreen, overflow: 'hidden' },
   bloom: { position: 'absolute', width: 340, height: 340 },
   lanternRig: { position: 'absolute', width: LANTERN_W, alignItems: 'center' },
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 0,
   },
   numberOverlay: { position: 'absolute', left: 0, right: 0 },
-  caption: { fontFamily: fonts.display, fontSize: 30, color: colors.card, marginTop: -6 },
+  caption: { fontFamily: fonts.display, fontSize: 30, color: colors.onPrimary, marginTop: -6 },
   arabic: { fontFamily: fonts.arabic, fontSize: 20, lineHeight: 34, color: colors.lightGold, writingDirection: 'rtl' },
 
   week: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', maxWidth: 360 },
@@ -450,11 +451,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   weekDotLit: { backgroundColor: colors.lightGold, borderColor: colors.lightGold },
-  weekDotToday: { backgroundColor: colors.lightGold, borderColor: colors.card, borderWidth: 2 },
+  weekDotToday: { backgroundColor: colors.lightGold, borderColor: colors.onPrimary, borderWidth: 2 },
 
   goal: { width: '100%', maxWidth: 360, gap: 8 },
   goalHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  goalLabel: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.card },
+  goalLabel: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.onPrimary },
   goalToGo: { fontFamily: fonts.ui, fontSize: 13, color: 'rgba(251,246,236,0.75)' },
   segments: { flexDirection: 'row', gap: 4 },
   segment: { flex: 1, height: 10, borderRadius: 5, backgroundColor: 'rgba(251,246,236,0.16)', overflow: 'hidden' },
@@ -475,7 +476,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chunkyText: { fontFamily: fonts.uiSemi, fontSize: 17, color: colors.card },
+  chunkyText: { fontFamily: fonts.uiSemi, fontSize: 17, color: colors.onPrimary },
   shareBtn: {
     height: 52,
     borderRadius: radius.button,
@@ -485,4 +486,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   shareText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.lightGold },
-});
+}),
+);

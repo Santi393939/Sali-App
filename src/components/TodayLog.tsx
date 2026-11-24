@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import type { Entry, EntrySource } from '@/store/counts';
-import { colors, fonts, spacing } from '@/theme';
+import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from './Card';
 
@@ -58,7 +58,7 @@ export function TodayLog({ entries, limit = 8 }: Props) {
 }
 
 function SourceIcon({ source }: { source: EntrySource }) {
-  const stroke = colors.zelligeGreen;
+  const stroke = colors.link;
   return (
     <View style={styles.icon}>
       <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -87,7 +87,8 @@ function SourceIcon({ source }: { source: EntrySource }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: spacing.sm },
   title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink },
   count: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted },
@@ -107,4 +108,5 @@ const styles = StyleSheet.create({
   source: { fontFamily: fonts.uiMedium, fontSize: 15, color: colors.ink },
   time: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginTop: 1 },
   amount: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 22, color: colors.terracotta },
-});
+}),
+);

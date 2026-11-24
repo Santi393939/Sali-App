@@ -3,22 +3,116 @@
  * Every screen and component reads from here, so a change happens in one place.
  */
 
-export const colors = {
-  zelligeGreen: '#1E5C46', // primary buttons, hero arch, active tab
-  deepGreen: '#174836', // pressed states, lantern star fill
-  saffron: '#C98E2B', // borders, progress, accents, tab indicator
-  lightGold: '#E9B860', // progress ring, highlights on green
-  cobalt: '#1D3E8A', // zellige tiles, list bullets
-  terracotta: '#8C4A2F', // secondary numbers, Arabic captions, tassels
-  plaster: '#F3EADB', // page background
-  card: '#FBF6EC', // cards, sheets, tab bar
-  cardBorder: '#E4D5BA', // 1 px borders
-  ink: '#22201C', // main text
-  muted: '#5D574C', // secondary text
-  night: '#16130F', // reminders feed background, dark tab bar
-} as const;
+import type { ThemeId } from '@/content/milestones';
 
-export type ColorToken = keyof typeof colors;
+/**
+ * Colour roles. Every theme (one per milestone badge, plus the default
+ * Zellige) fills in all of them, so "Wear it now" re-colours the whole app.
+ * The role names come from the original Zellige palette:
+ *   zelligeGreen = primary · deepGreen = primary, pressed · saffron = accent
+ *   lightGold = light accent · cobalt = secondary · terracotta = tertiary
+ */
+export type Palette = {
+  zelligeGreen: string; // primary buttons, hero arch, active tab
+  deepGreen: string; // pressed states, star inside the ring
+  saffron: string; // borders, progress, accents, tab indicator
+  lightGold: string; // progress ring, highlights on primary
+  cobalt: string; // secondary accent (tiles, bullets)
+  terracotta: string; // secondary numbers, Arabic captions
+  plaster: string; // page background
+  card: string; // cards, sheets, tab bar
+  cardBorder: string; // 1 px borders
+  ink: string; // main text
+  muted: string; // secondary text
+  night: string; // reminders feed background, dark tab bar
+  onPrimary: string; // text and icons on primary or dark surfaces
+  highlight: string; // selected chips, lit streak pill
+  primaryRing: string; // inner ring of primary buttons
+  link: string; // primary-coloured text and icons on cards (gold in the night theme)
+  statusBar: 'dark' | 'light';
+};
+
+export const PALETTES: Record<ThemeId, Palette> = {
+  zellige: {
+    zelligeGreen: '#1E5C46', deepGreen: '#174836', saffron: '#C98E2B', lightGold: '#E9B860', cobalt: '#1D3E8A', terracotta: '#8C4A2F',
+    plaster: '#F3EADB', card: '#FBF6EC', cardBorder: '#E4D5BA', ink: '#22201C', muted: '#5D574C', night: '#16130F',
+    onPrimary: '#FBF6EC', highlight: '#FBEFD6', primaryRing: '#3F8466', link: '#1E5C46', statusBar: 'dark',
+  },
+  // The Doorway — warm cedar wood and sand
+  cedar: {
+    zelligeGreen: '#7A4A2A', deepGreen: '#5E3820', saffron: '#C98E2B', lightGold: '#E9B860', cobalt: '#1E5C46', terracotta: '#9A5530',
+    plaster: '#F1E4D3', card: '#FBF3E8', cardBorder: '#E0C9AE', ink: '#2A1E16', muted: '#6A5747', night: '#1C120B',
+    onPrimary: '#FBF3E8', highlight: '#F6E0BF', primaryRing: '#A06D47', link: '#7A4A2A', statusBar: 'dark',
+  },
+  // The Courtyard — Fes cobalt on cool porcelain
+  fes: {
+    zelligeGreen: '#1D3E8A', deepGreen: '#152E66', saffron: '#C98E2B', lightGold: '#E9B860', cobalt: '#1E5C46', terracotta: '#8C4A2F',
+    plaster: '#E8EDF5', card: '#F7F9FC', cardBorder: '#CFD8E8', ink: '#131B2D', muted: '#4D586E', night: '#0B1222',
+    onPrimary: '#F7F9FC', highlight: '#FBF0D9', primaryRing: '#4A68B0', link: '#1D3E8A', statusBar: 'dark',
+  },
+  // The Fountain — turquoise water and pale mint
+  turquoise: {
+    zelligeGreen: '#1F7A7A', deepGreen: '#165E5E', saffron: '#C98E2B', lightGold: '#E9B860', cobalt: '#1D3E8A', terracotta: '#8C4A2F',
+    plaster: '#E4F1EF', card: '#F6FBFA', cardBorder: '#C3DEDA', ink: '#0F2826', muted: '#4A6664', night: '#0A1E1F',
+    onPrimary: '#F6FBFA', highlight: '#FBF0D9', primaryRing: '#4BA3A0', link: '#1F7A7A', statusBar: 'dark',
+  },
+  // The Minaret — deep green dressed in gold leaf
+  gilded: {
+    zelligeGreen: '#174836', deepGreen: '#0F3326', saffron: '#B8862A', lightGold: '#E9C46A', cobalt: '#1D3E8A', terracotta: '#8C4A2F',
+    plaster: '#F3EAD3', card: '#FCF6E6', cardBorder: '#E6D19C', ink: '#1D190F', muted: '#5E5640', night: '#0B1A14',
+    onPrimary: '#FCF6E6', highlight: '#F7E6B5', primaryRing: '#C9A24A', link: '#174836', statusBar: 'dark',
+  },
+  // The Dome — a full night theme in midnight and gold
+  midnight: {
+    zelligeGreen: '#3B4C92', deepGreen: '#2C3A73', saffron: '#E0A93E', lightGold: '#F5D58A', cobalt: '#8FA8E8', terracotta: '#E3A27F',
+    plaster: '#0E1322', card: '#161D33', cardBorder: '#28324F', ink: '#EEE6D6', muted: '#9EA6BD', night: '#070A14',
+    onPrimary: '#F3EADB', highlight: '#2B2F48', primaryRing: '#6274BF', link: '#F5D58A', statusBar: 'light',
+  },
+  // The Riad — garden green with rose
+  garden: {
+    zelligeGreen: '#2E6B4F', deepGreen: '#1F4D38', saffron: '#C98E2B', lightGold: '#E9B860', cobalt: '#B5576B', terracotta: '#A4505E',
+    plaster: '#F4ECE7', card: '#FDF8F5', cardBorder: '#EAD6CF', ink: '#1F2A22', muted: '#5D6B60', night: '#13241B',
+    onPrimary: '#FDF8F5', highlight: '#F9E1E5', primaryRing: '#5E9A7C', link: '#2E6B4F', statusBar: 'dark',
+  },
+};
+
+let activeTheme: ThemeId = 'zellige';
+
+/** Set by the root layout before the app renders (and re-renders on change). */
+export function setActiveTheme(id: ThemeId) {
+  activeTheme = id;
+}
+export const getActiveTheme = () => activeTheme;
+
+/** The active palette. Read it at render time (not in module-level constants). */
+export const colors: Palette = new Proxy({} as Palette, {
+  get: (_t, key: string) => PALETTES[activeTheme][key as keyof Palette],
+});
+
+/**
+ * Styles that follow the active theme: `make` runs once per theme and is
+ * cached; `styles.foo` always returns the active theme's version.
+ */
+export function themedStyles<T extends object>(make: () => T): T {
+  const cache = new Map<ThemeId, T>();
+  const get = () => {
+    let s = cache.get(activeTheme);
+    if (!s) {
+      s = make();
+      cache.set(activeTheme, s);
+    }
+    return s;
+  };
+  return new Proxy({} as T, { get: (_t, key) => get()[key as keyof T] });
+}
+
+/** "#RRGGBB" + alpha → "rgba(...)". */
+export function hexA(hex: string, a: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+export type ColorToken = keyof Palette;
 
 /** Font family names, as registered by expo-font in the root layout. */
 export const fonts = {

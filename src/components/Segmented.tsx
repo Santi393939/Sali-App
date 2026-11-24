@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 
 import { feedback } from '@/lib/feedback';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themedStyles } from '@/theme';
 
 type Props<T extends string> = {
   options: { value: T; label: string }[];
@@ -45,7 +45,8 @@ export function Segmented<T extends string>({ options, value, onChange }: Props<
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     height: 44,
@@ -67,5 +68,6 @@ const styles = StyleSheet.create({
   },
   option: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   label: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.muted },
-  labelActive: { color: colors.card },
-});
+  labelActive: { color: colors.onPrimary },
+}),
+);

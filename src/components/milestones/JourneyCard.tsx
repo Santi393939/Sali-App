@@ -10,7 +10,7 @@ import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, w
 import Svg, { Path } from 'react-native-svg';
 
 import { etaLabel, type MilestoneProgress, type MilestoneState } from '@/store/milestones';
-import { colors, fonts, spacing } from '@/theme';
+import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from '../Card';
 import { Lantern } from '../Lantern';
@@ -184,7 +184,8 @@ function HereMarker({ x, y }: { x: number; y: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink },
   sub: { fontFamily: fonts.ui, fontSize: 13, color: colors.muted, marginTop: 2 },
@@ -211,6 +212,7 @@ const styles = StyleSheet.create({
   nextNums: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.muted },
   toGo: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta },
   pace: { fontFamily: fonts.ui, fontSize: 13, lineHeight: 19, color: colors.ink, marginTop: spacing.sm },
-  boost: { fontFamily: fonts.uiMedium, fontSize: 13, color: colors.zelligeGreen, marginTop: 4 },
-  complete: { fontFamily: fonts.uiMedium, fontSize: 14, color: colors.zelligeGreen, marginTop: spacing.md, textAlign: 'center' },
-});
+  boost: { fontFamily: fonts.uiMedium, fontSize: 13, color: colors.link, marginTop: 4 },
+  complete: { fontFamily: fonts.uiMedium, fontSize: 14, color: colors.link, marginTop: spacing.md, textAlign: 'center' },
+}),
+);

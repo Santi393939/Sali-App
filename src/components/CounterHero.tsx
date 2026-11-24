@@ -26,7 +26,7 @@ import Animated, {
 import { THEMES } from '@/content/rewards';
 import type { AddKind } from '@/lib/feedback';
 import { useRewards } from '@/store/rewards';
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themedStyles } from '@/theme';
 
 import { HorseshoeArch } from './HorseshoeArch';
 import { AnimatedCount, FloatingAmount, Sparks, type Burst } from './motion';
@@ -162,10 +162,11 @@ export function CounterHero({ total, goal, event, countDown = false, onTap }: Pr
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   wrap: { width: ARCH_W, height: ARCH_H, overflow: 'visible' },
   countBox: { alignItems: 'center', justifyContent: 'center' },
-  count: { fontFamily: fonts.display, fontVariant: ['lining-nums'], color: colors.card, minWidth: 110 },
+  count: { fontFamily: fonts.display, fontVariant: ['lining-nums'], color: colors.onPrimary, minWidth: 110 },
   countOf: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.lightGold },
   pulse: {
     position: 'absolute',
@@ -191,4 +192,5 @@ const styles = StyleSheet.create({
     top: STAR_CY - STAR / 2 + 8,
     height: 40,
   },
-});
+}),
+);

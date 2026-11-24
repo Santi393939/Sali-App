@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing, themedStyles } from '@/theme';
 
 import { ZelligeBand } from './ZelligeBand';
 
@@ -24,7 +24,8 @@ export function Card({ children, band = false, bandHeight = 16, padded = true, s
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.card,
@@ -35,4 +36,5 @@ const styles = StyleSheet.create({
   body: {
     padding: spacing.lg,
   },
-});
+}),
+);

@@ -19,7 +19,7 @@ import {
   verifyEmailCode,
 } from '@/store/auth';
 import { getSettings, updateSettings } from '@/store/settings';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -209,14 +209,15 @@ function GoogleG() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.plaster },
   content: { paddingHorizontal: spacing.lg, gap: spacing.md, maxWidth: 520, width: '100%', alignSelf: 'center' },
   hero: { backgroundColor: colors.card, borderRadius: radius.card, borderWidth: 1, borderColor: colors.cardBorder, overflow: 'hidden', marginBottom: spacing.sm },
   heroBody: { alignItems: 'center', padding: spacing.xl, gap: spacing.sm },
   title: { fontFamily: fonts.display, fontSize: 32, color: colors.ink, marginTop: spacing.sm },
   subtitle: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, color: colors.muted, textAlign: 'center', maxWidth: 300 },
-  notice: { backgroundColor: '#FBEFD6', borderColor: colors.saffron, borderWidth: 1, borderRadius: radius.card, padding: spacing.lg },
+  notice: { backgroundColor: colors.highlight, borderColor: colors.saffron, borderWidth: 1, borderRadius: radius.card, padding: spacing.lg },
   noticeTitle: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.ink },
   noticeBody: { fontFamily: fonts.ui, fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 4 },
   apple: { height: 54, width: '100%' },
@@ -252,8 +253,9 @@ const styles = StyleSheet.create({
   codeInput: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 30, letterSpacing: 8, textAlign: 'center', height: 64 },
   sent: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 20, color: colors.muted, textAlign: 'center' },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.xs },
-  link: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.zelligeGreen },
+  link: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.link },
   error: { fontFamily: fonts.uiMedium, fontSize: 14, color: '#A23B2A', textAlign: 'center' },
   notNow: { height: 48, alignItems: 'center', justifyContent: 'center' },
   notNowText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.muted },
-});
+}),
+);

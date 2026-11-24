@@ -2,8 +2,10 @@
 import { milestoneByAmount, type Milestone } from '@/content/milestones';
 import { FEATURED_BADGE_UNLOCK, SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 
-import { getToday, useToday } from './counts';
-import { getSettings, updateSettings, useSettings, type Settings } from './settings';
+import { useSyncExternalStore } from 'react';
+
+import { getToday, subscribeCounts, useToday } from './counts';
+import { getSettings, subscribeSettings, updateSettings, useSettings, type Settings } from './settings';
 
 export type ActiveRewards = {
   theme: ThemeId;
@@ -26,6 +28,23 @@ export function useRewards(): ActiveRewards {
 }
 
 export const getRewards = () => activeRewards(getSettings(), getToday().lifetime);
+
+const getThemeId = () => getRewards().theme;
+/** Just the theme in use; re-renders only when it changes (not on every count). */
+export function useActiveThemeId(): ThemeId {
+  return useSyncExternalStore(
+    (l) => {
+      const a = subscribeCounts(l);
+      const b = subscribeSettings(l);
+      return () => {
+        a();
+        b();
+      };
+    },
+    getThemeId,
+    getThemeId,
+  );
+}
 
 /** Wear everything a milestone gives: its theme, tap sound and badge. */
 export function applyMilestoneRewards(m: Milestone) {

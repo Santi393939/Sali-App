@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, EightPointStar, HorseshoeArch, Lantern, Logo, PrimaryButton, ZelligeBand } from '@/components';
-import { colors, fonts, spacing, type } from '@/theme';
+import { colors, fonts, getActiveTheme, PALETTES, spacing, themedStyles, type } from '@/theme';
 
 export default function DesignKit() {
   const insets = useSafeAreaInsets();
@@ -47,7 +47,7 @@ export default function DesignKit() {
       <Card>
         <Text style={styles.eyebrow}>Colours</Text>
         <View style={styles.swatches}>
-          {(Object.entries(colors) as [string, string][]).map(([name, hex]) => (
+          {(Object.entries(PALETTES[getActiveTheme()]).filter(([, v]) => v.startsWith('#')) as [string, string][]).map(([name, hex]) => (
             <View key={name} style={styles.swatch}>
               <View style={[styles.chip, { backgroundColor: hex }]} />
               <Text style={styles.swatchName}>{name}</Text>
@@ -71,7 +71,8 @@ export default function DesignKit() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.plaster },
   content: { paddingHorizontal: spacing.lg, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
   title: { fontFamily: fonts.display, fontSize: type.screenTitle, color: colors.ink, lineHeight: 40 },
@@ -84,4 +85,5 @@ const styles = StyleSheet.create({
   swatchHex: { fontFamily: fonts.ui, fontSize: 11, color: colors.muted },
   arabic: { fontFamily: fonts.arabic, fontSize: 20, lineHeight: 36, color: colors.terracotta, writingDirection: 'rtl', textAlign: 'left' },
   body: { fontFamily: fonts.ui, fontSize: type.body, color: colors.ink },
-});
+}),
+);

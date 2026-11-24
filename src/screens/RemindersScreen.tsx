@@ -39,7 +39,7 @@ import { KIND_LABEL, REMINDERS, type Reminder } from '@/content/reminders';
 import { feedback } from '@/lib/feedback';
 import { addSalawat } from '@/store/counts';
 import { toggleAction, useReminderActions } from '@/store/reminderActions';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 const TAB_INDEX = 1;
 const SEND_AMOUNT = 10;
@@ -339,7 +339,7 @@ function TagIcon({ kind }: { kind: Reminder['kind'] }) {
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
-    <Svg width={26} height={26} viewBox="0 0 24 24" fill={filled ? '#E0604A' : 'none'} stroke={filled ? '#E0604A' : colors.card} strokeWidth={1.8} strokeLinejoin="round">
+    <Svg width={26} height={26} viewBox="0 0 24 24" fill={filled ? '#E0604A' : 'none'} stroke={filled ? '#E0604A' : '#FBF6EC'} strokeWidth={1.8} strokeLinejoin="round">
       <Path d="M12 20s-7.5-4.6-9.2-9.3C1.7 7.6 3.6 4.5 6.9 4.5c2 0 3.4 1.1 5.1 3 1.7-1.9 3.1-3 5.1-3 3.3 0 5.2 3.1 4.1 6.2C19.5 15.4 12 20 12 20Z" />
     </Svg>
   );
@@ -347,7 +347,7 @@ function HeartIcon({ filled }: { filled: boolean }) {
 
 function BookmarkIcon({ filled }: { filled: boolean }) {
   return (
-    <Svg width={24} height={24} viewBox="0 0 24 24" fill={filled ? colors.lightGold : 'none'} stroke={filled ? colors.lightGold : colors.card} strokeWidth={1.8} strokeLinejoin="round">
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill={filled ? colors.lightGold : 'none'} stroke={filled ? colors.lightGold : '#FBF6EC'} strokeWidth={1.8} strokeLinejoin="round">
       <Path d="M6 3.5h12v17l-6-4-6 4Z" />
     </Svg>
   );
@@ -355,7 +355,7 @@ function BookmarkIcon({ filled }: { filled: boolean }) {
 
 function ShareIcon() {
   return (
-    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={colors.card} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
       <Path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
     </Svg>
   );
@@ -363,7 +363,8 @@ function ShareIcon() {
 
 const RAIL_W = 64;
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.night },
   card: { backgroundColor: colors.night, overflow: 'hidden' },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
@@ -438,6 +439,7 @@ const styles = StyleSheet.create({
 
   video: { alignItems: 'center', gap: spacing.md },
   play: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.lightGold, alignItems: 'center', justifyContent: 'center', paddingLeft: 4 },
-  videoTitle: { fontFamily: fonts.display, fontSize: 26, color: colors.card },
+  videoTitle: { fontFamily: fonts.display, fontSize: 26, color: '#FBF6EC' },
   videoBody: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 21, color: 'rgba(251,246,236,0.7)', textAlign: 'center', maxWidth: 260 },
-});
+}),
+);

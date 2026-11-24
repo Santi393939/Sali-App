@@ -17,7 +17,7 @@ import Animated, {
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import type { MedalShape, Milestone } from '@/content/milestones';
-import { colors } from '@/theme';
+import { colors, themedStyles } from '@/theme';
 
 import { eightPointStarPath, scallopPath, starPath, tilePath } from '../geometry';
 import { MilestoneIcon } from './MilestoneIcon';
@@ -153,7 +153,9 @@ function lighten(hex: string, k: number) {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   glow: { borderWidth: 4, margin: -3 },
-});
+}),
+);

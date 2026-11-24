@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, fonts, radius, size } from '@/theme';
+import { colors, fonts, radius, size, themedStyles } from '@/theme';
 
 type Props = {
   label: string;
@@ -41,7 +41,8 @@ export function PrimaryButton({ label, onPress, variant = 'primary', compact = f
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   base: {
     minWidth: size.minTouch,
     borderRadius: radius.button,
@@ -79,16 +80,17 @@ const styles = StyleSheet.create({
     bottom: 3,
     borderRadius: radius.button - 3,
     borderWidth: 1,
-    borderColor: '#3F8466',
+    borderColor: colors.primaryRing,
   },
   label: {
     fontFamily: fonts.uiSemi,
     fontSize: 16,
   },
   labelPrimary: {
-    color: colors.card,
+    color: colors.onPrimary,
   },
   labelSecondary: {
-    color: colors.zelligeGreen,
+    color: colors.link,
   },
-});
+}),
+);

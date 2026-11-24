@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themedStyles } from '@/theme';
 
 import { eightPointStarPath, horseshoeArchPath } from './geometry';
 
@@ -27,7 +27,7 @@ export function Logo({ size }: Props) {
         <Path d={eightPointStarPath(c, c, c - edge / 2)} fill={colors.zelligeGreen} stroke={colors.saffron} strokeWidth={edge} />
         <Path
           d={horseshoeArchPath(archW, archH, 0, 22)}
-          fill={colors.card}
+          fill={colors.onPrimary}
           transform={`translate(${archX} ${archY})`}
         />
       </Svg>
@@ -48,9 +48,11 @@ export function Logo({ size }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   center: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}),
+);

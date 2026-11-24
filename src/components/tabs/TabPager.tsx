@@ -49,7 +49,11 @@ const COMMIT_DISTANCE = 0.28;
 /** How far a page darkens as it leaves (0–1). */
 const DIM = 0.14;
 
-export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number }) {
+/** The tab last landed on, so a theme change (which rebuilds the screens) keeps your place. */
+let lastTab = 0;
+
+export function TabPager({ tabs, initial: initialProp }: { tabs: Tab[]; initial?: number }) {
+  const initial = initialProp ?? lastTab;
   const { width } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const last = tabs.length - 1;
@@ -63,6 +67,7 @@ export function TabPager({ tabs, initial = 0 }: { tabs: Tab[]; initial?: number 
 
   const land = useCallback(
     (i: number) => {
+      lastTab = i;
       setIndex(i);
       feedback.medium();
       landing.set(i);

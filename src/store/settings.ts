@@ -82,6 +82,13 @@ function applyGoalToToday(goal: number) {
   notifyChange();
 }
 
+export function subscribeSettings(l: () => void) {
+  listeners.add(l);
+  return () => {
+    listeners.delete(l);
+  };
+}
+
 export function useSettings(): Settings {
   return useSyncExternalStore(
     (l) => {

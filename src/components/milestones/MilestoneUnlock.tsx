@@ -32,7 +32,7 @@ import { MILESTONES, type Milestone } from '@/content/milestones';
 import { SOUNDS, THEMES } from '@/content/rewards';
 import { feedback } from '@/lib/feedback';
 import { applyMilestoneRewards } from '@/store/rewards';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { eightPointStarPath, horseshoeArchPath, tilePath } from '../geometry';
 import { Sparks, type Burst } from '../motion';
@@ -441,7 +441,8 @@ function hexA(hex: string, a: number) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   root: { flex: 1, alignItems: 'center', paddingHorizontal: spacing.lg, overflow: 'hidden' },
   stage: { width: STAGE, height: STAGE, alignItems: 'center', justifyContent: 'center', marginTop: spacing.sm },
   abs: { position: 'absolute' },
@@ -449,7 +450,7 @@ const styles = StyleSheet.create({
   copy: { alignItems: 'center', gap: 2 },
   eyebrow: { fontFamily: fonts.uiSemi, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1.1 },
   salla: { fontFamily: fonts.arabic, fontSize: 15, textTransform: 'none' },
-  name: { fontFamily: fonts.display, fontSize: 40, lineHeight: 46, color: colors.card, textAlign: 'center' },
+  name: { fontFamily: fonts.display, fontSize: 40, lineHeight: 46, color: '#FBF6EC', textAlign: 'center' },
   arabic: { fontFamily: fonts.arabic, fontSize: 22, lineHeight: 36 },
   line: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 20, color: 'rgba(251,246,236,0.82)', textAlign: 'center', maxWidth: 320 },
   rewards: {
@@ -465,11 +466,12 @@ const styles = StyleSheet.create({
   rewardsLabel: { fontFamily: fonts.uiSemi, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   rowArt: { width: 30, alignItems: 'center' },
-  rowTitle: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.card },
+  rowTitle: { fontFamily: fonts.uiSemi, fontSize: 14, color: '#FBF6EC' },
   rowSub: { fontFamily: fonts.ui, fontSize: 12, color: 'rgba(251,246,236,0.7)' },
   buttons: { width: '100%', maxWidth: 380, marginTop: 'auto', gap: spacing.xs },
   wear: { height: 56, borderRadius: radius.button, alignItems: 'center', justifyContent: 'center' },
   wearText: { fontFamily: fonts.uiSemi, fontSize: 17 },
   later: { height: 44, alignItems: 'center', justifyContent: 'center' },
   laterText: { fontFamily: fonts.uiSemi, fontSize: 15, color: 'rgba(251,246,236,0.8)' },
-});
+}),
+);

@@ -14,7 +14,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { feedback } from '@/lib/feedback';
 import { MAX_SINGLE_ADD } from '@/store/counts';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { PrimaryButton } from './PrimaryButton';
 
@@ -159,7 +159,8 @@ function DeleteIcon() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,19,15,0.45)' },
   sheet: {
@@ -201,4 +202,5 @@ const styles = StyleSheet.create({
   keyText: { fontFamily: fonts.uiSemi, fontSize: 22, color: colors.ink },
   cancel: { height: 48, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs },
   cancelText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.muted },
-});
+}),
+);

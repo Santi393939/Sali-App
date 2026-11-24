@@ -2,7 +2,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { MilestoneProgress } from '@/store/milestones';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { Medallion } from './Medallion';
 
@@ -25,7 +25,8 @@ export function NextMilestoneStrip({ progress, onPress }: { progress: MilestoneP
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   strip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -41,4 +42,5 @@ const styles = StyleSheet.create({
   track: { height: 6, borderRadius: 3, backgroundColor: colors.plaster, marginTop: 6, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 3, backgroundColor: colors.saffron },
   short: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 22, color: colors.terracotta },
-});
+}),
+);

@@ -11,7 +11,7 @@ import { SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 import { feedback } from '@/lib/feedback';
 import { applyMilestoneRewards, type ActiveRewards } from '@/store/rewards';
 import { updateSettings } from '@/store/settings';
-import { colors, fonts, spacing } from '@/theme';
+import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from '../Card';
 import { horseshoeArchPath } from '../geometry';
@@ -78,7 +78,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={`${m.title}${selected ? ', in use' : ''}${has ? '' : ', locked'}`}
                 onPress={() => (has ? choose({ featuredBadge: selected ? null : m.amount }) : locked(m.amount))}
-                style={[styles.badgeSlot, selected && { borderColor: m.palette.rim, backgroundColor: '#FBEFD6' }]}>
+                style={[styles.badgeSlot, selected && { borderColor: m.palette.rim, backgroundColor: colors.highlight }]}>
                 <Medallion size={42} milestone={m} earned={has} />
               </Pressable>
             );
@@ -131,7 +131,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
                   feedback.previewSound(k);
                   choose({ tapSound: k });
                 }}>
-                <SoundGlyph color={owner?.palette.face ?? colors.zelligeGreen} />
+                <SoundGlyph color={colors.statusBar === 'light' ? colors.lightGold : (owner?.palette.face ?? colors.link)} />
               </Chip>
             );
           })}
@@ -210,7 +210,8 @@ function SoundGlyph({ color }: { color: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink },
   sub: { fontFamily: fonts.ui, fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 2 },
   wearAll: {
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginTop: spacing.md,
   },
-  wearTitle: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.card },
+  wearTitle: { fontFamily: fonts.uiSemi, fontSize: 15, color: '#FBF6EC' },
   wearSub: { fontFamily: fonts.ui, fontSize: 12, color: 'rgba(251,246,236,0.85)', marginTop: 2 },
   section: { borderTopWidth: 1, borderTopColor: colors.cardBorder, marginTop: spacing.md, paddingTop: spacing.md },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: spacing.sm, gap: spacing.sm },
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  chipSelected: { borderColor: colors.saffron, backgroundColor: '#FBEFD6' },
+  chipSelected: { borderColor: colors.saffron, backgroundColor: colors.highlight },
   chipArt: { alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', minHeight: 30 },
   themePreview: { alignItems: 'center', alignSelf: 'stretch', gap: 4 },
   themeBand: { alignSelf: 'stretch', borderRadius: 3, overflow: 'hidden' },
@@ -248,5 +249,6 @@ const styles = StyleSheet.create({
   lockRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   lockText: { fontFamily: fonts.uiSemi, fontSize: 11, color: colors.muted },
   inUse: { fontFamily: fonts.uiSemi, fontSize: 11, color: colors.terracotta },
-  use: { fontFamily: fonts.uiSemi, fontSize: 11, color: colors.zelligeGreen },
-});
+  use: { fontFamily: fonts.uiSemi, fontSize: 11, color: colors.link },
+}),
+);

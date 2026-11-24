@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { colors, fonts } from '@/theme';
+import { colors, fonts, themedStyles } from '@/theme';
 
 type Props = {
   id: number;
@@ -30,7 +30,8 @@ export function FloatingAmount({ id, amount, onDone }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   text: {
     position: 'absolute',
     alignSelf: 'center',
@@ -42,4 +43,5 @@ const styles = StyleSheet.create({
     textShadowRadius: 6,
     textShadowOffset: { width: 0, height: 1 },
   },
-});
+}),
+);

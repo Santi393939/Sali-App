@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { colors } from '@/theme';
+import { colors, themedStyles } from '@/theme';
 
 import { horseshoeArchPath } from './geometry';
 
@@ -67,10 +67,12 @@ export function HorseshoeArch({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   content: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}),
+);

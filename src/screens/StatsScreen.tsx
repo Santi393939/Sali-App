@@ -10,7 +10,7 @@ import { useToday } from '@/store/counts';
 import { getDay } from '@/store/days';
 import { periodStats, type Bar, type Period } from '@/store/stats';
 import { LEVELS } from '@/store/streaks';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 const PERIOD_LABEL: Record<Period, string> = { week: 'Last 7 days', month: 'Last 30 days', year: 'Last 12 months' };
@@ -116,14 +116,14 @@ function ArchBars({ bars, thin }: { bars: Bar[]; thin: boolean }) {
             {bars.map((b, i) => {
               const x = i * slot + (slot - bw) / 2;
               return (
-                <Path key={`t${b.key}`} d={arch(x, H)} fill={colors.card} opacity={0.08} />
+                <Path key={`t${b.key}`} d={arch(x, H)} fill={colors.onPrimary} opacity={0.08} />
               );
             })}
             {bars.map((b, i) => {
               if (b.total === 0) return null;
               const x = i * slot + (slot - bw) / 2;
               const h = (b.total / max) * (H - 4);
-              return <Path key={b.key} d={arch(x, h)} fill={b.current ? colors.lightGold : colors.card} opacity={b.current ? 1 : 0.7} />;
+              return <Path key={b.key} d={arch(x, h)} fill={b.current ? colors.lightGold : colors.onPrimary} opacity={b.current ? 1 : 0.7} />;
             })}
           </Svg>
           <View style={styles.barLabels}>
@@ -217,13 +217,14 @@ function MonthHeatmap({ today, status }: { today: string; status: Record<string,
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   content: { paddingHorizontal: spacing.lg, paddingBottom: 32, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
   panel: { backgroundColor: colors.zelligeGreen, borderRadius: radius.card, overflow: 'hidden', borderWidth: 1, borderColor: colors.saffron },
   panelBody: { padding: spacing.lg },
   panelLabel: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.lightGold, textTransform: 'uppercase', letterSpacing: 0.8 },
   totalRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: 2 },
-  total: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 52, lineHeight: 58, color: colors.card },
+  total: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 52, lineHeight: 58, color: colors.onPrimary },
   badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: 'rgba(233,184,96,0.22)' },
   badgeDown: { backgroundColor: 'rgba(251,246,236,0.14)' },
   badgeText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.lightGold },
@@ -254,4 +255,5 @@ const styles = StyleSheet.create({
   legend: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.md },
   legendDot: { width: 12, height: 12, borderRadius: 4 },
   legendText: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginRight: 8 },
-});
+}),
+);

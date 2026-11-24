@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { keyToDate } from '@/lib/salliDay';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 type Props = {
   /** The day a shield covered. */
@@ -36,12 +36,13 @@ export function ShieldNotice({ day, shieldsLeft, onDismiss }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: '#FBEFD6',
+    backgroundColor: colors.highlight,
     borderColor: colors.saffron,
     borderWidth: 1,
     borderRadius: radius.card,
@@ -50,5 +51,6 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.ink },
   body: { fontFamily: fonts.ui, fontSize: 13, color: colors.muted, marginTop: 2 },
   ok: { minWidth: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  okText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.zelligeGreen },
-});
+  okText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.link },
+}),
+);

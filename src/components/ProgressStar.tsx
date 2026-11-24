@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { colors } from '@/theme';
+import { colors, themedStyles } from '@/theme';
 
 import { eightPointStarPath } from './geometry';
 
@@ -63,10 +63,12 @@ export function ProgressStar({ size, progress, ringWidth = 5, starFill = colors.
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   center: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}),
+);

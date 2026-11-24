@@ -7,7 +7,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { keyToDate } from '@/lib/salliDay';
 import { etaLabel, type MilestoneProgress, type MilestoneState } from '@/store/milestones';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { PrimaryButton } from '../PrimaryButton';
 import { Medallion } from './Medallion';
@@ -118,7 +118,8 @@ export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,19,15,0.45)' },
   sheet: {
@@ -148,4 +149,5 @@ const styles = StyleSheet.create({
   titleBox: { alignItems: 'center', marginTop: -spacing.sm },
   titleText: { fontFamily: fonts.display, fontSize: 22 },
   small: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center' },
-});
+}),
+);

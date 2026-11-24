@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts, type } from '@/theme';
+import { colors, fonts, themedStyles, type } from '@/theme';
 
 /** Arabic caption over a Cormorant screen title, with an optional right side. */
 export function ScreenHeader({ title, arabic, right }: { title: string; arabic?: string; right?: ReactNode }) {
@@ -16,8 +16,10 @@ export function ScreenHeader({ title, arabic, right }: { title: string; arabic?:
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   arabic: { fontFamily: 'Amiri_400Regular', fontSize: 15, color: colors.terracotta, textAlign: 'left' },
   title: { fontFamily: fonts.display, fontSize: type.screenTitle, color: colors.ink, lineHeight: 40 },
-});
+}),
+);

@@ -37,7 +37,7 @@ import {
   useToday,
 } from '@/store/counts';
 import { useSettings } from '@/store/settings';
-import { colors, fonts, radius, spacing, type } from '@/theme';
+import { colors, fonts, radius, spacing, themedStyles, type } from '@/theme';
 
 /** Sample group numbers until Groups are built (Prompt 8). */
 const SAMPLE_GROUP = { name: 'Family', total: 6200, goal: 10000 };
@@ -180,7 +180,7 @@ export default function TodayScreen() {
               <Lantern size={46} lit={today.lit} level={streak.level} />
               <Text style={styles.sideNumber}>{streak.current}</Text>
               <Text style={styles.sideLabel}>day streak</Text>
-              <Text style={[styles.sideStatus, today.lit && { color: colors.zelligeGreen }]}>
+              <Text style={[styles.sideStatus, today.lit && { color: colors.link }]}>
                 {today.lit ? 'Lit today' : 'Your lantern is waiting'}
               </Text>
             </View>
@@ -190,7 +190,7 @@ export default function TodayScreen() {
             <View style={styles.heroSide}>
               {today.lit ? (
                 <>
-                  <Text style={[styles.sideNumber, { color: colors.zelligeGreen }]}>✓</Text>
+                  <Text style={[styles.sideNumber, { color: colors.link }]}>✓</Text>
                   <Text style={styles.sideLabel}>goal met</Text>
                 </>
               ) : (
@@ -260,7 +260,8 @@ function BellIcon() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles(() =>
+  StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.plaster },
   content: { paddingHorizontal: spacing.lg, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
 
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.cardBorder,
   },
-  streakPillLit: { borderColor: colors.saffron, backgroundColor: '#FBEFD6' },
+  streakPillLit: { borderColor: colors.saffron, backgroundColor: colors.highlight },
   streakPillText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.muted },
   streakPillTextLit: { color: colors.saffron },
   bell: {
@@ -324,4 +325,5 @@ const styles = StyleSheet.create({
   track: { height: 8, borderRadius: 4, backgroundColor: colors.plaster, marginTop: spacing.sm, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4, backgroundColor: colors.saffron },
   cardMeta: { fontFamily: fonts.ui, fontSize: 13, color: colors.muted, marginTop: spacing.sm },
-});
+}),
+);

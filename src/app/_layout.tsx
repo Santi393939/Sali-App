@@ -11,8 +11,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { View } from 'react-native';
+
+import { useActiveThemeId } from '@/store/rewards';
 import { startSync } from '@/store/sync';
-import { colors } from '@/theme';
+import { PALETTES, setActiveTheme } from '@/theme';
 
 startSync();
 
@@ -29,6 +32,15 @@ export default function RootLayout() {
     Inter_600SemiBold,
   });
 
+  // The badge theme being worn colours the whole app. Set it before anything
+  // renders, and rebuild the screens when it changes (the tab you are on and
+  // your place on Me are kept).
+  const themeId = useActiveThemeId();
+  setActiveTheme(themeId);
+  // Read from the theme id (not the shared palette object) so the React
+  // Compiler sees these colours change with the theme.
+  const palette = PALETTES[themeId];
+
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync();
   }, [loaded, error]);
@@ -36,15 +48,17 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.plaster }}>
-      <StatusBar style="dark" />
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.plaster }}>
+      <StatusBar style={palette.statusBar} />
+      <View key={themeId} style={{ flex: 1, backgroundColor: palette.plaster }}>
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: colors.plaster },
+          contentStyle: { backgroundColor: palette.plaster },
         }}>
         <Stack.Screen name="sign-in" options={{ presentation: 'modal' }} />
       </Stack>
+      </View>
     </GestureHandlerRootView>
   );
 }
