@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react';
 
 import { salliDayKey } from '@/lib/salliDay';
 
-import type { ArchTheme, BandTheme, TapSound } from '@/content/rewards';
+import { SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 
 import { notifyChange } from './counts';
 import { DEFAULT_DAILY_GOAL, getDay, saveDay } from './days';
@@ -20,9 +20,8 @@ export type Settings = {
   fridayReminders: boolean;
   shareCountWithGroup: boolean;
   /** Rewards (each needs its milestone; checked where used). */
-  archTheme: ArchTheme;
-  bandTheme: BandTheme;
-  tapSound: TapSound;
+  theme: ThemeId;
+  tapSound: SoundId;
   /** Amount of the milestone shown on the profile, or null. */
   featuredBadge: number | null;
 };
@@ -35,8 +34,7 @@ const DEFAULTS: Settings = {
   asrReminder: true,
   fridayReminders: true,
   shareCountWithGroup: false, // off by default, per the brief
-  archTheme: 'zellige',
-  bandTheme: 'cobalt',
+  theme: 'zellige',
   tapSound: 'tick',
   featuredBadge: null,
 };
@@ -45,7 +43,16 @@ export const GOAL_MIN = 1;
 export const GOAL_MAX = 100000;
 
 const listeners = new Set<() => void>();
-let current: Settings = { ...DEFAULTS, ...readJSON<Partial<Settings>>(KEY, {}) };
+let current: Settings = sanitize({ ...DEFAULTS, ...readJSON<Partial<Settings>>(KEY, {}) });
+
+/** Drop values from older versions that no longer exist. */
+function sanitize(s: Settings): Settings {
+  return {
+    ...s,
+    theme: s.theme in THEMES ? s.theme : 'zellige',
+    tapSound: s.tapSound in SOUNDS ? s.tapSound : 'tick',
+  };
+}
 
 export function getSettings(): Settings {
   return current;

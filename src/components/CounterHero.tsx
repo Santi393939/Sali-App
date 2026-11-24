@@ -23,7 +23,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { ARCH_THEMES } from '@/content/rewards';
+import { THEMES } from '@/content/rewards';
 import type { AddKind } from '@/lib/feedback';
 import { useRewards } from '@/store/rewards';
 import { colors, fonts } from '@/theme';
@@ -61,7 +61,7 @@ const countSize = (n: number) => (n < 1000 ? 44 : n < 10000 ? 38 : n < 100000 ? 
 
 export function CounterHero({ total, goal, event, countDown = false, onTap }: Props) {
   const reduceMotion = useReducedMotion();
-  const arch = ARCH_THEMES[useRewards().arch];
+  const arch = THEMES[useRewards().theme];
   const displayed = useSharedValue(total);
   const pop = useSharedValue(1);
   const pulse = useSharedValue(1); // 0 → 1 plays the ring; 1 = hidden

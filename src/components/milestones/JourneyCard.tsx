@@ -120,7 +120,7 @@ export function JourneyCard({ progress, today, onOpen }: Props) {
                 style={[styles.stop, { left: pts[i].x - 50, top: pts[i].y - MEDAL / 2 }]}>
                 {({ pressed }) => (
                   <View style={[styles.stopInner, pressed && { transform: [{ scale: 0.94 }] }]}>
-                    <Medallion size={MEDAL} icon={m.icon} earned={m.earned} next={m === next} progress={m === next ? fraction : 0} />
+                    <Medallion size={MEDAL} milestone={m} earned={m.earned} next={m === next} progress={m === next ? fraction : 0} />
                     <Text style={[styles.stopAmount, m.earned && { color: colors.terracotta }]}>{m.short}</Text>
                     <Text style={[styles.stopName, (m.earned || m === next) && { color: colors.ink }]} numberOfLines={1}>
                       {m.name.replace('The ', '')}

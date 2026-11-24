@@ -1,8 +1,28 @@
 /**
  * Lifetime milestones (from the brief: 1k, 10k, 50k, 100k, 250k, 1M).
- * Each one is a part of a Moroccan masjid you build up over time.
+ * Each is a part of a Moroccan masjid, with its own medallion shape and
+ * materials, its own unlock moment, and a reward set: a theme, a tap sound
+ * and a title.
  */
 export type MilestoneIconName = 'door' | 'courtyard' | 'fountain' | 'minaret' | 'dome' | 'riad';
+export type MedalShape = 'arch' | 'tile' | 'scallop' | 'star8' | 'star12' | 'rosette16';
+export type UnlockEffect = 'doors' | 'tiles' | 'fountain' | 'beam' | 'rings' | 'petals';
+export type SoundId = 'tick' | 'knock' | 'clink' | 'drop' | 'bell' | 'gong' | 'birds';
+
+export type MedalPalette = {
+  /** Main face of the medallion. */
+  face: string;
+  /** Rim / edge. */
+  rim: string;
+  /** Inner line and icon accent. */
+  accent: string;
+  /** Icon lines. */
+  icon: string;
+  /** Background of the unlock screen. */
+  stage: string;
+  /** Light / sparkle colour on the unlock screen. */
+  glow: string;
+};
 
 export type Milestone = {
   amount: number;
@@ -10,11 +30,21 @@ export type Milestone = {
   name: string;
   arabic: string;
   icon: MilestoneIconName;
+  shape: MedalShape;
+  palette: MedalPalette;
+  effect: UnlockEffect;
+  /** Title you earn, shown under your name when this badge is featured. */
+  title: string;
+  /** Theme and tap sound this milestone unlocks. */
+  theme: ThemeId;
+  sound: SoundId;
   /** Shown once earned. */
   earnedLine: string;
   /** Shown while working toward it. */
   goalLine: string;
 };
+
+export type ThemeId = 'zellige' | 'cedar' | 'fes' | 'turquoise' | 'gilded' | 'midnight' | 'garden';
 
 export const MILESTONES: Milestone[] = [
   {
@@ -23,7 +53,13 @@ export const MILESTONES: Milestone[] = [
     name: 'The Doorway',
     arabic: 'الباب',
     icon: 'door',
-    earnedLine: 'Your first thousand. The door is open.',
+    shape: 'arch',
+    palette: { face: '#7A4A2A', rim: '#C98E2B', accent: '#E9B860', icon: '#FBF6EC', stage: '#3B2414', glow: '#F2C779' },
+    effect: 'doors',
+    title: 'Opener of the Door',
+    theme: 'cedar',
+    sound: 'knock',
+    earnedLine: 'Your first thousand. The cedar door swings open.',
     goalLine: 'Your first thousand salawat opens the door.',
   },
   {
@@ -32,6 +68,12 @@ export const MILESTONES: Milestone[] = [
     name: 'The Courtyard',
     arabic: 'الصحن',
     icon: 'courtyard',
+    shape: 'tile',
+    palette: { face: '#1D3E8A', rim: '#E9B860', accent: '#8FB3F0', icon: '#FBF6EC', stage: '#0E1E45', glow: '#9CC0FF' },
+    effect: 'tiles',
+    title: 'Layer of the Zellige',
+    theme: 'fes',
+    sound: 'clink',
     earnedLine: 'Ten thousand. Zellige laid across the courtyard.',
     goalLine: 'Ten thousand lays the zellige of the courtyard.',
   },
@@ -41,7 +83,13 @@ export const MILESTONES: Milestone[] = [
     name: 'The Fountain',
     arabic: 'النافورة',
     icon: 'fountain',
-    earnedLine: 'Fifty thousand. The fountain runs.',
+    shape: 'scallop',
+    palette: { face: '#1F7A7A', rim: '#BFE6E2', accent: '#7FD4CC', icon: '#FBF6EC', stage: '#0C3B3D', glow: '#A6F0E8' },
+    effect: 'fountain',
+    title: 'Keeper of the Fountain',
+    theme: 'turquoise',
+    sound: 'drop',
+    earnedLine: 'Fifty thousand. The fountain runs clear.',
     goalLine: 'Fifty thousand sets the fountain running.',
   },
   {
@@ -50,6 +98,12 @@ export const MILESTONES: Milestone[] = [
     name: 'The Minaret',
     arabic: 'الصومعة',
     icon: 'minaret',
+    shape: 'star8',
+    palette: { face: '#174836', rim: '#E9B860', accent: '#E9B860', icon: '#FBF6EC', stage: '#0B2A1F', glow: '#FFE3A3' },
+    effect: 'beam',
+    title: 'Raiser of the Minaret',
+    theme: 'gilded',
+    sound: 'bell',
     earnedLine: 'One hundred thousand. The minaret stands tall.',
     goalLine: 'One hundred thousand raises the minaret.',
   },
@@ -59,7 +113,13 @@ export const MILESTONES: Milestone[] = [
     name: 'The Dome',
     arabic: 'القبة',
     icon: 'dome',
-    earnedLine: 'A quarter of a million. The dome is closed.',
+    shape: 'star12',
+    palette: { face: '#1A2240', rim: '#E9B860', accent: '#C98E2B', icon: '#F5D58A', stage: '#080C1C', glow: '#F5D58A' },
+    effect: 'rings',
+    title: 'Builder of the Dome',
+    theme: 'midnight',
+    sound: 'gong',
+    earnedLine: 'A quarter of a million. The dome is closed in gold.',
     goalLine: 'A quarter of a million closes the dome.',
   },
   {
@@ -68,7 +128,15 @@ export const MILESTONES: Milestone[] = [
     name: 'The Riad',
     arabic: 'الرياض',
     icon: 'riad',
-    earnedLine: 'One million salawat. The garden is in bloom. ما شاء الله',
+    shape: 'rosette16',
+    palette: { face: '#2E6B4F', rim: '#E9B860', accent: '#E6A0AE', icon: '#FFF4E6', stage: '#16301F', glow: '#F7C6CF' },
+    effect: 'petals',
+    title: 'Gardener of the Riad',
+    theme: 'garden',
+    sound: 'birds',
+    earnedLine: 'One million salawat. The riad garden is in bloom. ما شاء الله',
     goalLine: 'One million brings the riad garden into bloom.',
   },
 ];
+
+export const milestoneByAmount = (amount: number | null | undefined) => MILESTONES.find((m) => m.amount === amount);

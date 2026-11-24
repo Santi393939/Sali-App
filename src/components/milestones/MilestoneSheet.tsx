@@ -18,11 +18,13 @@ type Props = {
   today: string;
   onClose: () => void;
   onCountNow: () => void;
+  /** Replay an earned milestone's unlock moment. */
+  onReplay?: (m: MilestoneState) => void;
 };
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
-export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow }: Props) {
+export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow, onReplay }: Props) {
   const insets = useSafeAreaInsets();
   const reduce = useReducedMotion();
   const [shown, setShown] = useState<MilestoneState | null>(milestone);
@@ -63,7 +65,7 @@ export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow
           <Animated.View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }, sheetStyle]}>
             <View style={styles.grabber} />
             <View style={styles.center}>
-              <Medallion size={132} icon={m.icon} earned={m.earned} next={isNext} progress={isNext ? progress.fraction : 0} />
+              <Medallion size={132} milestone={m} earned={m.earned} next={isNext} progress={isNext ? progress.fraction : 0} />
               <Text style={styles.amount}>{fmt(m.amount)} salawat</Text>
               <Text style={styles.name}>{m.name}</Text>
               <Text style={styles.arabic}>{m.arabic}</Text>
@@ -98,7 +100,17 @@ export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow
               </View>
             )}
 
-            <PrimaryButton label={m.earned ? 'Close' : 'Count now'} onPress={m.earned ? onClose : onCountNow} />
+            {m.earned && (
+              <View style={styles.titleBox}>
+                <Text style={styles.small}>Title</Text>
+                <Text style={[styles.titleText, { color: m.palette.face }]}>{m.title}</Text>
+              </View>
+            )}
+            {m.earned && onReplay ? (
+              <PrimaryButton label="Replay the moment" onPress={() => onReplay(m)} />
+            ) : (
+              <PrimaryButton label={m.earned ? 'Close' : 'Count now'} onPress={m.earned ? onClose : onCountNow} />
+            )}
           </Animated.View>
         )}
       </View>
@@ -133,5 +145,7 @@ const styles = StyleSheet.create({
   track: { height: 10, borderRadius: 5, backgroundColor: colors.card, overflow: 'hidden', borderWidth: 1, borderColor: colors.cardBorder },
   fill: { height: '100%', borderRadius: 5, backgroundColor: colors.saffron },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
+  titleBox: { alignItems: 'center', marginTop: -spacing.sm },
+  titleText: { fontFamily: fonts.display, fontSize: 22 },
   small: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center' },
 });

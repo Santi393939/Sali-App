@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, G, Line, Path, Rect } from 'react-native-svg';
 
-import { BAND_THEMES, type BandTheme } from '@/content/rewards';
+import { THEMES, type ThemeId } from '@/content/rewards';
 import { useRewards } from '@/store/rewards';
 import { colors, size as sizes } from '@/theme';
 
@@ -12,7 +12,7 @@ type Props = {
   /** Strip height in px, 14–28. */
   height?: number;
   /** Show a specific colourway (reward previews) instead of the one in use. */
-  theme?: BandTheme;
+  theme?: ThemeId;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -23,8 +23,8 @@ type Props = {
 export function ZelligeBand({ height = 20, theme, style }: Props) {
   const h = Math.min(sizes.zelligeBandMax, Math.max(sizes.zelligeBandMin, height));
   const [width, setWidth] = useState(0);
-  const active = useRewards().band;
-  const band = BAND_THEMES[theme ?? active];
+  const active = useRewards().theme;
+  const band = THEMES[theme ?? active].band;
   const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
 
   const edge = 1.5; // saffron line top and bottom

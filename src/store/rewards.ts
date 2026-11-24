@@ -1,31 +1,22 @@
 /** Which rewards are unlocked and in use (a choice only applies once earned). */
-import {
-  ARCH_THEMES,
-  BAND_THEMES,
-  FEATURED_BADGE_UNLOCK,
-  TAP_SOUNDS,
-  type ArchTheme,
-  type BandTheme,
-  type TapSound,
-} from '@/content/rewards';
+import { milestoneByAmount, type Milestone } from '@/content/milestones';
+import { FEATURED_BADGE_UNLOCK, SOUNDS, THEMES, type SoundId, type ThemeId } from '@/content/rewards';
 
 import { getToday, useToday } from './counts';
-import { getSettings, useSettings, type Settings } from './settings';
+import { getSettings, updateSettings, useSettings, type Settings } from './settings';
 
 export type ActiveRewards = {
-  arch: ArchTheme;
-  band: BandTheme;
-  sound: TapSound;
-  featuredBadge: number | null;
+  theme: ThemeId;
+  sound: SoundId;
+  featured: Milestone | null;
 };
 
 export function activeRewards(s: Settings, lifetime: number): ActiveRewards {
+  const featured = milestoneByAmount(s.featuredBadge);
   return {
-    arch: lifetime >= ARCH_THEMES[s.archTheme].unlock ? s.archTheme : 'zellige',
-    band: lifetime >= BAND_THEMES[s.bandTheme].unlock ? s.bandTheme : 'cobalt',
-    sound: lifetime >= TAP_SOUNDS[s.tapSound].unlock ? s.tapSound : 'tick',
-    featuredBadge:
-      s.featuredBadge != null && lifetime >= FEATURED_BADGE_UNLOCK && lifetime >= s.featuredBadge ? s.featuredBadge : null,
+    theme: lifetime >= THEMES[s.theme].unlock ? s.theme : 'zellige',
+    sound: lifetime >= SOUNDS[s.tapSound].unlock ? s.tapSound : 'tick',
+    featured: featured && lifetime >= FEATURED_BADGE_UNLOCK && lifetime >= featured.amount ? featured : null,
   };
 }
 
@@ -35,3 +26,8 @@ export function useRewards(): ActiveRewards {
 }
 
 export const getRewards = () => activeRewards(getSettings(), getToday().lifetime);
+
+/** Wear everything a milestone gives: its theme, tap sound and badge. */
+export function applyMilestoneRewards(m: Milestone) {
+  updateSettings({ theme: m.theme, tapSound: m.sound, featuredBadge: m.amount });
+}

@@ -11,7 +11,7 @@ export function NextMilestoneStrip({ progress, onPress }: { progress: MilestoneP
   if (!next) return null;
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`Next milestone: ${next.name}`} style={({ pressed }) => [styles.strip, pressed && { opacity: 0.85 }]}>
-      <Medallion size={46} icon={next.icon} earned={false} next progress={fraction} />
+      <Medallion size={46} milestone={next} earned={false} next progress={fraction} />
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>
           {(next.amount - lifetime).toLocaleString('en-US')} to {next.name}

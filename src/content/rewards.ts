@@ -1,39 +1,39 @@
 /**
- * Rewards unlocked by lifetime milestones. Each one changes how the app looks
- * or sounds, so every badge is something you can use.
+ * Rewards unlocked by lifetime milestones: a theme (arch, star and tile
+ * colours across the app), a tap sound and a title for each one.
  */
-export type ArchTheme = 'zellige' | 'minaret' | 'dome' | 'riad';
-export type BandTheme = 'cobalt' | 'courtyard';
-export type TapSound = 'tick' | 'drop';
+import type { SoundId, ThemeId } from './milestones';
 
-/** Counter arch colours: [arch, star inside the ring]. */
-export const ARCH_THEMES: Record<ArchTheme, { name: string; arch: string; star: string; unlock: number }> = {
-  zellige: { name: 'Zellige', arch: '#1E5C46', star: '#174836', unlock: 0 },
-  minaret: { name: 'Midnight', arch: '#1D3E8A', star: '#152E66', unlock: 100000 },
-  dome: { name: 'Terracotta', arch: '#8C4A2F', star: '#6C3822', unlock: 250000 },
-  riad: { name: 'Riad', arch: '#2A7A6A', star: '#1E5C50', unlock: 1000000 },
+export type { SoundId, ThemeId } from './milestones';
+
+export type Theme = {
+  name: string;
+  /** Lifetime total that unlocks it (0 = always). */
+  unlock: number;
+  arch: string;
+  star: string;
+  band: { star: string; centre: string; diamond: string };
 };
 
-/** Zellige band colours: stars, centres, diamonds. */
-export const BAND_THEMES: Record<BandTheme, { name: string; star: string; centre: string; diamond: string; unlock: number }> = {
-  cobalt: { name: 'Fes cobalt', star: '#1D3E8A', centre: '#C98E2B', diamond: '#1E5C46', unlock: 0 },
-  courtyard: { name: 'Courtyard green & gold', star: '#1E5C46', centre: '#E9B860', diamond: '#C98E2B', unlock: 10000 },
+export const THEMES: Record<ThemeId, Theme> = {
+  zellige: { name: 'Zellige', unlock: 0, arch: '#1E5C46', star: '#174836', band: { star: '#1D3E8A', centre: '#C98E2B', diamond: '#1E5C46' } },
+  cedar: { name: 'Cedar', unlock: 1000, arch: '#7A4A2A', star: '#5E3820', band: { star: '#8C4A2F', centre: '#E9B860', diamond: '#1E5C46' } },
+  fes: { name: 'Fes blue', unlock: 10000, arch: '#1D3E8A', star: '#152E66', band: { star: '#1E5C46', centre: '#E9B860', diamond: '#1D3E8A' } },
+  turquoise: { name: 'Turquoise', unlock: 50000, arch: '#1F7A7A', star: '#165E5E', band: { star: '#2A9D9D', centre: '#FBF6EC', diamond: '#1D3E8A' } },
+  gilded: { name: 'Gilded', unlock: 100000, arch: '#174836', star: '#0F3326', band: { star: '#C98E2B', centre: '#1E5C46', diamond: '#1D3E8A' } },
+  midnight: { name: 'Midnight', unlock: 250000, arch: '#1A2240', star: '#10162B', band: { star: '#2C3A73', centre: '#E9B860', diamond: '#C98E2B' } },
+  garden: { name: 'Riad garden', unlock: 1000000, arch: '#2E6B4F', star: '#1F4D38', band: { star: '#B5576B', centre: '#E9B860', diamond: '#2E6B4F' } },
 };
 
-export const TAP_SOUNDS: Record<TapSound, { name: string; unlock: number }> = {
+export const SOUNDS: Record<SoundId, { name: string; unlock: number }> = {
   tick: { name: 'Soft tick', unlock: 0 },
-  drop: { name: 'Fountain drop', unlock: 50000 },
+  knock: { name: 'Cedar knock', unlock: 1000 },
+  clink: { name: 'Tile clink', unlock: 10000 },
+  drop: { name: 'Water drop', unlock: 50000 },
+  bell: { name: 'Small bell', unlock: 100000 },
+  gong: { name: 'Soft gong', unlock: 250000 },
+  birds: { name: 'Birdsong', unlock: 1000000 },
 };
 
 /** The featured badge unlocks with the first milestone. */
 export const FEATURED_BADGE_UNLOCK = 1000;
-
-/** What each milestone unlocks (shown on the unlock reveal). */
-export const REWARD_FOR_MILESTONE: Record<number, string> = {
-  1000: 'Feature a badge on your profile',
-  10000: 'Courtyard green & gold tiles',
-  50000: 'Fountain drop tap sound',
-  100000: 'Midnight minaret arch',
-  250000: 'Terracotta dome arch',
-  1000000: 'Riad garden arch',
-};

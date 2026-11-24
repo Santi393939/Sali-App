@@ -9,7 +9,7 @@ import * as Haptics from 'expo-haptics';
 
 import { getRewards } from '@/store/rewards';
 
-type SoundName = 'tick' | 'cluster' | 'chime' | 'success' | 'drop';
+type SoundName = 'tick' | 'cluster' | 'chime' | 'success' | 'drop' | 'knock' | 'clink' | 'bell' | 'gong' | 'birds';
 
 const SOURCES: Record<SoundName, number> = {
   tick: require('../../assets/sounds/tick.wav'),
@@ -17,9 +17,25 @@ const SOURCES: Record<SoundName, number> = {
   chime: require('../../assets/sounds/chime.wav'),
   success: require('../../assets/sounds/success.wav'),
   drop: require('../../assets/sounds/drop.wav'),
+  knock: require('../../assets/sounds/knock.wav'),
+  clink: require('../../assets/sounds/clink.wav'),
+  bell: require('../../assets/sounds/bell.wav'),
+  gong: require('../../assets/sounds/gong.wav'),
+  birds: require('../../assets/sounds/birds.wav'),
 };
 
-const VOLUME: Record<SoundName, number> = { tick: 0.35, cluster: 0.45, chime: 0.55, success: 0.6, drop: 0.45 };
+const VOLUME: Record<SoundName, number> = {
+  tick: 0.35,
+  cluster: 0.45,
+  chime: 0.55,
+  success: 0.6,
+  drop: 0.45,
+  knock: 0.5,
+  clink: 0.4,
+  bell: 0.4,
+  gong: 0.5,
+  birds: 0.4,
+};
 
 const players: Partial<Record<SoundName, AudioPlayer>> = {};
 
@@ -58,7 +74,7 @@ export const feedback = {
     switch (kind) {
       case 'tap':
         safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
-        play(getRewards().sound === 'drop' ? 'drop' : 'tick');
+        play(getRewards().sound);
         break;
       case 'small':
         safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
@@ -110,8 +126,38 @@ export const feedback = {
     safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
   },
   /** Preview a tap sound (Rewards on Me). */
-  previewSound(sound: 'tick' | 'drop') {
+  previewSound(sound: SoundName) {
     play(sound);
+  },
+  /**
+   * Each milestone's unlock has its own rhythm, growing with the milestone.
+   * Returns a cancel function.
+   */
+  milestone(effect: 'doors' | 'tiles' | 'fountain' | 'beam' | 'rings' | 'petals', sound: SoundName): () => void {
+    const L = () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+    const M = () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+    const H = () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
+    const S = () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+    const T = () => safe(() => Haptics.selectionAsync());
+    const own = () => play(sound);
+    const chime = () => play('chime');
+    const success = () => play('success');
+    const PATTERNS: Record<typeof effect, [number, () => void][]> = {
+      // knock-knock, the doors open
+      doors: [[0, L], [250, () => (M(), own())], [450, () => (M(), own())], [800, () => (S(), chime())]],
+      // a ripple of tiles clicking into place
+      tiles: [[0, L], ...[300, 360, 420, 480, 540, 600, 660, 720].map((ms) => [ms, () => (T(), own())] as [number, () => void]), [900, () => (S(), chime())]],
+      // water rising, then the splash
+      fountain: [[0, L], [250, L], [420, M], [600, () => (H(), own())], [900, () => (S(), chime())], [1500, own]],
+      // the beam climbs, then the bell
+      beam: [[0, M], [300, M], [600, H], [900, () => (S(), own(), chime())], [1500, own]],
+      // deep pulses as the rings spread
+      rings: [[0, H], [450, () => (H(), own())], [900, () => (H(), own())], [1350, () => (S(), chime(), success())]],
+      // the biggest: bursts, then petals with birdsong
+      petals: [[0, H], [200, M], [400, () => (S(), chime())], [900, () => (H(), own())], [1300, () => (S(), success())], [1800, own], [2500, own]],
+    };
+    const timers = PATTERNS[effect].map(([ms, fn]) => setTimeout(fn, ms));
+    return () => timers.forEach(clearTimeout);
   },
   /** Opening the number pad sheet. */
   sheetOpen() {

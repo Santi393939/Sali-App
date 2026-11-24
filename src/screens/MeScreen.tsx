@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { Card, EightPointStar, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
-import { JourneyCard, Medallion, MilestoneSheet, RewardsCard } from '@/components/milestones';
-import { MILESTONES } from '@/content/milestones';
+import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
+import type { Milestone } from '@/content/milestones';
 import { useRewards } from '@/store/rewards';
 import { useTabs } from '@/components/tabs';
 import { feedback } from '@/lib/feedback';
@@ -28,8 +28,9 @@ export default function MeScreen() {
   const totals = { lifetime: today.lifetime, year: today.yearTotal };
   const journey = today.milestones;
   const rewards = useRewards();
-  const featured = MILESTONES.find((m) => m.amount === rewards.featuredBadge);
+  const featured = rewards.featured;
   const [openMilestone, setOpenMilestone] = useState<MilestoneState | null>(null);
+  const [replay, setReplay] = useState<Milestone | null>(null);
   const tabs = useTabs();
   const initial = settings.name.trim().charAt(0).toUpperCase();
 
@@ -50,7 +51,7 @@ export default function MeScreen() {
               </View>
               {featured && (
                 <View style={styles.featured} accessibilityLabel={`Featured badge: ${featured.name}`}>
-                  <Medallion size={36} icon={featured.icon} earned />
+                  <Medallion size={36} milestone={featured} earned />
                 </View>
               )}
             </View>
@@ -69,7 +70,7 @@ export default function MeScreen() {
                 {fmt(totals.year)} salawat in {today.date.slice(0, 4)}
               </Text>
               <Text style={styles.lifetime}>{fmt(totals.lifetime)} all time</Text>
-              {featured && <Text style={styles.featuredName}>{featured.name} · {featured.arabic}</Text>}
+              {featured && <Text style={[styles.featuredName, { color: featured.palette.face }]}>{featured.title}</Text>}
             </View>
           </View>
         </Card>
@@ -177,7 +178,13 @@ export default function MeScreen() {
           setOpenMilestone(null);
           tabs.goTo(0);
         }}
+        onReplay={(m) => {
+          setOpenMilestone(null);
+          setTimeout(() => setReplay(m), 260);
+        }}
       />
+
+      <MilestoneUnlock milestone={replay} onClose={() => setReplay(null)} />
 
       <NumberPadSheet
         visible={goalOpen}
