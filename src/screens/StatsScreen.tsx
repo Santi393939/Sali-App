@@ -1,13 +1,12 @@
 /** Stats: totals per week / month / year, streak cards and a month heatmap. */
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, Lantern, PlasterPattern, ScreenHeader, Segmented, ShieldIcon, ZelligeBand } from '@/components';
-import { keyToDate, toDayKey } from '@/lib/salliDay';
+import { Card, Lantern, MonthCalendar, PlasterPattern, ScreenHeader, Segmented, ShieldIcon, ZelligeBand } from '@/components';
+import { useTabs } from '@/components/tabs';
 import { useToday } from '@/store/counts';
-import { getDay } from '@/store/days';
 import { periodStats, type Bar, type Period } from '@/store/stats';
 import { LEVELS } from '@/store/streaks';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
@@ -23,6 +22,28 @@ export default function StatsScreen() {
   const stats = periodStats(period, today.date, today.version);
   const { streak } = today;
   const levelName = LEVELS.find((l) => l.level === streak.level)!.name;
+  const tabs = useTabs();
+  const avg30 = Math.round(periodStats('month', today.date, today.version).total / 30);
+
+  if (today.lifetime === 0) {
+    return (
+      <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
+        <ScreenHeader title="Stats" arabic="إحصاءات" />
+        <View style={styles.empty}>
+          <PlasterPattern />
+          <View style={styles.emptyBody}>
+            <ArchBarsPreview />
+            <Text style={styles.emptyTitle}>Your story starts with one</Text>
+            <Text style={styles.emptyText}>Count your first salawat and your days, streaks and totals will fill in here.</Text>
+            <Pressable onPress={() => tabs.goTo(0)} accessibilityRole="button" style={styles.emptyBtn}>
+              <Text style={styles.emptyBtnText}>Start on Today</Text>
+            </Pressable>
+          </View>
+          <ZelligeBand height={16} />
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
@@ -90,8 +111,43 @@ export default function StatsScreen() {
         </Card>
       </View>
 
-      <MonthHeatmap today={today.date} status={streak.status} />
+      {/* At a glance */}
+      <View style={styles.tiles}>
+        <Tile label="All time" value={fmt(today.lifetime)} />
+        <Tile label="Daily average" value={fmt(avg30)} sub="last 30 days" />
+        <Tile label="Quest days" value={String(streak.questDays)} sub={`${streak.shields} ${streak.shields === 1 ? 'shield' : 'shields'} ready`} />
+      </View>
+
+      <Card>
+        <MonthCalendar today={today.date} status={streak.status} version={today.version} />
+      </Card>
     </ScrollView>
+  );
+}
+
+function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <View style={styles.tile}>
+      <Text style={styles.tileValue} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+      <Text style={styles.tileLabel}>{label}</Text>
+      {sub ? <Text style={styles.tileSub}>{sub}</Text> : null}
+    </View>
+  );
+}
+
+/** Faint arch bars for the empty state. */
+function ArchBarsPreview() {
+  const hs = [40, 64, 52, 80, 58, 72, 30];
+  return (
+    <Svg width={170} height={90}>
+      {hs.map((h, i) => {
+        const x = 8 + i * 23;
+        const w = 14;
+        return <Path key={i} d={`M${x},90 V${90 - h + 7} A7,7 0 0 1 ${x + w},${90 - h + 7} V90 Z`} fill={i === 6 ? colors.lightGold : colors.zelligeGreen} opacity={i === 6 ? 1 : 0.25} />;
+      })}
+    </Svg>
   );
 }
 
@@ -139,87 +195,20 @@ function ArchBars({ bars, thin }: { bars: Bar[]; thin: boolean }) {
   );
 }
 
-// ---------- month heatmap ----------
-
-const WEEK_HEAD = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-function MonthHeatmap({ today, status }: { today: string; status: Record<string, string> }) {
-  const t = keyToDate(today);
-  const first = new Date(t.getFullYear(), t.getMonth(), 1, 12);
-  const daysInMonth = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
-  const cells: (string | null)[] = [
-    ...Array.from({ length: first.getDay() }, () => null),
-    ...Array.from({ length: daysInMonth }, (_, i) => toDayKey(new Date(t.getFullYear(), t.getMonth(), i + 1, 12))),
-  ];
-  while (cells.length % 7) cells.push(null);
-  const monthName = first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  let hijri = '';
-  try {
-    hijri = new Intl.DateTimeFormat('ar-u-ca-islamic-umalqura-nu-latn', { month: 'long', year: 'numeric' })
-      .format(t)
-      .replace(/\s?هـ$/, '');
-  } catch {}
-  const litCount = cells.filter((k) => k && status[k] === 'lit').length;
-
-  return (
-    <Card>
-      <View style={styles.calHead}>
-        <View>
-          <Text style={styles.calTitle}>{monthName}</Text>
-          {hijri ? <Text style={styles.calHijri}>{hijri}</Text> : null}
-        </View>
-        <Text style={styles.calCount}>
-          {litCount} lit {litCount === 1 ? 'day' : 'days'}
-        </Text>
-      </View>
-      <View style={styles.calGrid}>
-        {WEEK_HEAD.map((d, i) => (
-          <Text key={`h${i}`} style={styles.calWeekday}>
-            {d}
-          </Text>
-        ))}
-        {cells.map((key, i) => {
-          if (!key) return <View key={`e${i}`} style={styles.calCell} />;
-          const day = getDay(key);
-          const lit = status[key] === 'lit';
-          const shield = status[key] === 'shield' || status[key] === 'repaired';
-          const future = key > today;
-          const ratio = Math.min(1, day.total / day.goal);
-          return (
-            <View key={key} style={styles.calCell}>
-              <View
-                style={[
-                  styles.calDot,
-                  !lit && day.total > 0 && { backgroundColor: `rgba(201,142,43,${0.12 + ratio * 0.35})` },
-                  lit && styles.calDotLit,
-                  key === today && styles.calDotToday,
-                  future && { opacity: 0.35 },
-                ]}>
-                {shield ? (
-                  <ShieldIcon size={14} color={colors.saffron} />
-                ) : (
-                  <Text style={[styles.calNum, lit && styles.calNumLit]}>{keyToDate(key).getDate()}</Text>
-                )}
-              </View>
-            </View>
-          );
-        })}
-      </View>
-      <View style={styles.legend}>
-        <View style={[styles.legendDot, styles.calDotLit]} />
-        <Text style={styles.legendText}>Lit</Text>
-        <View style={[styles.legendDot, { backgroundColor: 'rgba(201,142,43,0.3)' }]} />
-        <Text style={styles.legendText}>Partly</Text>
-        <ShieldIcon size={12} color={colors.saffron} />
-        <Text style={styles.legendText}>Shield</Text>
-      </View>
-    </Card>
-  );
-}
-
 const styles = themedStyles(() =>
   StyleSheet.create({
   content: { paddingHorizontal: spacing.lg, paddingBottom: 32, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
+  tiles: { flexDirection: 'row', gap: spacing.sm },
+  tile: { flex: 1, backgroundColor: colors.card, borderRadius: 18, borderWidth: 1, borderColor: colors.cardBorder, padding: spacing.md, alignItems: 'center' },
+  tileValue: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 26, color: colors.ink },
+  tileLabel: { fontFamily: fonts.uiSemi, fontSize: 11, color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.6, textAlign: 'center' },
+  tileSub: { fontFamily: fonts.ui, fontSize: 11, color: colors.terracotta, marginTop: 2, textAlign: 'center' },
+  empty: { backgroundColor: colors.card, borderRadius: radius.card, borderWidth: 1, borderColor: colors.cardBorder, overflow: 'hidden' },
+  emptyBody: { alignItems: 'center', padding: spacing.xl, gap: spacing.sm },
+  emptyTitle: { fontFamily: fonts.display, fontSize: 26, color: colors.ink, textAlign: 'center' },
+  emptyText: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, color: colors.muted, textAlign: 'center', maxWidth: 300 },
+  emptyBtn: { marginTop: spacing.sm, height: 48, paddingHorizontal: spacing.xl, borderRadius: radius.button, backgroundColor: colors.zelligeGreen, alignItems: 'center', justifyContent: 'center' },
+  emptyBtnText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.onPrimary },
   panel: { backgroundColor: colors.zelligeGreen, borderRadius: radius.card, overflow: 'hidden', borderWidth: 1, borderColor: colors.saffron },
   panelBody: { padding: spacing.lg },
   panelLabel: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.lightGold, textTransform: 'uppercase', letterSpacing: 0.8 },

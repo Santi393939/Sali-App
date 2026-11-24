@@ -10,7 +10,7 @@ import {
 } from '@/components/tabs';
 import { Redirect } from 'expo-router';
 
-import ComingSoonScreen from '@/screens/ComingSoonScreen';
+import GroupScreen from '@/screens/GroupScreen';
 import MeScreen from '@/screens/MeScreen';
 import RemindersScreen from '@/screens/RemindersScreen';
 import StatsScreen from '@/screens/StatsScreen';
@@ -20,19 +20,7 @@ import { useSettings } from '@/store/settings';
 const TABS: Tab[] = [
   { key: 'today', label: 'Today', Icon: TodayIcon, render: () => <TodayScreen /> },
   { key: 'reminders', label: 'Reminders', Icon: RemindersIcon, dark: true, render: () => <RemindersScreen /> },
-  {
-    key: 'group',
-    label: 'Group',
-    Icon: GroupIcon,
-    render: () => (
-      <ComingSoonScreen
-        title="Group"
-        arabic="العائلة"
-        heading="Count together for Jumu'ah"
-        body="Create a group, invite family by code and light the ten arched windows together. Groups arrive once accounts are set up."
-      />
-    ),
-  },
+  { key: 'group', label: 'Group', Icon: GroupIcon, render: () => <GroupScreen /> },
   { key: 'stats', label: 'Stats', Icon: StatsIcon, render: () => <StatsScreen /> },
   { key: 'me', label: 'Me', Icon: MeIcon, render: () => <MeScreen /> },
 ];

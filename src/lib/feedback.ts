@@ -8,6 +8,7 @@ import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 
 import { getRewards } from '@/store/rewards';
+import { getSettings } from '@/store/settings';
 
 type SoundName = 'tick' | 'cluster' | 'chime' | 'success' | 'drop' | 'knock' | 'clink' | 'bell' | 'gong' | 'birds';
 
@@ -40,6 +41,7 @@ const VOLUME: Record<SoundName, number> = {
 const players: Partial<Record<SoundName, AudioPlayer>> = {};
 
 function play(name: SoundName) {
+  if (!getSettings().sounds) return;
   try {
     let p = players[name];
     if (!p) {
@@ -55,6 +57,7 @@ function play(name: SoundName) {
 }
 
 const safe = (fn: () => Promise<void>) => {
+  if (!getSettings().haptics) return;
   fn().catch(() => {});
 };
 

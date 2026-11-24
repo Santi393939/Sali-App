@@ -22,6 +22,9 @@ export type Settings = {
   preMaghribReminder: boolean;
   /** Finished the first-run welcome. */
   onboarded: boolean;
+  /** Sound effects (taps, chimes) and vibration. */
+  sounds: boolean;
+  haptics: boolean;
   shareCountWithGroup: boolean;
   /** Rewards (each needs its milestone; checked where used). */
   theme: ThemeId;
@@ -39,6 +42,8 @@ const DEFAULTS: Settings = {
   fridayReminders: true,
   preMaghribReminder: true,
   onboarded: false,
+  sounds: true,
+  haptics: true,
   shareCountWithGroup: false, // off by default, per the brief
   theme: 'zellige',
   tapSound: 'tick',

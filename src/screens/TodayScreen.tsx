@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import {
-  Card,
   CounterHero,
   Lantern,
   NumberPadSheet,
@@ -17,7 +16,9 @@ import {
   MaghribCountdown,
   QuestsCard,
   RepairCard,
+  GroupTeaser,
   ShieldNotice,
+  StreakSheet,
   TasbihBeads,
   StreakTakeover,
   TodayLog,
@@ -47,9 +48,6 @@ import {
 } from '@/store/counts';
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles, type } from '@/theme';
-
-/** Sample group numbers until Groups are built (Prompt 8). */
-const SAMPLE_GROUP = { name: 'Family', total: 6200, goal: 10000 };
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -81,6 +79,7 @@ export default function TodayScreen() {
   const settings = useSettings();
   const countDown = settings.countingStyle === 'down';
   const [padOpen, setPadOpen] = useState(false);
+  const [streakOpen, setStreakOpen] = useState(false);
   const [event, setEvent] = useState<AddEvent>();
   const [takeover, setTakeover] = useState<TakeoverData | null>(null);
   const [unlock, setUnlock] = useState<Milestone | null>(null);
@@ -195,12 +194,17 @@ export default function TodayScreen() {
             <Text style={styles.hijri}>{hijriDateArabic()}</Text>
             <Text style={styles.title}>Today</Text>
           </View>
-          <View
-            style={[styles.streakPill, today.lit && styles.streakPillLit]}
-            accessibilityLabel={`${streak.current} day streak${today.lit ? ', lit today' : ''}`}>
+          <Pressable
+            onPress={() => {
+              feedback.sheetOpen();
+              setStreakOpen(true);
+            }}
+            style={({ pressed }) => [styles.streakPill, today.lit && styles.streakPillLit, pressed && { transform: [{ scale: 0.96 }] }]}
+            accessibilityRole="button"
+            accessibilityLabel={`${streak.current} day streak${today.lit ? ', lit today' : ''}. Open streak calendar`}>
             <Lantern size={20} lit={today.lit} level={streak.level} glow={false} />
             <Text style={[styles.streakPillText, today.lit && styles.streakPillTextLit]}>{streak.current}</Text>
-          </View>
+          </Pressable>
           <Pressable accessibilityRole="button" accessibilityLabel="Reminder settings" style={styles.bell} onPress={() => tabs.goTo(4)}>
             <BellIcon />
           </Pressable>
@@ -261,20 +265,7 @@ export default function TodayScreen() {
           <PrimaryButton label="Other" variant="secondary" style={styles.quickBtn} onPress={openPad} />
         </View>
 
-        {/* Family Jumu'ah goal (sample until Groups) */}
-        <Pressable accessibilityRole="button" accessibilityLabel="Open group" onPress={() => tabs.goTo(2)}>
-          <Card band>
-            <Text style={styles.cardEyebrow}>{SAMPLE_GROUP.name} Jumu&apos;ah goal</Text>
-            <View style={styles.goalRow}>
-              <Text style={styles.goalNumber}>{fmt(SAMPLE_GROUP.total)}</Text>
-              <Text style={styles.goalOf}> / {fmt(SAMPLE_GROUP.goal)}</Text>
-            </View>
-            <View style={styles.track}>
-              <View style={[styles.fill, { width: `${(SAMPLE_GROUP.total / SAMPLE_GROUP.goal) * 100}%` }]} />
-            </View>
-            <Text style={styles.cardMeta}>Ends Friday at Maghrib</Text>
-          </Card>
-        </Pressable>
+        <GroupTeaser onPress={() => tabs.goTo(2)} />
 
         <QuestsCard quests={today.quests} questDays={streak.questDays} />
 
@@ -283,6 +274,7 @@ export default function TodayScreen() {
         <TodayLog entries={today.entries} />
       </ScrollView>
 
+      <StreakSheet visible={streakOpen} today={today} onClose={() => setStreakOpen(false)} />
       <StreakTakeover data={takeover} onClose={closeTakeover} />
       <MilestoneUnlock milestone={unlock} onClose={() => setUnlock(null)} />
 

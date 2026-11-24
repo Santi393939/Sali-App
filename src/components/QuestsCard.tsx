@@ -7,7 +7,7 @@ import { QUEST_DAYS_PER_SHIELD } from '@/store/streaks';
 import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from './Card';
-import { Lantern } from './Lantern';
+import { ShieldIcon } from './StreakTakeover';
 
 export function QuestsCard({ quests, questDays }: { quests: Quest[]; questDays: number }) {
   const done = quests.filter((q) => q.done).length;
@@ -20,10 +20,11 @@ export function QuestsCard({ quests, questDays }: { quests: Quest[]; questDays: 
           <Text style={styles.title}>Today&apos;s quests</Text>
           <Text style={styles.sub}>{allDone ? 'All done today · ما شاء الله' : `${done} of ${quests.length} done`}</Text>
         </View>
-        <View style={styles.lamps} accessibilityLabel={`${towardShield} of ${QUEST_DAYS_PER_SHIELD} quest days toward a shield`}>
+        <View style={styles.meter} accessibilityLabel={`${towardShield} of ${QUEST_DAYS_PER_SHIELD} quest days toward a shield`}>
           {Array.from({ length: QUEST_DAYS_PER_SHIELD }, (_, i) => (
-            <Lantern key={i} size={22} lit={i < towardShield || (allDone && towardShield === 0 && questDays > 0)} glow={false} />
+            <View key={i} style={[styles.pip, i < towardShield && styles.pipOn]} />
           ))}
+          <ShieldIcon size={18} color={towardShield > 0 ? colors.saffron : colors.cardBorder} />
         </View>
       </View>
       {quests.map((q) => (
@@ -58,7 +59,9 @@ const styles = themedStyles(() =>
     head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
     title: { fontFamily: fonts.display, fontSize: 24, color: colors.ink },
     sub: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted },
-    lamps: { flexDirection: 'row', gap: 2 },
+    meter: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    pip: { width: 10, height: 10, transform: [{ rotate: '45deg' }], borderRadius: 2, borderWidth: 1.5, borderColor: colors.cardBorder },
+    pipOn: { backgroundColor: colors.saffron, borderColor: colors.saffron },
     row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.cardBorder },
     check: { width: 24, height: 24, borderRadius: 12, borderWidth: 1.5, borderColor: colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
     checkDone: { backgroundColor: colors.zelligeGreen, borderColor: colors.zelligeGreen },

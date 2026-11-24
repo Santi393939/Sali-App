@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, EightPointStar, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
+import { Card, EightPointStar, Logo, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
 import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
 import type { Milestone } from '@/content/milestones';
 import { switchTheme } from '@/lib/themeSwitch';
@@ -170,6 +170,22 @@ export default function MeScreen() {
             />
           </View>
 
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Sounds</Text>
+              <Text style={styles.rowHint}>Ticks, chimes and your tap sound</Text>
+            </View>
+            <Toggle label="Sounds" value={settings.sounds} onChange={(sounds) => updateSettings({ sounds })} />
+          </View>
+
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Vibration</Text>
+              <Text style={styles.rowHint}>Taps you can feel with each count</Text>
+            </View>
+            <Toggle label="Vibration" value={settings.haptics} onChange={(haptics) => updateSettings({ haptics })} />
+          </View>
+
           <View style={[styles.row, styles.rowLast]}>
             <View style={{ flex: 1 }}>
               <Text style={styles.rowLabel}>Show my count to group</Text>
@@ -200,6 +216,13 @@ export default function MeScreen() {
             </View>
           </View>
         </Card>
+
+        <View style={styles.footer}>
+          <Logo size={44} />
+          <Text style={styles.footerName}>Salli · صلِّ</Text>
+          <Text style={styles.footerText}>Version 0.1 · preview</Text>
+          <Text style={styles.footerText}>Qur&apos;an and hadith texts are awaiting review by a qualified scholar.</Text>
+        </View>
       </ScrollView>
 
       <MilestoneSheet
@@ -338,6 +361,9 @@ const styles = themedStyles(() =>
   rowLast: { paddingBottom: spacing.lg },
   rowLabel: { fontFamily: fonts.uiMedium, fontSize: 15, color: colors.ink },
   rowHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginTop: 2 },
+  footer: { alignItems: 'center', gap: 4, paddingVertical: spacing.lg },
+  footerName: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, marginTop: 4 },
+  footerText: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center', maxWidth: 280 },
   rowCity: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.terracotta },
   rowValue: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 22, color: colors.terracotta },
 

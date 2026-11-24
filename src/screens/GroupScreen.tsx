@@ -1,0 +1,177 @@
+/**
+ * Group (preview until accounts): what a family group looks like — the
+ * Jumu'ah goal with ten arched windows, who logged today, the activity feed
+ * with reactions — and how privacy works. Sample names, clearly marked.
+ */
+import { router } from 'expo-router';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
+
+import { ArchWindows, Card, EightPointStar, PlasterPattern, PrimaryButton, ScreenHeader, ZelligeBand } from '@/components';
+import { useSettings } from '@/store/settings';
+import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+
+const MEMBERS = [
+  { name: 'Amina', streak: 23, logged: true },
+  { name: 'Yusuf', streak: 9, logged: true },
+  { name: 'You', streak: 0, logged: true },
+  { name: 'Khadija', streak: 4, logged: false },
+  { name: 'Omar', streak: 15, logged: true },
+];
+
+const ACTIVITY = [
+  { who: 'Amina', what: 'lit her lantern · 23-day streak', when: '12 min', reactions: ['Ameen 3', 'MashaAllah 2'] },
+  { who: 'Omar', what: 'logged salawat after Asr', when: '1 h', reactions: ['Ameen 1'] },
+  { who: 'The family', what: 'passed 6,000 toward the Jumu’ah goal', when: '2 h', reactions: ['MashaAllah 4'] },
+];
+
+export default function GroupScreen() {
+  const insets = useSafeAreaInsets();
+  const settings = useSettings();
+  const you = settings.name.trim() || 'You';
+
+  return (
+    <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
+      <ScreenHeader
+        title="Group"
+        arabic="العائلة"
+        right={
+          <View style={styles.previewPill}>
+            <Text style={styles.previewText}>Preview</Text>
+          </View>
+        }
+      />
+
+      {/* Goal card */}
+      <View style={styles.goal}>
+        <PlasterPattern color={colors.lightGold} opacity={0.1} cell={44} />
+        <View style={styles.goalBody}>
+          <Text style={styles.goalEyebrow}>Family · Jumu&apos;ah goal</Text>
+          <View style={styles.goalRow}>
+            <Text style={styles.goalNum}>6,200</Text>
+            <Text style={styles.goalOf}> / 10,000</Text>
+          </View>
+          <Text style={styles.goalMeta}>Ends Friday at Maghrib · 5 members</Text>
+          <View style={styles.windows}>
+            <ArchWindows lit={6} size={24} />
+          </View>
+          <Text style={styles.goalHint}>A window lights for every 1,000 the family sends together.</Text>
+        </View>
+        <ZelligeBand height={16} />
+      </View>
+
+      {/* Logged today */}
+      <Card>
+        <Text style={styles.cardTitle}>Logged today</Text>
+        <View style={styles.members}>
+          {MEMBERS.map((m) => (
+            <View key={m.name} style={styles.member}>
+              <View style={[styles.avatar, !m.logged && styles.avatarDashed]}>
+                {m.logged ? (
+                  <EightPointStar size={46} fill={m.name === 'You' ? colors.saffron : colors.zelligeGreen} stroke={colors.saffron} strokeWidth={1.5} />
+                ) : null}
+                <Text style={[styles.initial, !m.logged && { color: colors.muted }]}>{(m.name === 'You' ? you : m.name).charAt(0)}</Text>
+              </View>
+              <Text style={styles.memberName} numberOfLines={1}>
+                {m.name === 'You' ? 'You' : m.name}
+              </Text>
+              <Text style={styles.memberStreak}>{m.logged ? `${m.streak || '•'} days` : 'not yet'}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={styles.note}>Members see the family total and each other&apos;s streaks, never each other&apos;s counts, unless someone turns sharing on.</Text>
+      </Card>
+
+      {/* Activity */}
+      <Card>
+        <Text style={styles.cardTitle}>Activity</Text>
+        {ACTIVITY.map((a, i) => (
+          <View key={i} style={[styles.event, i > 0 && styles.eventBorder]}>
+            <Text style={styles.eventText}>
+              <Text style={styles.eventWho}>{a.who}</Text> {a.what}
+            </Text>
+            <View style={styles.reactions}>
+              {a.reactions.map((r) => (
+                <View key={r} style={styles.reaction}>
+                  <Text style={styles.reactionText}>{r}</Text>
+                </View>
+              ))}
+              <Text style={styles.when}>{a.when}</Text>
+            </View>
+          </View>
+        ))}
+      </Card>
+
+      {/* How it works */}
+      <Card>
+        <Text style={styles.cardTitle}>How groups work</Text>
+        <Point icon="code" text="Create a group and share its 6-letter invite code with family." />
+        <Point icon="live" text="Everyone's salawat add up live toward the week's goal, until Friday at Maghrib." />
+        <Point icon="lock" text="Your own count stays private. Sharing is off unless you switch it on in Me." />
+        <Point icon="chat" text="Log from your family's Telegram group too, with the Salli bot." />
+        <View style={{ marginTop: spacing.md }}>
+          <PrimaryButton label="Sign in to create a group" onPress={() => router.push('/sign-in')} />
+        </View>
+        <Text style={styles.foot}>Groups switch on once accounts are connected.</Text>
+      </Card>
+    </ScrollView>
+  );
+}
+
+function Point({ icon, text }: { icon: 'code' | 'live' | 'lock' | 'chat'; text: string }) {
+  const d = {
+    code: 'M8 8 4 12l4 4M16 8l4 4-4 4M13.5 6l-3 12',
+    live: 'M3 12h3l3-7 4 14 3-7h5',
+    lock: 'M6 11h12v9H6Z M8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+    chat: 'M21 4 3 11l6 2 2 6 3-4 5 4Z M9 13l9-6',
+  }[icon];
+  return (
+    <View style={styles.point}>
+      <View style={styles.pointIcon}>
+        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={colors.link} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <Path d={d} />
+        </Svg>
+      </View>
+      <Text style={styles.pointText}>{text}</Text>
+    </View>
+  );
+}
+
+const styles = themedStyles(() =>
+  StyleSheet.create({
+    content: { paddingHorizontal: spacing.lg, paddingBottom: 32, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
+    previewPill: { borderRadius: 999, borderWidth: 1, borderColor: colors.saffron, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 6 },
+    previewText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta },
+    goal: { backgroundColor: colors.zelligeGreen, borderRadius: radius.card, borderWidth: 1, borderColor: colors.saffron, overflow: 'hidden' },
+    goalBody: { padding: spacing.lg },
+    goalEyebrow: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.lightGold, textTransform: 'uppercase', letterSpacing: 0.8 },
+    goalRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 2 },
+    goalNum: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 48, color: colors.onPrimary },
+    goalOf: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 24, color: colors.lightGold },
+    goalMeta: { fontFamily: fonts.ui, fontSize: 13, color: colors.onPrimary, opacity: 0.85 },
+    windows: { marginTop: spacing.lg, marginBottom: spacing.sm },
+    goalHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.onPrimary, opacity: 0.75 },
+    cardTitle: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, marginBottom: spacing.sm },
+    members: { flexDirection: 'row', justifyContent: 'space-between' },
+    member: { alignItems: 'center', width: 60 },
+    avatar: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
+    avatarDashed: { borderRadius: 23, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.cardBorder },
+    initial: { position: 'absolute', fontFamily: fonts.display, fontSize: 20, color: colors.onPrimary },
+    memberName: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.ink, marginTop: 4 },
+    memberStreak: { fontFamily: fonts.ui, fontSize: 11, color: colors.terracotta },
+    note: { fontFamily: fonts.ui, fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: spacing.md },
+    event: { paddingVertical: 10 },
+    eventBorder: { borderTopWidth: 1, borderTopColor: colors.cardBorder },
+    eventText: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 20, color: colors.ink },
+    eventWho: { fontFamily: fonts.uiSemi },
+    reactions: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+    reaction: { borderRadius: 999, backgroundColor: colors.highlight, paddingHorizontal: 10, paddingVertical: 3 },
+    reactionText: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.terracotta },
+    when: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginLeft: 'auto' },
+    point: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 6 },
+    pointIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.plaster, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
+    pointText: { flex: 1, fontFamily: fonts.ui, fontSize: 14, lineHeight: 20, color: colors.ink },
+    foot: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center', marginTop: spacing.sm },
+  }),
+);
