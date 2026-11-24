@@ -7,3 +7,5 @@ export { PlasterPattern } from './PlasterPattern';
 export { PrimaryButton } from './PrimaryButton';
 export { ProgressStar } from './ProgressStar';
 export { ZelligeBand } from './ZelligeBand';
+export { NumberPadSheet } from './NumberPadSheet';
+export { TodayLog } from './TodayLog';
