@@ -11,11 +11,12 @@ import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { Lantern } from './Lantern';
 import { MonthCalendar } from './MonthCalendar';
+import { PrimaryButton } from './PrimaryButton';
 import { ShieldIcon } from './StreakTakeover';
 
-type Props = { visible: boolean; today: TodaySnapshot; onClose: () => void };
+type Props = { visible: boolean; today: TodaySnapshot; onClose: () => void; onShare?: () => void };
 
-export function StreakSheet({ visible, today, onClose }: Props) {
+export function StreakSheet({ visible, today, onClose, onShare }: Props) {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const reduce = useReducedMotion();
@@ -93,6 +94,8 @@ export function StreakSheet({ visible, today, onClose }: Props) {
             <View style={styles.box}>
               <MonthCalendar today={today.date} status={streak.status} version={today.version} />
             </View>
+
+            {onShare && <PrimaryButton label="Share my streak" onPress={onShare} />}
 
             {/* How it works */}
             <View style={styles.box}>

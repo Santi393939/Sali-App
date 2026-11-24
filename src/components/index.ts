@@ -27,3 +27,4 @@ export { ArchWindows, GroupTeaser } from './GroupTeaser';
 export { StreakSheet } from './StreakSheet';
 export { FridayBanner } from './FridayBanner';
 export { LampsCard, OilLamp } from './LampsCard';
+export { ShareSheet, type ShareKind } from './ShareSheet';

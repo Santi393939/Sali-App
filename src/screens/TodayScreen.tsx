@@ -18,6 +18,7 @@ import {
   RepairCard,
   FridayBanner,
   GroupTeaser,
+  ShareSheet,
   ShieldNotice,
   StreakSheet,
   TasbihBeads,
@@ -84,6 +85,7 @@ export default function TodayScreen() {
   const countDown = settings.countingStyle === 'down';
   const [padOpen, setPadOpen] = useState(false);
   const [streakOpen, setStreakOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [event, setEvent] = useState<AddEvent>();
   const [takeover, setTakeover] = useState<TakeoverData | null>(null);
   const [unlock, setUnlock] = useState<Milestone | null>(null);
@@ -307,7 +309,16 @@ export default function TodayScreen() {
         <TodayLog entries={today.entries} />
       </ScrollView>
 
-      <StreakSheet visible={streakOpen} today={today} onClose={() => setStreakOpen(false)} />
+      <StreakSheet
+        visible={streakOpen}
+        today={today}
+        onClose={() => setStreakOpen(false)}
+        onShare={() => {
+          setStreakOpen(false);
+          setTimeout(() => setShareOpen(true), 260);
+        }}
+      />
+      <ShareSheet visible={shareOpen} initial="streak" today={today} onClose={() => setShareOpen(false)} />
       <StreakTakeover data={takeover} onClose={closeTakeover} />
       <MilestoneUnlock milestone={unlock} onClose={() => setUnlock(null)} />
 

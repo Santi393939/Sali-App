@@ -5,7 +5,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
+import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, ShareSheet, Toggle } from '@/components';
 import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
 import type { Milestone } from '@/content/milestones';
 import { switchTheme } from '@/lib/themeSwitch';
@@ -43,6 +43,7 @@ export default function MeScreen() {
   const [openMilestone, setOpenMilestone] = useState<MilestoneState | null>(null);
   const [replay, setReplay] = useState<Milestone | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const tabs = useTabs();
   const initial = settings.name.trim().charAt(0).toUpperCase();
 
@@ -86,6 +87,9 @@ export default function MeScreen() {
               </Text>
               <Text style={styles.lifetime}>{fmt(totals.lifetime)} all time</Text>
               {featured && <Text style={[styles.featuredName, { color: featured.palette.face }]}>{featured.title}</Text>}
+              <Pressable onPress={() => setShareOpen(true)} accessibilityRole="button" style={styles.shareBtn}>
+                <Text style={styles.shareText}>Share my progress</Text>
+              </Pressable>
             </View>
           </View>
         </Card>
@@ -291,6 +295,7 @@ export default function MeScreen() {
       />
 
       <MilestoneUnlock milestone={replay} onClose={() => setReplay(null)} />
+      <ShareSheet visible={shareOpen} initial="masjid" today={today} onClose={() => setShareOpen(false)} />
 
       <Modal visible={confirmDelete} transparent animationType="fade" onRequestClose={() => setConfirmDelete(false)}>
         <View style={styles.confirmRoot}>
@@ -438,6 +443,8 @@ const styles = themedStyles(() =>
   deleteText: { fontFamily: fonts.uiSemi, fontSize: 16, color: '#FFFFFF' },
   cancelBtn: { height: 48, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.link },
+  shareBtn: { alignSelf: 'flex-start', marginTop: spacing.sm, borderRadius: 999, borderWidth: 1.5, borderColor: colors.saffron, paddingHorizontal: 12, paddingVertical: 5 },
+  shareText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.link },
   footer: { alignItems: 'center', gap: 4, paddingVertical: spacing.lg },
   footerName: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, marginTop: 4 },
   footerText: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center', maxWidth: 280 },
