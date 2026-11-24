@@ -10,7 +10,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, ScreenHeader, Segmented, ShareSheet, Toggle, YearBanner } from '@/components';
+import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, RewardsBanner, ScreenHeader, Segmented, ShareSheet, Toggle, YearBanner } from '@/components';
 import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
 import type { Milestone } from '@/content/milestones';
 import { switchTheme } from '@/lib/themeSwitch';
@@ -27,6 +27,7 @@ import type { MilestoneState } from '@/store/milestones';
 import { useSyncStatus } from '@/store/sync';
 import { colors, fonts, isDarkMode, paletteFor, radius, spacing, themedStyles } from '@/theme';
 import { LANGUAGES, dateLocale, t, type Lang } from '@/lib/i18n';
+import { recapAsOf } from '@/store/recap';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -59,6 +60,7 @@ export default function MeScreen({ view = 'main' }: { view?: MeView }) {
   const [shareOpen, setShareOpen] = useState(false);
   const tabs = useTabs();
   const initial = settings.name.trim().charAt(0).toUpperCase();
+  const recapDay = recapAsOf(today.date);
 
   return (
     <View style={{ flex: 1 }}>
@@ -132,7 +134,9 @@ export default function MeScreen({ view = 'main' }: { view?: MeView }) {
               </View>
             </Card>
 
-            <YearBanner year={today.date.slice(0, 4)} />
+            <RewardsBanner progress={journey} featured={featured} />
+
+            {recapDay && <YearBanner year={recapDay.slice(0, 4)} />}
 
             <AccountCard />
 
@@ -141,16 +145,6 @@ export default function MeScreen({ view = 'main' }: { view?: MeView }) {
 
             {/* Everything else, one tap away */}
             <Card padded={false}>
-              <Pressable style={styles.row} accessibilityRole="button" onPress={() => router.push('/rewards')}>
-                <View style={styles.menuIcon}>
-                  <Medallion size={30} milestone={featured ?? journey.list[0]} earned={!!featured || journey.list[0].earned} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>{t('Rewards & themes')}</Text>
-                  <Text style={styles.rowHint}>{t('Badge sets, themes, lantern glass, sounds and lamps')}</Text>
-                </View>
-                <Chevron />
-              </Pressable>
               <Pressable style={[styles.row, styles.rowLast]} accessibilityRole="button" onPress={() => router.push('/settings')}>
                 <View style={styles.menuIcon}>
                   <Svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={colors.link} strokeWidth={1.8} strokeLinecap="round">
@@ -529,7 +523,14 @@ const styles = themedStyles(() =>
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
     },
-    signInPill: { backgroundColor: colors.zelligeGreen, borderRadius: 999, borderWidth: 1, borderColor: colors.saffron, paddingHorizontal: 14, paddingVertical: 7 },
+    signInPill: {
+      backgroundColor: colors.zelligeGreen,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: colors.saffron,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+    },
     signInPillText: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.onPrimary },
     back: { alignSelf: 'flex-start', paddingVertical: 4, marginBottom: 4 },
     backText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.link },

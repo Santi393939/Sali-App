@@ -33,3 +33,4 @@ export { StepUpCard } from './StepUpCard';
 export { ChallengeCard } from './ChallengeCard';
 export { RangeCard, RecordsCard } from './GrowthCards';
 export { YearBanner } from './YearBanner';
+export { RewardsBanner } from './RewardsBanner';

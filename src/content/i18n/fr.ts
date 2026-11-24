@@ -634,4 +634,9 @@ export const FR: Record<string, string> = {
   "Goal, reminders, language, appearance, privacy": "Objectif, rappels, langue, apparence, confidentialité",
   "Sync across phones and join groups": "Synchronisez vos téléphones et rejoignez des groupes",
   "Saved on this phone for now": "Enregistré sur ce téléphone pour l’instant",
+  "Every badge earned": "Tous les badges obtenus",
+  "Next unlock: {name}": "Prochain déblocage : {name}",
+  "Wear any set you like": "Portez l’ensemble de votre choix",
+  "{n} of {total} badges earned": "{n} badges obtenus sur {total}",
+  "{n} to go · a new theme, sound and title": "Encore {n} · un nouveau thème, un son et un titre",
 };

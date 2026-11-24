@@ -12,7 +12,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { MILESTONES, type Milestone } from '@/content/milestones';
 import { feedback } from '@/lib/feedback';
 import type { TodaySnapshot } from '@/store/counts';
-import { yearRecap } from '@/store/recap';
+import { recapAsOf, yearRecap } from '@/store/recap';
 import { useRewards } from '@/store/rewards';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
@@ -84,7 +84,7 @@ export function ShareSheet({ visible, initial = 'streak', today, onClose }: Prop
     { value: 'streak', label: t('Streak') },
     { value: 'masjid', label: t('Masjid') },
     ...(badge ? [{ value: 'badge' as const, label: t('Badge') }] : []),
-    { value: 'year', label: t('Year') },
+    ...(recapAsOf(today.date) || initial === 'year' ? [{ value: 'year' as const, label: t('Year') }] : []),
   ];
 
   return (
@@ -175,7 +175,7 @@ function MasjidCard({ lifetime }: { lifetime: number }) {
 }
 
 function YearCard({ today }: { today: TodaySnapshot }) {
-  const r = yearRecap(today.date, today.version);
+  const r = yearRecap(recapAsOf(today.date) ?? today.date, today.version);
   return (
     <View style={[styles.face, { backgroundColor: colors.night }]}>
       <PlasterPattern color={colors.lightGold} opacity={0.08} cell={40} />

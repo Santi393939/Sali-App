@@ -15,7 +15,7 @@ import { MILESTONES } from '@/content/milestones';
 import { dateLocale, t } from '@/lib/i18n';
 import { keyToDate } from '@/lib/salliDay';
 import { useToday } from '@/store/counts';
-import { yearRecap, type TimeOfDay } from '@/store/recap';
+import { recapAsOf, yearRecap, type TimeOfDay } from '@/store/recap';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -23,7 +23,7 @@ const fmt = (n: number) => n.toLocaleString('en-US');
 export default function Recap() {
   const insets = useSafeAreaInsets();
   const today = useToday();
-  const r = yearRecap(today.date, today.version);
+  const r = yearRecap(recapAsOf(today.date) ?? today.date, today.version);
   const [shareOpen, setShareOpen] = useState(false);
 
   const month = (m: number) => new Date(2026, m, 15).toLocaleDateString(dateLocale(), { month: 'long' });

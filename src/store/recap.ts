@@ -95,3 +95,15 @@ export function yearRecap(today: string, _version?: number): YearRecap {
     lamps: lampsFor(before + total) - lampsFor(before),
   };
 }
+
+/**
+ * When "Your year in Salli" is offered: all of December (the year so far),
+ * then the first two weeks of January (the year just ended). Returns the day
+ * the recap is told up to, or null the rest of the year (Stats covers it).
+ */
+export function recapAsOf(today: string): string | null {
+  const [y, m, d] = today.split('-').map(Number);
+  if (m === 12) return today;
+  if (m === 1 && d <= 14) return `${y - 1}-12-31`;
+  return null;
+}

@@ -8,6 +8,7 @@ import { Card, Lantern, MonthCalendar, RangeCard, RecordsCard, YearBanner, Plast
 import { useTabs } from '@/components/tabs';
 import { useToday } from '@/store/counts';
 import { personalRecords, weekRange } from '@/store/growth';
+import { recapAsOf } from '@/store/recap';
 import { periodStats, type Bar, type Period } from '@/store/stats';
 import { LEVELS } from '@/store/streaks';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
@@ -128,7 +129,7 @@ export default function StatsScreen() {
 
       <RecordsCard records={personalRecords(today.version)} longestStreak={streak.best} />
 
-      <YearBanner year={today.date.slice(0, 4)} />
+      {recapAsOf(today.date) && <YearBanner year={recapAsOf(today.date)!.slice(0, 4)} />}
     </ScrollView>
   );
 }

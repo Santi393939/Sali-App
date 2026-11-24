@@ -625,4 +625,9 @@ export const AR: Record<string, string> = {
   "Goal, reminders, language, appearance, privacy": "الهدف والتذكيرات واللغة والمظهر والخصوصية",
   "Sync across phones and join groups": "زامن بين الهواتف وانضم إلى المجموعات",
   "Saved on this phone for now": "محفوظة على هذا الهاتف حاليًا",
+  "Every badge earned": "كل الشارات مُكتسَبة",
+  "Next unlock: {name}": "التالي: {name}",
+  "Wear any set you like": "ارتدِ أي مجموعة تحبها",
+  "{n} of {total} badges earned": "{n} من {total} شارات مُكتسَبة",
+  "{n} to go · a new theme, sound and title": "بقي {n} · سِمة وصوت ولقب جديد",
 };
