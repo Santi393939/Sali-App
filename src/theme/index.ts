@@ -68,11 +68,11 @@ export const PALETTES: Record<ThemeId, Palette> = {
     plaster: '#0E1322', card: '#161D33', cardBorder: '#28324F', ink: '#EEE6D6', muted: '#9EA6BD', night: '#070A14',
     onPrimary: '#F3EADB', highlight: '#2B2F48', primaryRing: '#6274BF', link: '#F5D58A', statusBar: 'light',
   },
-  // The Riad — garden green with rose
+  // The Riad — Bougainvillea: fuchsia blooms over riad walls, emerald leaves and gold
   garden: {
-    zelligeGreen: '#2E6B4F', deepGreen: '#1F4D38', saffron: '#C98E2B', lightGold: '#E9B860', cobalt: '#B5576B', terracotta: '#A4505E',
-    plaster: '#F4ECE7', card: '#FDF8F5', cardBorder: '#EAD6CF', ink: '#1F2A22', muted: '#5D6B60', night: '#13241B',
-    onPrimary: '#FDF8F5', highlight: '#F9E1E5', primaryRing: '#5E9A7C', link: '#2E6B4F', statusBar: 'dark',
+    zelligeGreen: '#A8326E', deepGreen: '#82245A', saffron: '#E0A23A', lightGold: '#F6CF6B', cobalt: '#2E8A63', terracotta: '#C0533A',
+    plaster: '#FBEAF0', card: '#FFF7FA', cardBorder: '#F0D0DD', ink: '#2B1420', muted: '#6F4C5D', night: '#22101A',
+    onPrimary: '#FFF7FA', highlight: '#FCE3C0', primaryRing: '#D2669E', link: '#A8326E', statusBar: 'dark',
   },
 };
 

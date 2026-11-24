@@ -431,7 +431,7 @@ function Petal({ i, width, height, milestone }: { i: number; width: number; heig
   return (
     <Animated.View style={[{ position: 'absolute', left: 0, top: 0 }, style]}>
       <Svg width={16} height={12}>
-        <Ellipse cx={8} cy={6} rx={leaf ? 7 : 6} ry={leaf ? 3 : 5} fill={leaf ? '#5FA37E' : i % 2 ? p.accent : '#F9DCE2'} />
+        <Ellipse cx={8} cy={6} rx={leaf ? 7 : 6} ry={leaf ? 3 : 5} fill={leaf ? '#2E8A63' : i % 2 ? p.accent : p.face} />
       </Svg>
     </Animated.View>
   );

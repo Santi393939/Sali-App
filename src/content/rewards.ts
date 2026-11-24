@@ -22,7 +22,7 @@ export const THEMES: Record<ThemeId, Theme> = {
   turquoise: { name: 'Turquoise', unlock: 50000, arch: '#1F7A7A', star: '#165E5E', band: { star: '#2A9D9D', centre: '#FBF6EC', diamond: '#1D3E8A' } },
   gilded: { name: 'Marrakech', unlock: 100000, arch: '#A8382E', star: '#842A22', band: { star: '#1E6B6B', centre: '#F0C46A', diamond: '#A8382E' } },
   midnight: { name: 'Midnight', unlock: 250000, arch: '#1A2240', star: '#10162B', band: { star: '#2C3A73', centre: '#E9B860', diamond: '#C98E2B' } },
-  garden: { name: 'Riad garden', unlock: 1000000, arch: '#2E6B4F', star: '#1F4D38', band: { star: '#B5576B', centre: '#E9B860', diamond: '#2E6B4F' } },
+  garden: { name: 'Bougainvillea', unlock: 1000000, arch: '#A8326E', star: '#82245A', band: { star: '#2E8A63', centre: '#F6CF6B', diamond: '#A8326E' } },
 };
 
 export const SOUNDS: Record<SoundId, { name: string; unlock: number }> = {
