@@ -1,15 +1,18 @@
 /** Me: profile, milestone badges and settings. */
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, EightPointStar, NumberPadSheet, ScreenHeader, Segmented, Toggle } from '@/components';
+import { Card, EightPointStar, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
 import { eightPointStarPath } from '@/components/geometry';
 import { feedback } from '@/lib/feedback';
+import { signOut, useAuth } from '@/store/auth';
 import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
 import { lifetimeTotals, MILESTONES } from '@/store/stats';
+import { useSyncStatus } from '@/store/sync';
 import { colors, fonts, radius, spacing } from '@/theme';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -58,6 +61,8 @@ export default function MeScreen() {
             </View>
           </View>
         </Card>
+
+        <AccountCard />
 
         {/* Milestones */}
         <Card>
@@ -180,6 +185,58 @@ export default function MeScreen() {
   );
 }
 
+function AccountCard() {
+  const { session, configured } = useAuth();
+  const sync = useSyncStatus();
+  if (session) {
+    const email = session.user.email ?? 'Signed in';
+    const when = sync.lastSyncedAt ? timeAgo(sync.lastSyncedAt) : 'not yet';
+    return (
+      <Card>
+        <View style={styles.account}>
+          <View style={[styles.syncDot, sync.state === 'error' && { backgroundColor: '#C2543D' }]} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel} numberOfLines={1}>
+              {email}
+            </Text>
+            <Text style={styles.rowHint}>
+              {sync.state === 'syncing'
+                ? 'Syncing…'
+                : sync.state === 'error'
+                  ? 'Will retry when you are back online'
+                  : `Synced ${when}`}
+            </Text>
+          </View>
+          <Pressable onPress={() => signOut()} accessibilityRole="button" style={styles.signOut}>
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
+        </View>
+      </Card>
+    );
+  }
+  return (
+    <Card>
+      <Text style={styles.rowLabel}>Keep your counts safe</Text>
+      <Text style={styles.rowHint}>
+        {configured
+          ? 'Sign in to sync across phones, join a family group and log from Telegram.'
+          : 'Your counts are saved on this phone. Accounts switch on once Supabase is connected.'}
+      </Text>
+      <View style={{ marginTop: spacing.md }}>
+        <PrimaryButton label="Sign in" onPress={() => router.push('/sign-in')} />
+      </View>
+    </Card>
+  );
+}
+
+function timeAgo(iso: string) {
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.round(s / 60)} min ago`;
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 function Badge({ label, earned }: { label: string; earned: boolean }) {
   const s = 64;
   return (
@@ -259,6 +316,10 @@ const styles = StyleSheet.create({
   rowValue: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 22, color: colors.terracotta },
 
   telegram: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  account: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  syncDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.zelligeGreen },
+  signOut: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.sm },
+  signOutText: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.terracotta },
   tgIcon: {
     width: 44,
     height: 44,

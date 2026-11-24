@@ -10,6 +10,7 @@ import { nextMaghrib, previousDayKey, salliDayKey } from '@/lib/salliDay';
 
 import { getDay, isLit, saveDay, type Entry, type EntrySource } from './days';
 import { storage } from './storage';
+import { queueEntry } from './syncQueue';
 import { computeStreak, goalProgress, weekKeys, type GoalProgress, type StreakState } from './streaks';
 
 export { DEFAULT_DAILY_GOAL, type Entry, type EntrySource } from './days';
@@ -79,6 +80,7 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
   }
   day.total += add;
   saveDay(day);
+  queueEntry(day.entries[day.entries.length - 1].clientId, date);
   notifyChange();
   const litNow = !wasLit && isLit(day);
   if (litNow) litListeners.forEach((l) => l(source));

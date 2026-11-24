@@ -11,7 +11,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { startSync } from '@/store/sync';
 import { colors } from '@/theme';
+
+startSync();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,8 +42,9 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.plaster },
-        }}
-      />
+        }}>
+        <Stack.Screen name="sign-in" options={{ presentation: 'modal' }} />
+      </Stack>
     </GestureHandlerRootView>
   );
 }

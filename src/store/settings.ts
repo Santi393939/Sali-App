@@ -39,11 +39,19 @@ export function getSettings(): Settings {
   return current;
 }
 
-export function updateSettings(patch: Partial<Settings>) {
+type ChangeListener = (fields: (keyof Settings)[]) => void;
+let changeListener: ChangeListener | null = null;
+/** The sync engine registers here to upload changed settings. */
+export function setSettingsChangeListener(fn: ChangeListener | null) {
+  changeListener = fn;
+}
+
+export function updateSettings(patch: Partial<Settings>, opts: { fromServer?: boolean } = {}) {
   current = { ...current, ...patch };
   writeJSON(KEY, current);
   if (patch.dailyGoal != null) applyGoalToToday(patch.dailyGoal);
   listeners.forEach((l) => l());
+  if (!opts.fromServer) changeListener?.(Object.keys(patch) as (keyof Settings)[]);
 }
 
 /** A new goal applies from today; past days keep the goal they had. */
