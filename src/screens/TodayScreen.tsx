@@ -16,6 +16,7 @@ import {
   MaghribCountdown,
   QuestsCard,
   RepairCard,
+  ChallengeCard,
   StepUpCard,
   FridayBanner,
   ShareSheet,
@@ -45,6 +46,8 @@ import {
   markTakeoverShown,
   onGoalLit,
   onFridayBadge,
+  onDayRecord,
+  onChallengeDone,
   onLampLit,
   onStreakRepaired,
   onMilestone,
@@ -54,7 +57,8 @@ import {
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles, type } from '@/theme';
 import { isRTL, t } from '@/lib/i18n';
-import { stepUpOffer } from '@/store/habit';
+import { stepDownOffer, stepUpOffer } from '@/store/habit';
+import { monthChallenge } from '@/store/growth';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -84,7 +88,8 @@ export default function TodayScreen() {
   const today = useToday();
   const settingsNow = useSettings();
   // Re-read when counts or the goal change.
-  const stepUp = stepUpOffer(today.date, today.version + settingsNow.dailyGoal);
+  const goalOffer =
+    stepUpOffer(today.date, today.version + settingsNow.dailyGoal) ?? stepDownOffer(today.date, today.version + settingsNow.dailyGoal);
   const tabs = useTabs();
   const settings = useSettings();
   const countDown = settings.countingStyle === 'down';
@@ -158,6 +163,14 @@ export default function TodayScreen() {
         sub: glass ? t('New lantern glass: {name} · choose it in Me', { name: glass.name }) : t('Another lamp burns in your masjid'),
       });
     });
+    const offRecord = onDayRecord(({ total }) => {
+      feedback.quest(true);
+      showToast({ tone: 'big', title: t('New personal best!'), sub: t('{n} in one day, your most yet', { n: total.toLocaleString('en-US') }) });
+    });
+    const offChallenge = onChallengeDone((c) => {
+      feedback.quest(true);
+      showToast({ tone: 'big', title: t('{month} challenge complete!', { month: c.name }), sub: t('{n} lit days this month', { n: c.lit }) });
+    });
     const offFriday = onFridayBadge(() => {
       feedback.quest(true);
       showToast({ tone: 'big', title: t('Jumu’ah Keeper earned!'), sub: t('Four Fridays in a row with your lantern lit') });
@@ -169,6 +182,8 @@ export default function TodayScreen() {
       offRepair();
       offLamp();
       offFriday();
+      offRecord();
+      offChallenge();
     };
   }, []);
 
@@ -239,7 +254,7 @@ export default function TodayScreen() {
         {today.friday.isFriday && <FridayBanner streak={today.friday.streak} badge={today.friday.badge} />}
 
         {today.repair && <RepairCard repair={today.repair} total={today.total} />}
-        {stepUp && !today.repair && <StepUpCard offer={stepUp} today={today.date} />}
+        {goalOffer && !today.repair && <StepUpCard offer={goalOffer} today={today.date} />}
 
         {today.shieldNotice && (
           <ShieldNotice
@@ -310,6 +325,8 @@ export default function TodayScreen() {
         </View>
 
         <QuestsCard quests={today.quests} questDays={streak.questDays} />
+
+        <ChallengeCard c={monthChallenge(today.date, today.version)} />
 
         <TodayLog entries={today.entries} />
       </ScrollView>

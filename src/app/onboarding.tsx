@@ -39,7 +39,9 @@ const QUESTIONS = (): [Question<'frequency'>, Question<'amount'>, Question<'time
       { value: 'few', label: t('A few (under 10)') },
       { value: 'tens', label: t('10 to 50') },
       { value: 'hundred', label: t('Around 100') },
-      { value: 'many', label: t('300 or more') },
+      { value: 'many', label: t('Around 300') },
+      { value: 'thousand', label: t('Around 1,000') },
+      { value: 'lots', label: t('5,000 or more') },
     ],
   },
   {
@@ -49,7 +51,8 @@ const QUESTIONS = (): [Question<'frequency'>, Question<'amount'>, Question<'time
       { value: 'one', label: t('About a minute') },
       { value: 'five', label: t('About 5 minutes') },
       { value: 'fifteen', label: t('About 15 minutes') },
-      { value: 'more', label: t('More than that') },
+      { value: 'thirty', label: t('About 30 minutes') },
+      { value: 'hour', label: t('An hour or more') },
     ],
   },
 ];
@@ -193,9 +196,11 @@ export default function Onboarding() {
             <View style={styles.path}>
               <Text style={styles.pathTitle}>{t('How it grows')}</Text>
               <Text style={styles.pathText}>
-                {t('Light your lantern 7 days in a row and Salli will offer the next step. Many scholars describe {n} a day as the least of “abundant” salawat: a goal to grow toward, one step at a time.', { n: ABUNDANT_GOAL })}
+                {settings.dailyGoal < ABUNDANT_GOAL
+                  ? t('Light your lantern 7 days in a row and Salli will offer the next step. Many scholars describe {n} a day as the least of “abundant” salawat: a goal to grow toward, one step at a time.', { n: ABUNDANT_GOAL })
+                  : t('You’re already past {n} a day, which many scholars describe as the least of “abundant” salawat. Light your lantern 7 days in a row and Salli will offer the next step, at your pace.', { n: ABUNDANT_GOAL })}
               </Text>
-              <Text style={styles.pathSteps}>{stepsToward(settings.dailyGoal).join('  ›  ')}</Text>
+              {settings.dailyGoal < ABUNDANT_GOAL && <Text style={styles.pathSteps}>{stepsToward(settings.dailyGoal).join('  ›  ')}</Text>}
             </View>
             <PrimaryButton label={t('Continue')} onPress={next} />
           </>

@@ -11,21 +11,21 @@
  * Then Salli offers the next step after each week of lit days.
  */
 export type Frequency = 'rarely' | 'weekly' | 'most' | 'daily';
-export type Amount = 'few' | 'tens' | 'hundred' | 'many';
-export type Time = 'one' | 'five' | 'fifteen' | 'more';
+export type Amount = 'few' | 'tens' | 'hundred' | 'many' | 'thousand' | 'lots';
+export type Time = 'one' | 'five' | 'fifteen' | 'thirty' | 'hour';
 
 export type HabitAnswers = { frequency: Frequency; amount: Amount; time: Time };
 
 /** Goal steps, small at the start so each one feels reachable. */
-export const GOAL_LADDER = [5, 10, 15, 25, 33, 50, 100, 150, 200, 300, 500, 1000, 2000, 3000];
+export const GOAL_LADDER = [5, 10, 15, 25, 33, 50, 100, 150, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000];
 
 /** Many scholars describe 300 a day as the least of "abundant" salawat. */
 export const ABUNDANT_GOAL = 300;
 
-const CURRENT: Record<Amount, number> = { few: 5, tens: 25, hundred: 100, many: 300 };
+const CURRENT: Record<Amount, number> = { few: 5, tens: 25, hundred: 100, many: 300, thousand: 1000, lots: 5000 };
 const STEP: Record<Frequency, number> = { rarely: -1, weekly: 0, most: 0, daily: 1 };
 /** A short salawat takes about 2–3 seconds, so roughly 25 a minute (kept gentle). */
-const TIME_CAP: Record<Time, number> = { one: 25, five: 100, fifteen: 300, more: 3000 };
+const TIME_CAP: Record<Time, number> = { one: 25, five: 100, fifteen: 300, thirty: 750, hour: 10000 };
 
 const indexOf = (goal: number) => {
   let i = 0;

@@ -1,4 +1,4 @@
-/** After a week of lit days at one goal: offer the next step, gently. */
+/** Offer the next goal step after a lit week, or a lighter goal after a hard one. */
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { feedback } from '@/lib/feedback';
@@ -10,23 +10,32 @@ import { EightPointStar } from './EightPointStar';
 import { PrimaryButton } from './PrimaryButton';
 
 export function StepUpCard({ offer, today }: { offer: StepUpOffer; today: string }) {
+  const up = offer.to > offer.from;
   return (
     <View style={styles.card}>
       <View style={styles.row}>
         <View style={styles.badge}>
           <EightPointStar size={44} fill={colors.zelligeGreen} stroke={colors.saffron} strokeWidth={1.5} />
-          <Text style={styles.badgeText}>{STEP_UP_DAYS}</Text>
+          <Text style={styles.badgeText}>{up ? STEP_UP_DAYS : '♡'}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{t('{days} lit days at {n}. Ready for the next step?', { days: STEP_UP_DAYS, n: offer.from.toLocaleString('en-US') })}</Text>
-          <Text style={styles.body}>{t('Your habit is holding. A small step up keeps it growing.')}</Text>
+          <Text style={styles.title}>
+            {up
+              ? t('{days} lit days at {n}. Ready for the next step?', { days: STEP_UP_DAYS, n: offer.from.toLocaleString('en-US') })
+              : t('A lighter goal for a busy stretch?')}
+          </Text>
+          <Text style={styles.body}>
+            {up
+              ? t('Your habit is holding. A small step up keeps it growing.')
+              : t('{n} a day keeps the habit alive. You can step back up any time.', { n: offer.to.toLocaleString('en-US') })}
+          </Text>
         </View>
       </View>
       <View style={styles.actions}>
         <PrimaryButton
           compact
           style={{ flex: 1 }}
-          label={t('Raise to {n}', { n: offer.to.toLocaleString('en-US') })}
+          label={up ? t('Raise to {n}', { n: offer.to.toLocaleString('en-US') }) : t('Go to {n} for now', { n: offer.to.toLocaleString('en-US') })}
           onPress={() => {
             feedback.add('medium');
             acceptStepUp(offer);
@@ -40,7 +49,7 @@ export function StepUpCard({ offer, today }: { offer: StepUpOffer; today: string
           accessibilityRole="button"
           hitSlop={8}
           style={styles.later}>
-          <Text style={styles.laterText}>{t('Not yet')}</Text>
+          <Text style={styles.laterText}>{up ? t('Not yet') : t('Keep {n}', { n: offer.from.toLocaleString('en-US') })}</Text>
         </Pressable>
       </View>
     </View>

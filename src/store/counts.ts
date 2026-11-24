@@ -28,6 +28,7 @@ import {
   type GoalProgress,
   type StreakState,
 } from './streaks';
+import { challengeJustDone, newDayRecord, type ChallengeProgress } from './growth';
 
 export { DEFAULT_DAILY_GOAL, type Entry, type EntrySource } from './days';
 
@@ -163,7 +164,27 @@ export function addSalawat(amount: number, source: EntrySource, now = new Date()
     notifyChange();
     fridayListeners.forEach((l) => l());
   }
+  // Personal best day (once a day) and this month's challenge.
+  const record = newDayRecord(date, day.total, add);
+  if (record) recordListeners.forEach((l) => l(record));
+  const challenge = litNow ? challengeJustDone(date) : null;
+  if (challenge) challengeListeners.forEach((l) => l(challenge));
   return { total: day.total, litNow, milestone };
+}
+
+const recordListeners = new Set<(r: { total: number; previous: number }) => void>();
+export function onDayRecord(fn: (r: { total: number; previous: number }) => void) {
+  recordListeners.add(fn);
+  return () => {
+    recordListeners.delete(fn);
+  };
+}
+const challengeListeners = new Set<(c: ChallengeProgress) => void>();
+export function onChallengeDone(fn: (c: ChallengeProgress) => void) {
+  challengeListeners.add(fn);
+  return () => {
+    challengeListeners.delete(fn);
+  };
 }
 
 // ---- the streak takeover plays once per lit day ----

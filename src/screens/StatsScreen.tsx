@@ -4,9 +4,10 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { Card, Lantern, MonthCalendar, PlasterPattern, ScreenHeader, Segmented, ShieldIcon, ZelligeBand } from '@/components';
+import { Card, Lantern, MonthCalendar, RangeCard, RecordsCard, PlasterPattern, ScreenHeader, Segmented, ShieldIcon, ZelligeBand } from '@/components';
 import { useTabs } from '@/components/tabs';
 import { useToday } from '@/store/counts';
+import { personalRecords, weekRange } from '@/store/growth';
 import { periodStats, type Bar, type Period } from '@/store/stats';
 import { LEVELS } from '@/store/streaks';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
@@ -119,9 +120,13 @@ export default function StatsScreen() {
         <Tile label={t('Quest days')} value={String(streak.questDays)} sub={t(streak.shields === 1 ? '{n} shield ready' : '{n} shields ready', { n: streak.shields })} />
       </View>
 
+      <RangeCard range={weekRange(today.date, today.version)} />
+
       <Card>
         <MonthCalendar today={today.date} status={streak.status} version={today.version} />
       </Card>
+
+      <RecordsCard records={personalRecords(today.version)} longestStreak={streak.best} />
     </ScrollView>
   );
 }

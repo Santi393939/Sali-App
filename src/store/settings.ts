@@ -37,7 +37,7 @@ export type Settings = {
   lanternGlass: GlassId;
   /** App language; starts from the phone's language. */
   language: Lang;
-  /** Light or dark; 'system' follows the phone. */
+  /** Dark by default; 'system' follows the phone. */
   appearance: Appearance;
   /** "Not yet" on the step-up offer: hide it for this goal until that day. */
   goalNudge: { goal: number; until: string } | null;
@@ -62,7 +62,7 @@ const DEFAULTS: Settings = {
   featuredBadge: null,
   lanternGlass: 'amber',
   language: deviceLanguage(),
-  appearance: 'system',
+  appearance: 'dark', // Salli looks best at night; Light and Automatic are in Me
   goalNudge: null,
 };
 
