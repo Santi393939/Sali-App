@@ -53,6 +53,7 @@ import {
 } from '@/store/counts';
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles, type } from '@/theme';
+import { isRTL, t } from '@/lib/i18n';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -133,29 +134,29 @@ export default function TodayScreen() {
         const left = QUEST_DAYS_PER_SHIELD - (questDays % QUEST_DAYS_PER_SHIELD);
         showToast({
           tone: 'big',
-          title: 'All of today’s quests done!',
-          sub: questDays % QUEST_DAYS_PER_SHIELD === 0 ? 'You earned a streak shield' : `${left} more quest ${left === 1 ? 'day' : 'days'} to a streak shield`,
+          title: t('All of today’s quests done!'),
+          sub: questDays % QUEST_DAYS_PER_SHIELD === 0 ? t('You earned a streak shield') : t(left === 1 ? '{n} more quest day to a streak shield' : '{n} more quest days to a streak shield', { n: left }),
         });
       } else {
-        showToast({ tone: 'quest', title: 'Quest complete', sub: quest.title });
+        showToast({ tone: 'quest', title: t('Quest complete'), sub: quest.title });
       }
     });
     // A repair made from another tab (e.g. Send 10) still celebrates.
     const offRepair = onStreakRepaired(({ streak: kept }) => {
-      showToast({ tone: 'big', title: 'Streak repaired!', sub: `Your ${kept}-day streak is lit again` });
+      showToast({ tone: 'big', title: t('Streak repaired!'), sub: t('Your {n}-day streak is lit again', { n: kept }) });
     });
     const offLamp = onLampLit((lamps) => {
       feedback.quest(true);
       const glass = GLASSES.find((g) => g.lamp === lamps);
       showToast({
         tone: 'big',
-        title: `Lamp ${lamps} lit · ${(lamps * LAMP_STEP).toLocaleString('en-US')}`,
-        sub: glass ? `New lantern glass: ${glass.name} · choose it in Me` : 'Another lamp burns in your masjid',
+        title: t('Lamp {n} lit · {total}', { n: lamps, total: (lamps * LAMP_STEP).toLocaleString('en-US') }),
+        sub: glass ? t('New lantern glass: {name} · choose it in Me', { name: glass.name }) : t('Another lamp burns in your masjid'),
       });
     });
     const offFriday = onFridayBadge(() => {
       feedback.quest(true);
-      showToast({ tone: 'big', title: 'Jumu’ah Keeper earned!', sub: 'Four Fridays in a row with your lantern lit' });
+      showToast({ tone: 'big', title: t('Jumu’ah Keeper earned!'), sub: t('Four Fridays in a row with your lantern lit') });
     });
     return () => {
       offLit();
@@ -193,7 +194,7 @@ export default function TodayScreen() {
       const taps = getToday().taps;
       if (taps % ROUND === 0) {
         feedback.round(taps % (ROUND * 3) === 0);
-        if (taps % (ROUND * 3) === 0) showToast({ tone: 'quest', title: 'Tasbih complete', sub: `${taps} taps on the arch today · سبحان الله` });
+        if (taps % (ROUND * 3) === 0) showToast({ tone: 'quest', title: t('Tasbih complete'), sub: `${t('{n} taps on the arch today', { n: taps })} · سبحان الله` });
       }
     }
     // Reached a lifetime milestone: reveal the new part of the masjid.
@@ -213,7 +214,7 @@ export default function TodayScreen() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.hijri}>{hijriDateArabic()}</Text>
-            <Text style={styles.title}>Today</Text>
+            <Text style={styles.title}>{t('Today')}</Text>
           </View>
           <Pressable
             onPress={() => {
@@ -222,11 +223,11 @@ export default function TodayScreen() {
             }}
             style={({ pressed }) => [styles.streakPill, today.lit && styles.streakPillLit, pressed && { transform: [{ scale: 0.96 }] }]}
             accessibilityRole="button"
-            accessibilityLabel={`${streak.current} day streak${today.lit ? ', lit today' : ''}. Open streak calendar`}>
+            accessibilityLabel={t(today.lit ? '{n} day streak, lit today. Open streak calendar' : '{n} day streak. Open streak calendar', { n: streak.current })}>
             <Lantern size={20} lit={today.lit} level={streak.level} glow={false} />
             <Text style={[styles.streakPillText, today.lit && styles.streakPillTextLit]}>{streak.current}</Text>
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Reminder settings" style={styles.bell} onPress={() => tabs.goTo(4)}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('Reminder settings')} style={styles.bell} onPress={() => tabs.goTo(4)}>
             <BellIcon />
           </Pressable>
         </View>
@@ -262,9 +263,9 @@ export default function TodayScreen() {
             <View style={styles.heroSide}>
               <Lantern size={46} lit={today.lit} level={streak.level} />
               <Text style={styles.sideNumber}>{streak.current}</Text>
-              <Text style={styles.sideLabel}>day streak</Text>
+              <Text style={styles.sideLabel}>{t('day streak')}</Text>
               <Text style={[styles.sideStatus, today.lit && { color: colors.link }]}>
-                {today.lit ? 'Lit today' : 'Your lantern is waiting'}
+                {today.lit ? t('Lit today') : t('Your lantern is waiting')}
               </Text>
             </View>
 
@@ -274,14 +275,14 @@ export default function TodayScreen() {
               {today.lit ? (
                 <>
                   <Text style={[styles.sideNumber, { color: colors.link }]}>✓</Text>
-                  <Text style={styles.sideLabel}>goal met</Text>
+                  <Text style={styles.sideLabel}>{t('goal met')}</Text>
                 </>
               ) : (
                 <>
                   <Text style={[styles.sideNumber, { color: colors.terracotta }]}>
                     {fmt(countDown ? today.total : today.left)}
                   </Text>
-                  <Text style={styles.sideLabel}>{countDown ? 'done today' : 'left today'}</Text>
+                  <Text style={styles.sideLabel}>{countDown ? t('done today') : t('left today')}</Text>
                 </>
               )}
             </View>
@@ -297,7 +298,7 @@ export default function TodayScreen() {
           <PrimaryButton label="+100" style={styles.quickBtn} onPress={() => add(100, 'quick')} />
           <PrimaryButton label="+300" style={styles.quickBtn} onPress={() => add(300, 'quick')} />
           <PrimaryButton label="+1,000" style={styles.quickBtn} onPress={() => add(1000, 'quick')} />
-          <PrimaryButton label="Other" variant="secondary" style={styles.quickBtn} onPress={openPad} />
+          <PrimaryButton label={t('Other')} variant="secondary" style={styles.quickBtn} onPress={openPad} />
         </View>
 
         <GroupTeaser onPress={() => tabs.goTo(2)} />
@@ -349,7 +350,7 @@ const styles = themedStyles(() =>
   content: { paddingHorizontal: spacing.lg, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
 
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  hijri: { fontFamily: fonts.arabic, fontSize: 15, color: colors.terracotta, textAlign: 'left' },
+  hijri: { fontFamily: fonts.arabic, fontSize: 15, color: colors.terracotta, textAlign: isRTL() ? 'right' : 'left' },
   title: { fontFamily: fonts.display, fontSize: type.screenTitle, color: colors.ink, lineHeight: 40 },
   streakPill: {
     flexDirection: 'row',

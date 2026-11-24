@@ -5,16 +5,17 @@ import type { MilestoneProgress } from '@/store/milestones';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { Medallion } from './Medallion';
+import { t } from '@/lib/i18n';
 
 export function NextMilestoneStrip({ progress, onPress }: { progress: MilestoneProgress; onPress: () => void }) {
   const { next, lifetime, fraction } = progress;
   if (!next) return null;
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`Next milestone: ${next.name}`} style={({ pressed }) => [styles.strip, pressed && { opacity: 0.85 }]}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={t('Next milestone: {name}', { name: next.name })} style={({ pressed }) => [styles.strip, pressed && { opacity: 0.85 }]}>
       <Medallion size={46} milestone={next} earned={false} next progress={fraction} />
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>
-          {(next.amount - lifetime).toLocaleString('en-US')} to {next.name}
+          {t('{n} to {name}', { n: (next.amount - lifetime).toLocaleString('en-US'), name: next.name })}
         </Text>
         <View style={styles.track}>
           <View style={[styles.fill, { width: `${Math.max(2, fraction * 100)}%` }]} />

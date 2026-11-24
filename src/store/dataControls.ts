@@ -9,6 +9,7 @@ import { resetSettings } from './settings';
 import { storage } from './storage';
 import { invalidateStreakCache } from './streaks';
 import { resetQueue } from './syncQueue';
+import { t } from '@/lib/i18n';
 
 /** All of Salli's saved data as readable JSON (sign-in tokens left out). */
 export function exportData(): string {
@@ -33,7 +34,7 @@ export async function shareExport(): Promise<'shared' | 'copied' | 'failed'> {
       await navigator.clipboard.writeText(json);
       return 'copied';
     }
-    await Share.share({ title: 'My Salli data', message: json });
+    await Share.share({ title: t('My Salli data'), message: json });
     return 'shared';
   } catch {
     return 'failed';

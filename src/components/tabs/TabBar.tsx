@@ -72,7 +72,7 @@ export function TabBar({ tabs, position, landing, bounce, onPress }: Props) {
   });
 
   return (
-    <Animated.View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }, barStyle]}>
+    <Animated.View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8), direction: 'ltr' }, barStyle]}>
       <View style={[styles.row, { width: inner }]}>
         <Animated.View style={[styles.pill, pillStyle]} />
         {tabs.map((t, i) => (

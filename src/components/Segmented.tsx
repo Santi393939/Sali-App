@@ -21,7 +21,7 @@ export function Segmented<T extends string>({ options, value, onChange }: Props<
     transform: [{ translateX: withSpring(index * seg + 2, { damping: 20, stiffness: 260 }) }],
   }));
   return (
-    <View style={styles.wrap} onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
+    <View style={[styles.wrap, { direction: 'ltr' }]} onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
       {w > 0 && <Animated.View style={[styles.thumb, thumb]} />}
       {options.map((o) => {
         const active = o.value === value;

@@ -8,19 +8,21 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CityPicker, Logo, PlasterPattern, PrimaryButton, Toggle, ZelligeBand } from '@/components';
+import { CityPicker, Logo, PlasterPattern, PrimaryButton, Segmented, Toggle, ZelligeBand } from '@/components';
 import { feedback } from '@/lib/feedback';
 import { requestReminderPermission } from '@/lib/notifications';
 import { updateSettings, useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { LANGUAGES, t, type Lang } from '@/lib/i18n';
+import { sallaParts } from '@/components/sallaParts';
 
 const STEPS = 4;
-const GOALS = [
-  { value: 100, label: 'A gentle start' },
-  { value: 300, label: 'Steady' },
-  { value: 500, label: 'Committed' },
-  { value: 1000, label: 'Recommended' },
-  { value: 3000, label: 'Devoted' },
+const GOALS = () => [
+  { value: 100, label: t('A gentle start') },
+  { value: 300, label: t('Steady') },
+  { value: 500, label: t('Committed') },
+  { value: 1000, label: t('Recommended') },
+  { value: 3000, label: t('Devoted') },
 ];
 
 export default function Onboarding() {
@@ -51,7 +53,7 @@ export default function Onboarding() {
       style={styles.page}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xl }]}
       keyboardShouldPersistTaps="handled">
-      <View style={styles.dots} accessibilityLabel={`Step ${step + 1} of ${STEPS}`}>
+      <View style={styles.dots} accessibilityLabel={t('Step {n} of {total}', { n: step + 1, total: STEPS })}>
         {Array.from({ length: STEPS }, (_, i) => (
           <View key={i} style={[styles.dot, i === step && styles.dotOn, i < step && styles.dotDone]} />
         ))}
@@ -60,6 +62,11 @@ export default function Onboarding() {
       <Animated.View style={[{ gap: spacing.lg }, stepStyle]}>
         {step === 0 && (
           <>
+            <Segmented<Lang>
+              options={LANGUAGES.map((l) => ({ value: l.id, label: l.name }))}
+              value={settings.language}
+              onChange={(language) => updateSettings({ language })}
+            />
             <View style={styles.hero}>
               <PlasterPattern />
               <View style={styles.heroBody}>
@@ -67,26 +74,26 @@ export default function Onboarding() {
                 <Text style={styles.brand}>Salli</Text>
                 <Text style={styles.brandAr}>صلِّ</Text>
                 <Text style={styles.lead}>
-                  Send blessings on the Prophet <Text style={styles.salla}>ﷺ</Text> every day. Count them, keep your lantern lit, and build your masjid.
+                  {sallaParts(t('Send blessings on the Prophet ﷺ every day. Count them, keep your lantern lit, and build your masjid.'), styles.salla)}
                 </Text>
               </View>
               <ZelligeBand height={20} />
             </View>
             <View style={styles.quote}>
               <Text style={styles.quoteAr}>مَنْ صَلَّى عَلَيَّ وَاحِدَةً صَلَّى اللَّهُ عَلَيْهِ عَشْرًا</Text>
-              <Text style={styles.quoteEn}>“Whoever sends blessings upon me once, Allah sends blessings upon him ten times.”</Text>
-              <Text style={styles.quoteRef}>Ṣaḥīḥ Muslim 408</Text>
+              {settings.language !== 'ar' && <Text style={styles.quoteEn}>{t('“Whoever sends blessings upon me once, Allah sends blessings upon him ten times.”')}</Text>}
+              <Text style={styles.quoteRef}>{t('Ṣaḥīḥ Muslim 408')}</Text>
             </View>
-            <PrimaryButton label="Begin" onPress={next} />
+            <PrimaryButton label={t('Begin')} onPress={next} />
           </>
         )}
 
         {step === 1 && (
           <>
-            <Text style={styles.title}>Your daily goal</Text>
-            <Text style={styles.sub}>Reach it each day to light your lantern and grow your streak. You can change it any time.</Text>
+            <Text style={styles.title}>{t('Your daily goal')}</Text>
+            <Text style={styles.sub}>{t('Reach it each day to light your lantern and grow your streak. You can change it any time.')}</Text>
             <View style={styles.goals}>
-              {GOALS.map((g) => {
+              {GOALS().map((g) => {
                 const selected = settings.dailyGoal === g.value;
                 return (
                   <Pressable
@@ -104,48 +111,48 @@ export default function Onboarding() {
                 );
               })}
             </View>
-            <PrimaryButton label="Continue" onPress={next} />
+            <PrimaryButton label={t('Continue')} onPress={next} />
           </>
         )}
 
         {step === 2 && (
           <>
-            <Text style={styles.title}>Where are you?</Text>
-            <Text style={styles.sub}>A Salli day runs Maghrib to Maghrib, like the Islamic day. Your city sets when it turns and when reminders arrive.</Text>
+            <Text style={styles.title}>{t('Where are you?')}</Text>
+            <Text style={styles.sub}>{t('A Salli day runs Maghrib to Maghrib, like the Islamic day. Your city sets when it turns and when reminders arrive.')}</Text>
             <CityPicker />
-            <PrimaryButton label="Continue" onPress={next} />
+            <PrimaryButton label={t('Continue')} onPress={next} />
             <Pressable onPress={next} accessibilityRole="button" style={styles.skip}>
-              <Text style={styles.skipText}>Skip for now (the day turns at 6 pm)</Text>
+              <Text style={styles.skipText}>{t('Skip for now (the day turns at 6 pm)')}</Text>
             </Pressable>
           </>
         )}
 
         {step === 3 && (
           <>
-            <Text style={styles.title}>Gentle reminders</Text>
-            <Text style={styles.sub}>Only when your lantern is still waiting. Never guilt, never spam.</Text>
+            <Text style={styles.title}>{t('Gentle reminders')}</Text>
+            <Text style={styles.sub}>{t('Only when your lantern is still waiting. Never guilt, never spam.')}</Text>
             <View style={styles.reminders}>
               <ReminderRow
-                title="After Asr"
-                hint="A nudge if today's lantern isn't lit yet"
+                title={t('After Asr')}
+                hint={t('A nudge if today’s lantern isn’t lit yet')}
                 value={settings.asrReminder}
                 onChange={(asrReminder) => updateSettings({ asrReminder })}
               />
               <ReminderRow
-                title="An hour before Maghrib"
-                hint="Keep your streak glowing"
+                title={t('An hour before Maghrib')}
+                hint={t('Keep your streak glowing')}
                 value={settings.preMaghribReminder}
                 onChange={(preMaghribReminder) => updateSettings({ preMaghribReminder })}
               />
               <ReminderRow
-                title="Friday"
-                hint="Jumu'ah, the day to send abundant salawat"
+                title={t('Friday')}
+                hint={t('Jumu’ah, the day to send abundant salawat')}
                 value={settings.fridayReminders}
                 onChange={(fridayReminders) => updateSettings({ fridayReminders })}
                 last
               />
             </View>
-            <PrimaryButton label={Platform.OS === 'web' ? 'Start counting' : 'Allow reminders & start'} onPress={finish} />
+            <PrimaryButton label={Platform.OS === 'web' ? t('Start counting') : t('Allow reminders & start')} onPress={finish} />
           </>
         )}
       </Animated.View>

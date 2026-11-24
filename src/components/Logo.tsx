@@ -4,6 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import { colors, fonts, themedStyles } from '@/theme';
 
 import { eightPointStarPath, horseshoeArchPath } from './geometry';
+import { t } from '@/lib/i18n';
 
 type Props = {
   size: number;
@@ -22,7 +23,7 @@ export function Logo({ size }: Props) {
   const archX = c - archW / 2;
   const archY = c - archH / 2 + size * 0.02;
   return (
-    <View style={{ width: size, height: size }} accessibilityLabel="Salli logo">
+    <View style={{ width: size, height: size }} accessibilityLabel={t('Salli logo')}>
       <Svg width={size} height={size}>
         <Path d={eightPointStarPath(c, c, c - edge / 2)} fill={colors.zelligeGreen} stroke={colors.saffron} strokeWidth={edge} />
         <Path

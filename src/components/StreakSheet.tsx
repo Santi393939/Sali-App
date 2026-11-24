@@ -13,6 +13,7 @@ import { Lantern } from './Lantern';
 import { MonthCalendar } from './MonthCalendar';
 import { PrimaryButton } from './PrimaryButton';
 import { ShieldIcon } from './StreakTakeover';
+import { t } from '@/lib/i18n';
 
 type Props = { visible: boolean; today: TodaySnapshot; onClose: () => void; onShare?: () => void };
 
@@ -51,7 +52,7 @@ export function StreakSheet({ visible, today, onClose, onShare }: Props) {
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.root}>
         <Animated.View style={[styles.backdrop, shadeStyle]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('Close')} />
         </Animated.View>
         <Animated.View style={[styles.sheet, { maxHeight: height - insets.top - 24 }, sheetStyle]}>
           <View style={styles.grabber} />
@@ -61,22 +62,22 @@ export function StreakSheet({ visible, today, onClose, onShare }: Props) {
               <Lantern size={84} lit={today.lit} level={streak.level} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.big}>{streak.current}</Text>
-                <Text style={styles.bigLabel}>day streak</Text>
-                <Text style={styles.status}>{today.lit ? 'Lit today · ما شاء الله' : 'Your lantern is waiting today'}</Text>
+                <Text style={styles.bigLabel}>{t('day streak')}</Text>
+                <Text style={styles.status}>{today.lit ? t('Lit today · ما شاء الله') : t('Your lantern is waiting today')}</Text>
               </View>
             </View>
 
             <View style={styles.statsRow}>
-              <Stat value={String(streak.best)} label="Best streak" />
-              <Stat value={String(streak.shields)} label={streak.shields === 1 ? 'Shield' : 'Shields'} icon />
-              <Stat value={level.name} label="Lantern" small />
+              <Stat value={String(streak.best)} label={t('Best streak')} />
+              <Stat value={String(streak.shields)} label={streak.shields === 1 ? t('Shield') : t('Shields')} icon />
+              <Stat value={level.name} label={t('Lantern')} small />
             </View>
 
             {/* Next goal */}
             <View style={styles.box}>
               <View style={styles.boxHead}>
-                <Text style={styles.boxTitle}>{goalBar.reached ? `${goalBar.next}-day goal reached!` : `Next goal: ${goalBar.next} days`}</Text>
-                {!goalBar.reached && <Text style={styles.boxSub}>{goalBar.toGo} to go</Text>}
+                <Text style={styles.boxTitle}>{goalBar.reached ? t('{n}-day goal reached!', { n: goalBar.next }) : t('Next goal: {n} days', { n: goalBar.next })}</Text>
+                {!goalBar.reached && <Text style={styles.boxSub}>{t('{n} to go', { n: goalBar.toGo })}</Text>}
               </View>
               <View style={styles.segments}>
                 {Array.from({ length: goalBar.segments }, (_, i) => (
@@ -85,7 +86,7 @@ export function StreakSheet({ visible, today, onClose, onShare }: Props) {
               </View>
               {nextLevel && (
                 <Text style={styles.boxNote}>
-                  {nextLevel.from - streak.current} more {nextLevel.from - streak.current === 1 ? 'day' : 'days'} to the {nextLevel.name} lantern
+                  {t(nextLevel.from - streak.current === 1 ? '{n} more day to the {name} lantern' : '{n} more days to the {name} lantern', { n: nextLevel.from - streak.current, name: nextLevel.name })}
                 </Text>
               )}
             </View>
@@ -95,15 +96,15 @@ export function StreakSheet({ visible, today, onClose, onShare }: Props) {
               <MonthCalendar today={today.date} status={streak.status} version={today.version} />
             </View>
 
-            {onShare && <PrimaryButton label="Share my streak" onPress={onShare} />}
+            {onShare && <PrimaryButton label={t('Share my streak')} onPress={onShare} />}
 
             {/* How it works */}
             <View style={styles.box}>
-              <Text style={styles.boxTitle}>Keeping your lantern lit</Text>
-              <Rule text="Reach your daily goal before Maghrib to light the day." />
-              <Rule text="7 lit days in a row earns a shield (hold up to 2). A shield covers a missed day automatically." />
-              <Rule text={`Finishing all three quests on ${QUEST_DAYS_PER_SHIELD} days also earns a shield · ${towardShield}/${QUEST_DAYS_PER_SHIELD} so far.`} />
-              <Rule text={`Missed a day with no shield? Send ${REPAIR_MULTIPLIER}× your goal the next day to relight it.`} />
+              <Text style={styles.boxTitle}>{t('Keeping your lantern lit')}</Text>
+              <Rule text={t('Reach your daily goal before Maghrib to light the day.')} />
+              <Rule text={t('7 lit days in a row earns a shield (hold up to 2). A shield covers a missed day automatically.')} />
+              <Rule text={t('Finishing all three quests on {total} days also earns a shield · {n}/{total} so far.', { n: towardShield, total: QUEST_DAYS_PER_SHIELD })} />
+              <Rule text={t('Missed a day with no shield? Send {x}× your goal the next day to relight it.', { x: REPAIR_MULTIPLIER })} />
             </View>
           </ScrollView>
         </Animated.View>

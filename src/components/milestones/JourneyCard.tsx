@@ -15,6 +15,7 @@ import { colors, fonts, spacing, themedStyles } from '@/theme';
 import { Card } from '../Card';
 import { Lantern } from '../Lantern';
 import { Medallion } from './Medallion';
+import { t } from '@/lib/i18n';
 
 const MEDAL = 68;
 const ROW1 = 46;
@@ -94,9 +95,9 @@ export function JourneyCard({ progress, today, onOpen }: Props) {
   return (
     <Card>
       <View style={styles.head}>
-        <View>
-          <Text style={styles.title}>Your masjid</Text>
-          <Text style={styles.sub}>Each milestone adds a part. {fmt(lifetime)} salawat so far.</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>{t('Your masjid')}</Text>
+          <Text style={styles.sub}>{t('Each milestone adds a part. {n} salawat so far.', { n: fmt(lifetime) })}</Text>
         </View>
       </View>
 
@@ -116,7 +117,7 @@ export function JourneyCard({ progress, today, onOpen }: Props) {
                 key={m.amount}
                 onPress={() => onOpen(m)}
                 accessibilityRole="button"
-                accessibilityLabel={`${m.name}, ${m.short}${m.earned ? ', earned' : ''}`}
+                accessibilityLabel={`${m.name}, ${m.short}${m.earned ? t(', earned') : ''}`}
                 style={[styles.stop, { left: pts[i].x - 50, top: pts[i].y - MEDAL / 2 }]}>
                 {({ pressed }) => (
                   <View style={[styles.stopInner, pressed && { transform: [{ scale: 0.94 }] }]}>
@@ -138,7 +139,7 @@ export function JourneyCard({ progress, today, onOpen }: Props) {
       {next ? (
         <Pressable onPress={() => onOpen(next)} style={styles.nextBox} accessibilityRole="button">
           <View style={styles.nextHead}>
-            <Text style={styles.nextLabel}>Next · {next.name}</Text>
+            <Text style={styles.nextLabel}>{t('Next · {name}', { name: next.name })}</Text>
             <Text style={styles.nextArabic}>{next.arabic}</Text>
           </View>
           <View style={styles.track}>
@@ -148,21 +149,23 @@ export function JourneyCard({ progress, today, onOpen }: Props) {
             <Text style={styles.nextNums}>
               {fmt(lifetime)} / {fmt(next.amount)}
             </Text>
-            <Text style={styles.toGo}>{fmt(next.amount - lifetime)} to go</Text>
+            <Text style={styles.toGo}>{t('{n} to go', { n: fmt(next.amount - lifetime) })}</Text>
           </View>
           <Text style={styles.pace}>
             {etaDays
-              ? `At your pace (about ${fmt(pace)} a day) you'll get there ${etaDays === 1 ? 'within a day' : `in about ${etaDays} days, around ${etaLabel(today, etaDays)}`}.`
-              : 'Count today to set your pace, and we will show when you will get there.'}
+              ? etaDays === 1
+                ? t('At your pace (about {n} a day) you’ll get there within a day.', { n: fmt(pace) })
+                : t('At your pace (about {n} a day) you’ll get there in about {days} days, around {date}.', { n: fmt(pace), days: etaDays, date: etaLabel(today, etaDays) })
+              : t('Count today to set your pace, and we will show when you will get there.')}
           </Text>
           {daysSooner > 0 && (
             <Text style={styles.boost}>
-              +{EXTRA_PER_DAY} a day gets you there {daysSooner === 1 ? '1 day' : `${daysSooner} days`} sooner.
+              {t(daysSooner === 1 ? '+{x} a day gets you there 1 day sooner.' : '+{x} a day gets you there {n} days sooner.', { x: EXTRA_PER_DAY, n: daysSooner })}
             </Text>
           )}
         </Pressable>
       ) : (
-        <Text style={styles.complete}>Every part is built. The riad is in bloom. ما شاء الله</Text>
+        <Text style={styles.complete}>{t('Every part is built. The riad is in bloom.')} ما شاء الله</Text>
       )}
     </Card>
   );

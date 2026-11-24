@@ -17,6 +17,7 @@ import { MAX_SINGLE_ADD } from '@/store/counts';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { PrimaryButton } from './PrimaryButton';
+import { t } from '@/lib/i18n';
 
 type Props = {
   visible: boolean;
@@ -37,8 +38,8 @@ export function NumberPadSheet({
   visible,
   onAdd,
   onClose,
-  title = 'Add salawat',
-  actionLabel = (a) => `Add ${a}`,
+  title = t('Add salawat'),
+  actionLabel = (a) => t('Add {n}', { n: a }),
   max = MAX_SINGLE_ADD,
 }: Props) {
   const insets = useSafeAreaInsets();
@@ -95,7 +96,7 @@ export function NumberPadSheet({
     <Modal visible={mounted} transparent animationType="none" onRequestClose={close} statusBarTranslucent>
       <View style={styles.root}>
         <Animated.View style={[styles.backdrop, shadeStyle]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel="Close number pad" />
+          <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel={t('Close number pad')} />
         </Animated.View>
         <Animated.View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }, sheetStyle]}>
           <View style={styles.grabber} />
@@ -107,11 +108,11 @@ export function NumberPadSheet({
             adjustsFontSizeToFit>
             {amount.toLocaleString('en-US')}
           </Text>
-          <Text style={styles.hint}>Up to {max.toLocaleString('en-US')}</Text>
+          <Text style={styles.hint}>{t('Up to {n}', { n: max.toLocaleString('en-US') })}</Text>
 
           <View style={styles.grid}>
             {KEYS.map((key) => (
-              <PadKey key={key} label={key === 'del' ? 'Delete' : key} onPress={() => press(key)}>
+              <PadKey key={key} label={key === 'del' ? t('Delete') : key} onPress={() => press(key)}>
                 {key === 'del' ? <DeleteIcon /> : <Text style={styles.keyText}>{key}</Text>}
               </PadKey>
             ))}
@@ -123,7 +124,7 @@ export function NumberPadSheet({
             disabled={amount === 0}
           />
           <Pressable onPress={close} accessibilityRole="button" style={styles.cancel}>
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={styles.cancelText}>{t('Cancel')}</Text>
           </Pressable>
         </Animated.View>
       </View>

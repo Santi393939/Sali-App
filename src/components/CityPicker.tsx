@@ -9,8 +9,9 @@ import { feedback } from '@/lib/feedback';
 import { asrOn, getLocation, maghribOn, type SavedLocation } from '@/lib/salliDay';
 import { setCity } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { dateLocale, t } from '@/lib/i18n';
 
-const time = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+const time = (d: Date) => d.toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit' });
 
 export function CityPicker({ onPicked }: { onPicked?: (loc: SavedLocation) => void }) {
   const [query, setQuery] = useState('');
@@ -37,16 +38,16 @@ export function CityPicker({ onPicked }: { onPicked?: (loc: SavedLocation) => vo
     setLocating(true);
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
-      if (!perm.granted) throw new Error('Location permission was not given. Pick your city from the list instead.');
+      if (!perm.granted) throw new Error(t('Location permission was not given. Pick your city from the list instead.'));
       const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-      let name = 'My location';
+      let name = t('My location');
       try {
         const [place] = await Location.reverseGeocodeAsync(pos.coords);
         if (place?.city) name = place.city;
       } catch {}
       pick({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, city: name });
     } catch (e) {
-      setError(e instanceof Error && e.message.includes('permission') ? e.message : 'Could not find your location here. Pick your city from the list.');
+      setError(e instanceof Error && e.message.includes('permission') ? e.message : t('Could not find your location here. Pick your city from the list.'));
     } finally {
       setLocating(false);
     }
@@ -61,7 +62,7 @@ export function CityPicker({ onPicked }: { onPicked?: (loc: SavedLocation) => vo
           <Text style={styles.currentTimes}>
             Asr {time(asrOn(today))} · Maghrib {time(maghribOn(today))}
           </Text>
-          <Text style={styles.currentHint}>Your day, streak and reminders follow Maghrib here.</Text>
+          <Text style={styles.currentHint}>{t('Your day, streak and reminders follow Maghrib here.')}</Text>
         </View>
       )}
 
@@ -74,17 +75,17 @@ export function CityPicker({ onPicked }: { onPicked?: (loc: SavedLocation) => vo
             <Path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" />
           </Svg>
         )}
-        <Text style={styles.locateText}>Use my location</Text>
+        <Text style={styles.locateText}>{t('Use my location')}</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
 
       <TextInput
         value={query}
         onChangeText={setQuery}
-        placeholder="Search your city"
+        placeholder={t('Search your city')}
         placeholderTextColor={colors.muted}
         style={styles.search}
-        accessibilityLabel="Search your city"
+        accessibilityLabel={t('Search your city')}
         autoCorrect={false}
       />
       <View style={styles.list}>
@@ -101,7 +102,7 @@ export function CityPicker({ onPicked }: { onPicked?: (loc: SavedLocation) => vo
             </Pressable>
           );
         })}
-        {results.length === 0 && <Text style={styles.none}>No match. Try “Use my location”, or a nearby big city.</Text>}
+        {results.length === 0 && <Text style={styles.none}>{t('No match. Try “Use my location”, or a nearby big city.')}</Text>}
       </View>
     </View>
   );

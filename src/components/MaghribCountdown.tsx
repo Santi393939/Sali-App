@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fonts, themedStyles } from '@/theme';
+import { dateLocale, t } from '@/lib/i18n';
 
 export function MaghribCountdown({ endsAt, lit }: { endsAt: Date; lit: boolean }) {
   const [now, setNow] = useState(() => Date.now());
@@ -14,13 +15,13 @@ export function MaghribCountdown({ endsAt, lit }: { endsAt: Date; lit: boolean }
   if (ms <= 0) return null;
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
-  const left = h > 0 ? `${h} h ${m} m` : `${m} m`;
-  const at = endsAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  const left = h > 0 ? t('{h} h {m} m', { h, m }) : t('{m} m', { m });
+  const at = endsAt.toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit' }).toLowerCase();
   const urgent = !lit && ms < 3 * 3600000;
   return (
     <View style={[styles.pill, urgent && styles.urgent]}>
       <Text style={[styles.text, urgent && styles.urgentText]}>
-        {lit ? `Lit today · new day at Maghrib, ${at}` : `Lantern waiting · ${left} until Maghrib`}
+        {lit ? t('Lit today · new day at Maghrib, {at}', { at }) : t('Lantern waiting · {left} until Maghrib', { left })}
       </Text>
     </View>
   );

@@ -3,6 +3,7 @@ import Svg, { Path } from 'react-native-svg';
 
 import { keyToDate } from '@/lib/salliDay';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { dateLocale, t } from '@/lib/i18n';
 
 type Props = {
   /** The day a shield covered. */
@@ -13,7 +14,7 @@ type Props = {
 
 /** A kind note the morning after a shield is used. Never guilt. */
 export function ShieldNotice({ day, shieldsLeft, onDismiss }: Props) {
-  const weekday = keyToDate(day).toLocaleDateString('en-US', { weekday: 'long' });
+  const weekday = keyToDate(day).toLocaleDateString(dateLocale(), { weekday: 'long' });
   return (
     <View style={styles.card} accessibilityRole="summary">
       <Svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke={colors.saffron} strokeWidth={1.8} strokeLinejoin="round">
@@ -21,16 +22,16 @@ export function ShieldNotice({ day, shieldsLeft, onDismiss }: Props) {
         <Path d="m9 12 2 2 4-4" strokeLinecap="round" />
       </Svg>
       <View style={{ flex: 1 }}>
-        <Text style={styles.title}>A shield kept your lantern lit</Text>
+        <Text style={styles.title}>{t('A shield kept your lantern lit')}</Text>
         <Text style={styles.body}>
-          {weekday} was covered, so your streak carries on.{' '}
+          {t('{day} was covered, so your streak carries on.', { day: weekday })}{' '}
           {shieldsLeft > 0
-            ? `You have ${shieldsLeft} ${shieldsLeft === 1 ? 'shield' : 'shields'} left.`
-            : 'Seven lit days in a row earns another.'}
+            ? t(shieldsLeft === 1 ? 'You have {n} shield left.' : 'You have {n} shields left.', { n: shieldsLeft })
+            : t('Seven lit days in a row earns another.')}
         </Text>
       </View>
-      <Pressable onPress={onDismiss} accessibilityRole="button" accessibilityLabel="Dismiss" style={styles.ok}>
-        <Text style={styles.okText}>OK</Text>
+      <Pressable onPress={onDismiss} accessibilityRole="button" accessibilityLabel={t('Dismiss')} style={styles.ok}>
+        <Text style={styles.okText}>{t('OK')}</Text>
       </Pressable>
     </View>
   );

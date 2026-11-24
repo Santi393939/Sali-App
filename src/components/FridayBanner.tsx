@@ -6,6 +6,8 @@ import { FRIDAY_BADGE_RUN } from '@/content/extras';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { EightPointStar } from './EightPointStar';
+import { t } from '@/lib/i18n';
+import { sallaParts } from '@/components/sallaParts';
 
 export function FridayBanner({ streak, badge }: { streak: number; badge: boolean }) {
   return (
@@ -22,16 +24,16 @@ export function FridayBanner({ streak, badge }: { streak: number; badge: boolean
       <View style={styles.row}>
         <EightPointStar size={44} fill={colors.zelligeGreen} stroke="#8F6119" strokeWidth={1.5} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Jumu&apos;ah Mubarak</Text>
+          <Text style={styles.title}>{t('Jumu’ah Mubarak')}</Text>
           <Text style={styles.ar}>جمعة مباركة</Text>
           <Text style={styles.body}>
-            Send abundant salawat on the Prophet <Text style={styles.salla}>ﷺ</Text> today.
+            {sallaParts(t('Send abundant salawat on the Prophet ﷺ today.'), styles.salla)}
           </Text>
         </View>
       </View>
       <View style={styles.foot}>
         {badge ? (
-          <Text style={styles.footText}>Jumu&apos;ah Keeper ✓ · Friday streak {streak}</Text>
+          <Text style={styles.footText}>{t('Jumu’ah Keeper ✓ · Friday streak {n}', { n: streak })}</Text>
         ) : (
           <>
             <View style={styles.dots}>
@@ -40,7 +42,7 @@ export function FridayBanner({ streak, badge }: { streak: number; badge: boolean
               ))}
             </View>
             <Text style={styles.footText}>
-              {streak}/{FRIDAY_BADGE_RUN} lit Fridays toward the Jumu&apos;ah Keeper badge
+              {t('{n}/{total} lit Fridays toward the Jumu’ah Keeper badge', { n: streak, total: FRIDAY_BADGE_RUN })}
             </Text>
           </>
         )}

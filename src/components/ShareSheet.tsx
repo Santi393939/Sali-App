@@ -22,6 +22,7 @@ import { PlasterPattern } from './PlasterPattern';
 import { PrimaryButton } from './PrimaryButton';
 import { Segmented } from './Segmented';
 import { ZelligeBand } from './ZelligeBand';
+import { t } from '@/lib/i18n';
 
 export type ShareKind = 'streak' | 'masjid' | 'badge';
 
@@ -71,29 +72,29 @@ export function ShareSheet({ visible, initial = 'streak', today, onClose }: Prop
       const uri = await captureRef(cardRef as Parameters<typeof captureRef>[0], { format: 'png', quality: 1, width: 1080, height: 1920 });
       if (await Sharing.isAvailableAsync()) {
         feedback.medium();
-        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Share from Salli' });
+        await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: t('Share from Salli') });
       }
     } catch {
-      setStatus('Could not make the image. Please try again.');
+      setStatus(t('Could not make the image. Please try again.'));
     }
   };
 
   const options: { value: ShareKind; label: string }[] = [
-    { value: 'streak', label: 'Streak' },
-    { value: 'masjid', label: 'Masjid' },
-    ...(badge ? [{ value: 'badge' as const, label: 'Badge' }] : []),
+    { value: 'streak', label: t('Streak') },
+    { value: 'masjid', label: t('Masjid') },
+    ...(badge ? [{ value: 'badge' as const, label: t('Badge') }] : []),
   ];
 
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.root}>
         <Animated.View style={[styles.backdrop, shadeStyle]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('Close')} />
         </Animated.View>
         <Animated.View style={[styles.sheet, sheetStyle]}>
           <View style={styles.grabber} />
           <ScrollView contentContainerStyle={{ gap: spacing.lg, paddingBottom: insets.bottom + spacing.lg, alignItems: 'stretch' }} showsVerticalScrollIndicator={false}>
-            <Text style={styles.title}>Share</Text>
+            <Text style={styles.title}>{t('Share')}</Text>
             <Segmented options={options} value={kind} onChange={setKind} />
 
             <View style={styles.cardWrap}>
@@ -105,9 +106,9 @@ export function ShareSheet({ visible, initial = 'streak', today, onClose }: Prop
             </View>
 
             {Platform.OS === 'web' ? (
-              <Text style={styles.note}>Sharing images works in the Salli app on your phone.</Text>
+              <Text style={styles.note}>{t('Sharing images works in the Salli app on your phone.')}</Text>
             ) : (
-              <PrimaryButton label="Share image" onPress={share} />
+              <PrimaryButton label={t('Share image')} onPress={share} />
             )}
             {status && <Text style={styles.note}>{status}</Text>}
           </ScrollView>
@@ -134,8 +135,8 @@ function StreakCard({ today }: { today: TodaySnapshot }) {
       <View style={styles.center}>
         <Lantern size={120} lit level={streak.level} />
         <Text style={styles.bigNum}>{streak.current}</Text>
-        <Text style={styles.bigLabel}>day streak</Text>
-        <Text style={styles.line}>Lighting my lantern every day with salawat on the Prophet</Text>
+        <Text style={styles.bigLabel}>{t('day streak')}</Text>
+        <Text style={styles.line}>{t('Lighting my lantern every day with salawat on the Prophet')}</Text>
         <Text style={styles.arabic}>اللهم صل وسلم على نبينا محمد</Text>
       </View>
       <CardFooter />
@@ -150,7 +151,7 @@ function MasjidCard({ lifetime }: { lifetime: number }) {
     <View style={[styles.face, { backgroundColor: colors.night }]}>
       <PlasterPattern color={colors.lightGold} opacity={0.08} cell={40} />
       <View style={styles.center}>
-        <Text style={styles.eyebrow}>My masjid</Text>
+        <Text style={styles.eyebrow}>{t('My masjid')}</Text>
         <View style={styles.medals}>
           {MILESTONES.map((m) => (
             <View key={m.amount} style={[styles.medalSlot, lifetime < m.amount && { opacity: 0.3 }]}>
@@ -160,9 +161,9 @@ function MasjidCard({ lifetime }: { lifetime: number }) {
           ))}
         </View>
         <Text style={styles.bigLabel}>
-          {built} of {MILESTONES.length} parts built
+          {t('{n} of {total} parts built', { n: built, total: MILESTONES.length })}
         </Text>
-        <Text style={styles.line}>Building it one salawat at a time</Text>
+        <Text style={styles.line}>{t('Building it one salawat at a time')}</Text>
       </View>
       <CardFooter />
       <ZelligeBand height={16} />
@@ -175,7 +176,7 @@ function BadgeCard({ m }: { m: Milestone }) {
     <View style={[styles.face, { backgroundColor: m.palette.stage }]}>
       <PlasterPattern color={m.palette.glow} opacity={0.08} cell={40} />
       <View style={styles.center}>
-        <Text style={[styles.eyebrow, { color: m.palette.glow }]}>Milestone reached</Text>
+        <Text style={[styles.eyebrow, { color: m.palette.glow }]}>{t('Milestone reached')}</Text>
         <Medallion size={150} milestone={m} earned />
         <Text style={styles.badgeName}>{m.name}</Text>
         <Text style={[styles.arabic, { color: m.palette.glow }]}>{m.arabic}</Text>

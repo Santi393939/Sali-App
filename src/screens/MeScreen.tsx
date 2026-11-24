@@ -21,6 +21,7 @@ import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/sto
 import type { MilestoneState } from '@/store/milestones';
 import { useSyncStatus } from '@/store/sync';
 import { colors, fonts, PALETTES, radius, spacing, themedStyles } from '@/theme';
+import { LANGUAGES, dateLocale, t, type Lang } from '@/lib/i18n';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -55,7 +56,7 @@ export default function MeScreen() {
         scrollEventThrottle={64}
         contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}
         keyboardShouldPersistTaps="handled">
-        <ScreenHeader title="Me" arabic="حسابي" />
+        <ScreenHeader title={t('Me')} arabic="حسابي" />
 
         {/* Profile */}
         <Card>
@@ -66,7 +67,7 @@ export default function MeScreen() {
                 {initial ? <Text style={styles.initial}>{initial}</Text> : <PersonGlyph />}
               </View>
               {featured && (
-                <View style={styles.featured} accessibilityLabel={`Featured badge: ${featured.name}`}>
+                <View style={styles.featured} accessibilityLabel={t('Featured badge: {name}', { name: featured.name })}>
                   <Medallion size={36} milestone={featured} earned />
                 </View>
               )}
@@ -75,20 +76,20 @@ export default function MeScreen() {
               <TextInput
                 value={settings.name}
                 onChangeText={(name) => updateSettings({ name })}
-                placeholder="Add your name"
+                placeholder={t('Add your name')}
                 placeholderTextColor={colors.muted}
                 style={styles.name}
                 maxLength={40}
-                accessibilityLabel="Your name"
+                accessibilityLabel={t('Your name')}
                 returnKeyType="done"
               />
               <Text style={styles.yearTotal}>
-                {fmt(totals.year)} salawat in {today.date.slice(0, 4)}
+                {t('{n} salawat in {year}', { n: fmt(totals.year), year: today.date.slice(0, 4) })}
               </Text>
-              <Text style={styles.lifetime}>{fmt(totals.lifetime)} all time</Text>
+              <Text style={styles.lifetime}>{t('{n} all time', { n: fmt(totals.lifetime) })}</Text>
               {featured && <Text style={[styles.featuredName, { color: featured.palette.face }]}>{featured.title}</Text>}
               <Pressable onPress={() => setShareOpen(true)} accessibilityRole="button" style={styles.shareBtn}>
-                <Text style={styles.shareText}>Share my progress</Text>
+                <Text style={styles.shareText}>{t('Share my progress')}</Text>
               </Pressable>
             </View>
           </View>
@@ -114,7 +115,7 @@ export default function MeScreen() {
 
         {/* Settings */}
         <Card padded={false}>
-          <Text style={[styles.sectionTitle, styles.padded]}>Settings</Text>
+          <Text style={[styles.sectionTitle, styles.padded]}>{t('Settings')}</Text>
 
           <Pressable
             style={styles.row}
@@ -124,49 +125,58 @@ export default function MeScreen() {
               setGoalOpen(true);
             }}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Daily goal</Text>
-              <Text style={styles.rowHint}>Applies from today</Text>
+              <Text style={styles.rowLabel}>{t('Daily goal')}</Text>
+              <Text style={styles.rowHint}>{t('Applies from today')}</Text>
             </View>
             <Text style={styles.rowValue}>{fmt(settings.dailyGoal)}</Text>
             <Chevron />
           </Pressable>
 
           <View style={[styles.row, styles.rowColumn]}>
-            <Text style={styles.rowLabel}>Counting style</Text>
+            <Text style={styles.rowLabel}>{t('Counting style')}</Text>
             <Segmented<CountingStyle>
               options={[
-                { value: 'up', label: 'Count up' },
-                { value: 'down', label: 'Count down' },
+                { value: 'up', label: t('Count up') },
+                { value: 'down', label: t('Count down') },
               ]}
               value={settings.countingStyle}
               onChange={(countingStyle) => updateSettings({ countingStyle })}
             />
           </View>
 
+          <View style={[styles.row, styles.rowColumn]}>
+            <Text style={styles.rowLabel}>{t('Language')}</Text>
+            <Segmented<Lang>
+              options={LANGUAGES.map((l) => ({ value: l.id, label: l.name }))}
+              value={settings.language}
+              onChange={(language) => updateSettings({ language })}
+            />
+          </View>
+
           <Pressable style={styles.row} accessibilityRole="button" onPress={() => router.push('/city')}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>City</Text>
-              <Text style={styles.rowHint}>Sets Maghrib (when your day turns) and reminder times</Text>
+              <Text style={styles.rowLabel}>{t('City')}</Text>
+              <Text style={styles.rowHint}>{t('Sets Maghrib (when your day turns) and reminder times')}</Text>
             </View>
-            <Text style={styles.rowCity}>{getLocation()?.city ?? 'Not set'}</Text>
+            <Text style={styles.rowCity}>{getLocation()?.city ?? t('Not set')}</Text>
             <Chevron />
           </Pressable>
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>After-Asr reminder</Text>
-              <Text style={styles.rowHint}>A gentle nudge if your lantern is waiting</Text>
+              <Text style={styles.rowLabel}>{t('After-Asr reminder')}</Text>
+              <Text style={styles.rowHint}>{t('A gentle nudge if your lantern is waiting')}</Text>
             </View>
-            <Toggle label="After-Asr reminder" value={settings.asrReminder} onChange={(asrReminder) => updateSettings({ asrReminder })} />
+            <Toggle label={t('After-Asr reminder')} value={settings.asrReminder} onChange={(asrReminder) => updateSettings({ asrReminder })} />
           </View>
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Before-Maghrib reminder</Text>
-              <Text style={styles.rowHint}>An hour before the day turns, if your lantern is waiting</Text>
+              <Text style={styles.rowLabel}>{t('Before-Maghrib reminder')}</Text>
+              <Text style={styles.rowHint}>{t('An hour before the day turns, if your lantern is waiting')}</Text>
             </View>
             <Toggle
-              label="Before-Maghrib reminder"
+              label={t('Before-Maghrib reminder')}
               value={settings.preMaghribReminder}
               onChange={(preMaghribReminder) => updateSettings({ preMaghribReminder })}
             />
@@ -174,11 +184,11 @@ export default function MeScreen() {
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Friday reminders</Text>
-              <Text style={styles.rowHint}>For the Jumu&apos;ah goal</Text>
+              <Text style={styles.rowLabel}>{t('Friday reminders')}</Text>
+              <Text style={styles.rowHint}>{t('For the Jumu’ah goal')}</Text>
             </View>
             <Toggle
-              label="Friday reminders"
+              label={t('Friday reminders')}
               value={settings.fridayReminders}
               onChange={(fridayReminders) => updateSettings({ fridayReminders })}
             />
@@ -186,27 +196,27 @@ export default function MeScreen() {
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Sounds</Text>
-              <Text style={styles.rowHint}>Ticks, chimes and your tap sound</Text>
+              <Text style={styles.rowLabel}>{t('Sounds')}</Text>
+              <Text style={styles.rowHint}>{t('Ticks, chimes and your tap sound')}</Text>
             </View>
-            <Toggle label="Sounds" value={settings.sounds} onChange={(sounds) => updateSettings({ sounds })} />
+            <Toggle label={t('Sounds')} value={settings.sounds} onChange={(sounds) => updateSettings({ sounds })} />
           </View>
 
           <View style={styles.row}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Vibration</Text>
-              <Text style={styles.rowHint}>Taps you can feel with each count</Text>
+              <Text style={styles.rowLabel}>{t('Vibration')}</Text>
+              <Text style={styles.rowHint}>{t('Taps you can feel with each count')}</Text>
             </View>
-            <Toggle label="Vibration" value={settings.haptics} onChange={(haptics) => updateSettings({ haptics })} />
+            <Toggle label={t('Vibration')} value={settings.haptics} onChange={(haptics) => updateSettings({ haptics })} />
           </View>
 
           <View style={[styles.row, styles.rowLast]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Show my count to group</Text>
-              <Text style={styles.rowHint}>Off: members see only the group total and your streak</Text>
+              <Text style={styles.rowLabel}>{t('Show my count to group')}</Text>
+              <Text style={styles.rowHint}>{t('Off: members see only the group total and your streak')}</Text>
             </View>
             <Toggle
-              label="Show my count to group"
+              label={t('Show my count to group')}
               value={settings.shareCountWithGroup}
               onChange={(shareCountWithGroup) => updateSettings({ shareCountWithGroup })}
             />
@@ -222,22 +232,22 @@ export default function MeScreen() {
               </Svg>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Log from group chats</Text>
-              <Text style={styles.rowHint}>Connect the Salli Telegram bot. Arrives with the bot step.</Text>
+              <Text style={styles.rowLabel}>{t('Log from group chats')}</Text>
+              <Text style={styles.rowHint}>{t('Connect the Salli Telegram bot. Arrives with the bot step.')}</Text>
             </View>
             <View style={styles.soon}>
-              <Text style={styles.soonText}>Soon</Text>
+              <Text style={styles.soonText}>{t('Soon')}</Text>
             </View>
           </View>
         </Card>
 
         {/* Privacy & data */}
         <Card padded={false}>
-          <Text style={[styles.sectionTitle, styles.padded]}>Privacy & data</Text>
+          <Text style={[styles.sectionTitle, styles.padded]}>{t('Privacy & data')}</Text>
           <Pressable style={styles.row} accessibilityRole="button" onPress={() => router.push('/privacy')}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Privacy policy</Text>
-              <Text style={styles.rowHint}>No ads, no tracking. Here is what Salli keeps</Text>
+              <Text style={styles.rowLabel}>{t('Privacy policy')}</Text>
+              <Text style={styles.rowHint}>{t('No ads, no tracking. Here is what Salli keeps')}</Text>
             </View>
             <Chevron />
           </Pressable>
@@ -248,20 +258,20 @@ export default function MeScreen() {
               const r = await shareExport();
               showToast(
                 r === 'failed'
-                  ? { tone: 'quest', title: 'Could not export', sub: 'Please try again' }
-                  : { tone: 'quest', title: r === 'copied' ? 'Copied your data' : 'Data ready to share', sub: 'Everything Salli keeps, as text' },
+                  ? { tone: 'quest', title: t('Could not export'), sub: t('Please try again') }
+                  : { tone: 'quest', title: r === 'copied' ? t('Copied your data') : t('Data ready to share'), sub: t('Everything Salli keeps, as text') },
               );
             }}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Export my data</Text>
-              <Text style={styles.rowHint}>A copy of your counts, streaks and settings</Text>
+              <Text style={styles.rowLabel}>{t('Export my data')}</Text>
+              <Text style={styles.rowHint}>{t('A copy of your counts, streaks and settings')}</Text>
             </View>
             <Chevron />
           </Pressable>
           <Pressable style={[styles.row, styles.rowLast]} accessibilityRole="button" onPress={() => setConfirmDelete(true)}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.rowLabel, { color: '#B0412E' }]}>Delete all my data</Text>
-              <Text style={styles.rowHint}>Wipes everything from this phone</Text>
+              <Text style={[styles.rowLabel, { color: '#B0412E' }]}>{t('Delete all my data')}</Text>
+              <Text style={styles.rowHint}>{t('Wipes everything from this phone')}</Text>
             </View>
           </Pressable>
         </Card>
@@ -269,8 +279,8 @@ export default function MeScreen() {
         <View style={styles.footer}>
           <Logo size={44} />
           <Text style={styles.footerName}>Salli · صلِّ</Text>
-          <Text style={styles.footerText}>Version 0.1 · preview</Text>
-          <Text style={styles.footerText}>Qur&apos;an and hadith texts are awaiting review by a qualified scholar.</Text>
+          <Text style={styles.footerText}>{t('Version 0.1 · preview')}</Text>
+          <Text style={styles.footerText}>{t('Qur’an and hadith texts are awaiting review by a qualified scholar.')}</Text>
         </View>
       </ScrollView>
 
@@ -300,9 +310,9 @@ export default function MeScreen() {
       <Modal visible={confirmDelete} transparent animationType="fade" onRequestClose={() => setConfirmDelete(false)}>
         <View style={styles.confirmRoot}>
           <View style={styles.confirm}>
-            <Text style={styles.confirmTitle}>Delete everything?</Text>
+            <Text style={styles.confirmTitle}>{t('Delete everything?')}</Text>
             <Text style={styles.confirmText}>
-              Your counts, streaks, quests, rewards and settings will be removed from this phone. This can&apos;t be undone.
+              {t('Your counts, streaks, quests, rewards and settings will be removed from this phone. This can’t be undone.')}
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -312,10 +322,10 @@ export default function MeScreen() {
                 await deleteAllData();
                 router.replace('/onboarding');
               }}>
-              <Text style={styles.deleteText}>Delete all my data</Text>
+              <Text style={styles.deleteText}>{t('Delete all my data')}</Text>
             </Pressable>
             <Pressable accessibilityRole="button" style={styles.cancelBtn} onPress={() => setConfirmDelete(false)}>
-              <Text style={styles.cancelText}>Keep my data</Text>
+              <Text style={styles.cancelText}>{t('Keep my data')}</Text>
             </Pressable>
           </View>
         </View>
@@ -323,9 +333,9 @@ export default function MeScreen() {
 
       <NumberPadSheet
         visible={goalOpen}
-        title="Daily goal"
+        title={t('Daily goal')}
         max={GOAL_MAX}
-        actionLabel={(a) => (a ? `Set goal to ${a}` : 'Set goal')}
+        actionLabel={(a) => (a ? t('Set goal to {n}', { n: a }) : t('Set goal'))}
         onClose={() => setGoalOpen(false)}
         onAdd={(n) => {
           feedback.medium();
@@ -341,8 +351,8 @@ function AccountCard() {
   const { session, configured } = useAuth();
   const sync = useSyncStatus();
   if (session) {
-    const email = session.user.email ?? 'Signed in';
-    const when = sync.lastSyncedAt ? timeAgo(sync.lastSyncedAt) : 'not yet';
+    const email = session.user.email ?? t('Signed in');
+    const when = sync.lastSyncedAt ? timeAgo(sync.lastSyncedAt) : t('not yet');
     return (
       <Card>
         <View style={styles.account}>
@@ -353,14 +363,14 @@ function AccountCard() {
             </Text>
             <Text style={styles.rowHint}>
               {sync.state === 'syncing'
-                ? 'Syncing…'
+                ? t('Syncing…')
                 : sync.state === 'error'
-                  ? 'Will retry when you are back online'
-                  : `Synced ${when}`}
+                  ? t('Will retry when you are back online')
+                  : t('Synced {when}', { when })}
             </Text>
           </View>
           <Pressable onPress={() => signOut()} accessibilityRole="button" style={styles.signOut}>
-            <Text style={styles.signOutText}>Sign out</Text>
+            <Text style={styles.signOutText}>{t('Sign out')}</Text>
           </Pressable>
         </View>
       </Card>
@@ -368,14 +378,14 @@ function AccountCard() {
   }
   return (
     <Card>
-      <Text style={styles.rowLabel}>Keep your counts safe</Text>
+      <Text style={styles.rowLabel}>{t('Keep your counts safe')}</Text>
       <Text style={styles.rowHint}>
         {configured
-          ? 'Sign in to sync across phones, join a family group and log from Telegram.'
-          : 'Your counts are saved on this phone. Accounts switch on once Supabase is connected.'}
+          ? t('Sign in to sync across phones, join a family group and log from Telegram.')
+          : t('Your counts are saved on this phone. Accounts switch on once Supabase is connected.')}
       </Text>
       <View style={{ marginTop: spacing.md }}>
-        <PrimaryButton label="Sign in" onPress={() => router.push('/sign-in')} />
+        <PrimaryButton label={t('Sign in')} onPress={() => router.push('/sign-in')} />
       </View>
     </Card>
   );
@@ -383,10 +393,10 @@ function AccountCard() {
 
 function timeAgo(iso: string) {
   const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (s < 60) return 'just now';
-  if (s < 3600) return `${Math.round(s / 60)} min ago`;
-  if (s < 86400) return `${Math.round(s / 3600)} h ago`;
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (s < 60) return t('just now');
+  if (s < 3600) return t('{n} min ago', { n: Math.round(s / 60) });
+  if (s < 86400) return t('{n} h ago', { n: Math.round(s / 3600) });
+  return new Date(iso).toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' });
 }
 
 function PersonGlyph() {

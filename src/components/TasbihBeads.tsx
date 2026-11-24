@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { colors, fonts, themedStyles } from '@/theme';
+import { t } from '@/lib/i18n';
 
 export const ROUND = 33;
 
@@ -18,7 +19,7 @@ export function TasbihBeads({ taps }: { taps: number }) {
   }, [justCompleted, taps, flash]);
   const glow = useAnimatedStyle(() => ({ opacity: flash.value }));
   return (
-    <View style={styles.wrap} accessibilityLabel={`Tasbih: round ${rounds + (justCompleted ? 0 : 1)}, ${shown} of ${ROUND}`}>
+    <View style={styles.wrap} accessibilityLabel={t('Tasbih: round {r}, {n} of {total}', { r: rounds + (justCompleted ? 0 : 1), n: shown, total: ROUND })}>
       <View style={styles.row}>
         {Array.from({ length: ROUND }, (_, i) => (
           <Bead key={i} filled={i < shown} newest={i === shown - 1} />
@@ -26,7 +27,7 @@ export function TasbihBeads({ taps }: { taps: number }) {
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.glow, glow]} />
       </View>
       <Text style={styles.label}>
-        {taps === 0 ? 'Tap the arch to count' : `Round ${rounds + (justCompleted ? 0 : 1)} · ${shown}/${ROUND}${rounds > 0 ? ` · ${rounds} ${rounds === 1 ? 'round' : 'rounds'} done` : ''}`}
+        {taps === 0 ? t('Tap the arch to count') : t('Round {r} · {n}/{total}', { r: rounds + (justCompleted ? 0 : 1), n: shown, total: ROUND }) + (rounds > 0 ? t(rounds === 1 ? ' · {n} round done' : ' · {n} rounds done', { n: rounds }) : '')}
       </Text>
     </View>
   );

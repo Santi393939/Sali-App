@@ -41,6 +41,7 @@ import { addSalawat } from '@/store/counts';
 import { recordReminderLike, recordReminderView } from '@/store/quests';
 import { toggleAction, useReminderActions } from '@/store/reminderActions';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { getLanguage, t } from '@/lib/i18n';
 
 const TAB_INDEX = 1;
 const SEND_AMOUNT = 10;
@@ -89,10 +90,10 @@ export default function RemindersScreen() {
       {height > 0 && filter === 'saved' && data.length === 0 && (
         <View style={[styles.emptySaved, { height }]}>
           <BookmarkIcon filled={false} size={44} />
-          <Text style={styles.emptyTitle}>Nothing saved yet</Text>
-          <Text style={styles.emptyText}>Tap the bookmark on any reminder to keep it here for later.</Text>
+          <Text style={styles.emptyTitle}>{t('Nothing saved yet')}</Text>
+          <Text style={styles.emptyText}>{t('Tap the bookmark on any reminder to keep it here for later.')}</Text>
           <Pressable onPress={() => choose('all')} accessibilityRole="button" style={styles.emptyBtn}>
-            <Text style={styles.emptyBtnText}>Browse reminders</Text>
+            <Text style={styles.emptyBtnText}>{t('Browse reminders')}</Text>
           </Pressable>
         </View>
       )}
@@ -138,7 +139,7 @@ export default function RemindersScreen() {
               accessibilityState={{ selected: filter === f }}
               style={[styles.switchBtn, filter === f && styles.switchBtnOn]}>
               <Text style={[styles.switchText, filter === f && styles.switchTextOn]}>
-                {f === 'all' ? 'For you' : `Saved${savedCount ? ` · ${savedCount}` : ''}`}
+                {f === 'all' ? t('For you') : `${t('Saved')}${savedCount ? ` · ${savedCount}` : ''}`}
               </Text>
             </Pressable>
           ))}
@@ -182,7 +183,7 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
 
   const share = async () => {
     try {
-      await Share.share({ message: `${reminder.arabic}\n\n${reminder.english}\n— ${reminder.sourceRef}\n\nShared from Salli` });
+      await Share.share({ message: `${reminder.arabic}\n\n${getLanguage() === 'ar' ? '' : `${t(reminder.english)}\n`}— ${t(reminder.sourceRef)}\n\n${t('Shared from Salli')}` });
     } catch {}
   };
 
@@ -194,11 +195,11 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
       <View style={[styles.top, { paddingTop: topInset + spacing.md }]}>
         <View style={styles.tag}>
           <TagIcon kind={reminder.kind} />
-          <Text style={styles.tagText}>{KIND_LABEL[reminder.kind]}</Text>
+          <Text style={styles.tagText}>{t(KIND_LABEL[reminder.kind])}</Text>
         </View>
         {!reminder.verifiedBy && reminder.kind !== 'video' && (
           <View style={styles.review}>
-            <Text style={styles.reviewText}>Awaiting review</Text>
+            <Text style={styles.reviewText}>{t('Awaiting review')}</Text>
           </View>
         )}
         <Text style={styles.counter}>{position}</Text>
@@ -215,15 +216,17 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
             </Animated.Text>
             <Ornament />
             <Animated.View style={[styles.englishBlock, englishStyle]}>
+              {getLanguage() !== 'ar' && (
               <Text style={styles.english}>
-                {reminder.english.split('ﷺ').map((part, i) => (
+                {t(reminder.english).split('ﷺ').map((part, i) => (
                   <Text key={i}>
                     {i > 0 && <Text style={styles.salla}>ﷺ</Text>}
                     {part}
                   </Text>
                 ))}
               </Text>
-              <Text style={styles.source}>{reminder.sourceRef}</Text>
+              )}
+              <Text style={styles.source}>{t(reminder.sourceRef)}</Text>
             </Animated.View>
           </>
         )}
@@ -233,7 +236,7 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
       <View style={styles.rail}>
         <LikeButton id={reminder.id} liked={liked} count={reminder.baseLikes + (liked ? 1 : 0)} />
         <RailButton
-          label={saved ? 'Saved' : 'Save'}
+          label={saved ? t('Saved') : t('Save')}
           onPress={() => {
             feedback.medium();
             toggleAction(reminder.id, 'saved');
@@ -241,7 +244,7 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
           <BookmarkIcon filled={saved} />
         </RailButton>
         {Platform.OS !== 'web' && (
-          <RailButton label="Share" onPress={share}>
+          <RailButton label={t('Share')} onPress={share}>
             <ShareIcon />
           </RailButton>
         )}
@@ -293,13 +296,13 @@ function SendTen() {
       <Pressable
         onPress={send}
         accessibilityRole="button"
-        accessibilityLabel="Send 10 salawat now"
+        accessibilityLabel={t('Send 10 salawat now')}
         style={({ pressed }) => [styles.sendBtn, pressed && { transform: [{ scale: 0.98 }] }]}>
         {() => (
           <>
             <Animated.View style={[styles.sendFill, fillStyle]} />
             <Text style={[styles.sendText, busy && { color: colors.night }]}>
-              {busy ? `${SEND_AMOUNT} salawat sent · ما شاء الله` : 'Send 10 salawat now'}
+              {busy ? `${t('{n} salawat sent', { n: SEND_AMOUNT })} · ما شاء الله` : t('Send 10 salawat now')}
             </Text>
           </>
         )}
@@ -366,8 +369,8 @@ function VideoSlot() {
           </Svg>
         </View>
       </HorseshoeArch>
-      <Text style={styles.videoTitle}>Video reminder</Text>
-      <Text style={styles.videoBody}>Short videos will play here once they are hosted (Mux or Cloudflare Stream).</Text>
+      <Text style={styles.videoTitle}>{t('Video reminder')}</Text>
+      <Text style={styles.videoBody}>{t('Short videos will play here once they are hosted (Mux or Cloudflare Stream).')}</Text>
     </View>
   );
 }

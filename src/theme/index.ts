@@ -4,6 +4,7 @@
  */
 
 import type { ThemeId } from '@/content/milestones';
+import { getLanguage } from '@/lib/i18n';
 
 /**
  * Colour roles. Every theme (one per milestone badge, plus the default
@@ -94,12 +95,13 @@ export const colors: Palette = new Proxy({} as Palette, {
  * cached; `styles.foo` always returns the active theme's version.
  */
 export function themedStyles<T extends object>(make: () => T): T {
-  const cache = new Map<ThemeId, T>();
+  const cache = new Map<string, T>();
   const get = () => {
-    let s = cache.get(activeTheme);
+    const k = `${activeTheme}-${getLanguage()}`;
+    let s = cache.get(k);
     if (!s) {
       s = make();
-      cache.set(activeTheme, s);
+      cache.set(k, s);
     }
     return s;
   };
@@ -115,7 +117,7 @@ export function hexA(hex: string, a: number) {
 export type ColorToken = keyof Palette;
 
 /** Font family names, as registered by expo-font in the root layout. */
-export const fonts = {
+const LATIN_FONTS = {
   display: 'CormorantGaramond_700Bold', // headings and big numbers
   displaySemi: 'CormorantGaramond_600SemiBold',
   arabic: 'Amiri_400Regular',
@@ -123,7 +125,20 @@ export const fonts = {
   ui: 'Inter_400Regular',
   uiMedium: 'Inter_500Medium',
   uiSemi: 'Inter_600SemiBold',
-} as const;
+};
+/** In Arabic: Amiri for headings, Cairo (a clear Arabic UI face) for interface text. */
+const ARABIC_FONTS: typeof LATIN_FONTS = {
+  ...LATIN_FONTS,
+  display: 'Amiri_700Bold',
+  displaySemi: 'Amiri_700Bold',
+  ui: 'Cairo_400Regular',
+  uiMedium: 'Cairo_600SemiBold',
+  uiSemi: 'Cairo_700Bold',
+};
+/** Font families for the active language (read when styles are built). */
+export const fonts = new Proxy(LATIN_FONTS, {
+  get: (_t, key: string) => (getLanguage() === 'ar' ? ARABIC_FONTS : LATIN_FONTS)[key as keyof typeof LATIN_FONTS],
+});
 
 /** Type scale. Interface text never goes below 11. */
 export const type = {

@@ -5,16 +5,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CityPicker, PrimaryButton } from '@/components';
 import { colors, fonts, spacing, themedStyles } from '@/theme';
+import { t } from '@/lib/i18n';
 
 export default function CityScreen() {
   const insets = useSafeAreaInsets();
   const done = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
     <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom + spacing.xl }]} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Your city</Text>
-      <Text style={styles.sub}>Salli days run Maghrib to Maghrib. Your city sets when the day turns and when reminders arrive.</Text>
+      <Text style={styles.title}>{t('Your city')}</Text>
+      <Text style={styles.sub}>{t('Salli days run Maghrib to Maghrib. Your city sets when the day turns and when reminders arrive.')}</Text>
       <CityPicker />
-      <PrimaryButton label="Done" onPress={done} />
+      <PrimaryButton label={t('Done')} onPress={done} />
     </ScrollView>
   );
 }

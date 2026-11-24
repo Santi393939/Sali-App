@@ -5,20 +5,21 @@ import { keyToDate } from '@/lib/salliDay';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { Lantern } from './Lantern';
+import { dateLocale, isRTL, t } from '@/lib/i18n';
 
 type Props = { repair: { day: string; streak: number; target: number }; total: number };
 
 export function RepairCard({ repair, total }: Props) {
-  const weekday = keyToDate(repair.day).toLocaleDateString('en-US', { weekday: 'long' });
+  const weekday = keyToDate(repair.day).toLocaleDateString(dateLocale(), { weekday: 'long' });
   const pct = Math.min(1, total / repair.target);
   return (
     <View style={styles.card} accessibilityRole="summary">
       <View style={styles.row}>
         <Lantern size={40} lit={false} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Your {repair.streak}-day streak can still be saved</Text>
+          <Text style={styles.title}>{t('Your {n}-day streak can still be saved', { n: repair.streak })}</Text>
           <Text style={styles.body}>
-            {weekday} was missed. Send {repair.target.toLocaleString('en-US')} today, double your goal, before Maghrib and it lights up again.
+            {t('{day} was missed. Send {n} today, double your goal, before Maghrib and it lights up again.', { day: weekday, n: repair.target.toLocaleString('en-US') })}
           </Text>
         </View>
       </View>
@@ -40,6 +41,6 @@ const styles = themedStyles(() =>
     body: { fontFamily: fonts.ui, fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 2 },
     track: { height: 8, borderRadius: 4, backgroundColor: colors.card, overflow: 'hidden', borderWidth: 1, borderColor: colors.cardBorder },
     fill: { height: '100%', borderRadius: 4, backgroundColor: colors.saffron },
-    count: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta, textAlign: 'right' },
+    count: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta, textAlign: isRTL() ? 'left' : 'right' },
   }),
 );

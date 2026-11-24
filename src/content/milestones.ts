@@ -1,3 +1,5 @@
+import { localized } from '@/lib/i18n';
+
 /**
  * Lifetime milestones (from the brief: 1k, 10k, 50k, 100k, 250k, 1M).
  * Each is a part of a Moroccan masjid, with its own medallion shape and
@@ -46,7 +48,8 @@ export type Milestone = {
 
 export type ThemeId = 'zellige' | 'cedar' | 'fes' | 'turquoise' | 'gilded' | 'midnight' | 'garden';
 
-export const MILESTONES: Milestone[] = [
+export const MILESTONES: Milestone[] = (
+  [
   {
     amount: 1000,
     short: '1k',
@@ -137,6 +140,7 @@ export const MILESTONES: Milestone[] = [
     earnedLine: 'One million salawat. Bougainvillea blooms over the riad. ما شاء الله',
     goalLine: 'One million brings the riad garden into bloom.',
   },
-];
+  ] satisfies Milestone[]
+).map((m) => localized(m, ['name', 'title', 'earnedLine', 'goalLine']));
 
 export const milestoneByAmount = (amount: number | null | undefined) => MILESTONES.find((m) => m.amount === amount);

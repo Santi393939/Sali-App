@@ -11,7 +11,8 @@ import sys
 
 src, out = sys.argv[1], sys.argv[2]
 USED_FONTS = ['Amiri_400Regular.', 'Amiri_700Bold.', 'CormorantGaramond_600SemiBold.', 'CormorantGaramond_700Bold.',
-              'Inter_400Regular.', 'Inter_500Medium.', 'Inter_600SemiBold.']
+              'Inter_400Regular.', 'Inter_500Medium.', 'Inter_600SemiBold.',
+              'Cairo_400Regular.', 'Cairo_600SemiBold.', 'Cairo_700Bold.']
 MIME = {'ttf': 'font/ttf', 'wav': 'audio/wav'}
 
 html = open(f'{src}/index.html').read()

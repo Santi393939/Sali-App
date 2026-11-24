@@ -3,6 +3,7 @@ import {
   CormorantGaramond_600SemiBold,
   CormorantGaramond_700Bold,
 } from '@expo-google-fonts/cormorant-garamond';
+import { Cairo_400Regular, Cairo_600SemiBold, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -19,6 +20,8 @@ import { startReminders } from '@/lib/notifications';
 import { useActiveThemeId } from '@/store/rewards';
 import { startSync } from '@/store/sync';
 import { PALETTES, setActiveTheme } from '@/theme';
+import { setLanguage } from '@/lib/i18n';
+import { useSettings } from '@/store/settings';
 
 startSync();
 startReminders();
@@ -31,6 +34,9 @@ export default function RootLayout() {
     CormorantGaramond_700Bold,
     Amiri_400Regular,
     Amiri_700Bold,
+    Cairo_400Regular,
+    Cairo_600SemiBold,
+    Cairo_700Bold,
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
@@ -44,6 +50,10 @@ export default function RootLayout() {
   // Read from the theme id (not the shared palette object) so the React
   // Compiler sees these colours change with the theme.
   const palette = PALETTES[themeId];
+  // Language works the same way: set before rendering, screens rebuilt on change.
+  const lang = useSettings().language;
+  setLanguage(lang);
+  const direction = lang === 'ar' ? 'rtl' : 'ltr';
 
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync();
@@ -54,11 +64,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.plaster }}>
       <StatusBar style={palette.statusBar} />
-      <View key={themeId} style={{ flex: 1, backgroundColor: palette.plaster }}>
+      <View key={`${themeId}-${lang}`} style={{ flex: 1, backgroundColor: palette.plaster, direction }}>
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: palette.plaster },
+          contentStyle: { backgroundColor: palette.plaster, direction },
         }}>
         <Stack.Screen name="sign-in" options={{ presentation: 'modal' }} />
         <Stack.Screen name="city" options={{ presentation: 'modal' }} />

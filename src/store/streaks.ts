@@ -14,6 +14,7 @@ import { addDays, keyToDate, nextDayKey } from '@/lib/salliDay';
 
 import { getDay, isLit, savedDayKeys } from './days';
 import { readJSON, storage, writeJSON } from './storage';
+import { localized } from '@/lib/i18n';
 
 export const MAX_SHIELDS = 2;
 export const PERFECT_WEEK = 7;
@@ -21,13 +22,15 @@ export const STREAK_GOALS = [7, 14, 30, 50, 100, 365] as const;
 
 export type LanternLevel = 'brass' | 'bronze' | 'silver' | 'gold' | 'emerald';
 
-export const LEVELS: { level: LanternLevel; from: number; name: string }[] = [
+export const LEVELS: { level: LanternLevel; from: number; name: string }[] = (
+  [
   { level: 'emerald', from: 365, name: 'Emerald' },
   { level: 'gold', from: 100, name: 'Gold' },
   { level: 'silver', from: 30, name: 'Silver' },
   { level: 'bronze', from: 7, name: 'Bronze' },
   { level: 'brass', from: 0, name: 'Brass' },
-];
+  ] as { level: LanternLevel; from: number; name: string }[]
+).map((l) => localized(l, ['name']));
 
 export function levelFor(streak: number): LanternLevel {
   return LEVELS.find((l) => streak >= l.from)!.level;

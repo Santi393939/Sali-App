@@ -10,9 +10,10 @@ import { useToday } from '@/store/counts';
 import { periodStats, type Bar, type Period } from '@/store/stats';
 import { LEVELS } from '@/store/streaks';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { isRTL, t } from '@/lib/i18n';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
-const PERIOD_LABEL: Record<Period, string> = { week: 'Last 7 days', month: 'Last 30 days', year: 'Last 12 months' };
+const PERIOD_LABEL = (): Record<Period, string> => ({ week: t('Last 7 days'), month: t('Last 30 days'), year: t('Last 12 months') });
 
 export default function StatsScreen() {
   const insets = useSafeAreaInsets();
@@ -28,15 +29,15 @@ export default function StatsScreen() {
   if (today.lifetime === 0) {
     return (
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
-        <ScreenHeader title="Stats" arabic="إحصاءات" />
+        <ScreenHeader title={t('Stats')} arabic="إحصاءات" />
         <View style={styles.empty}>
           <PlasterPattern />
           <View style={styles.emptyBody}>
             <ArchBarsPreview />
-            <Text style={styles.emptyTitle}>Your story starts with one</Text>
-            <Text style={styles.emptyText}>Count your first salawat and your days, streaks and totals will fill in here.</Text>
+            <Text style={styles.emptyTitle}>{t('Your story starts with one')}</Text>
+            <Text style={styles.emptyText}>{t('Count your first salawat and your days, streaks and totals will fill in here.')}</Text>
             <Pressable onPress={() => tabs.goTo(0)} accessibilityRole="button" style={styles.emptyBtn}>
-              <Text style={styles.emptyBtnText}>Start on Today</Text>
+              <Text style={styles.emptyBtnText}>{t('Start on Today')}</Text>
             </Pressable>
           </View>
           <ZelligeBand height={16} />
@@ -47,13 +48,13 @@ export default function StatsScreen() {
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
-      <ScreenHeader title="Stats" arabic="إحصاءات" />
+      <ScreenHeader title={t('Stats')} arabic="إحصاءات" />
 
       <Segmented
         options={[
-          { value: 'week', label: 'Week' },
-          { value: 'month', label: 'Month' },
-          { value: 'year', label: 'Year' },
+          { value: 'week', label: t('Week') },
+          { value: 'month', label: t('Month') },
+          { value: 'year', label: t('Year') },
         ]}
         value={period}
         onChange={setPeriod}
@@ -63,7 +64,7 @@ export default function StatsScreen() {
       <View style={styles.panel}>
         <PlasterPattern color={colors.lightGold} opacity={0.1} cell={40} />
         <View style={styles.panelBody}>
-          <Text style={styles.panelLabel}>{PERIOD_LABEL[period]}</Text>
+          <Text style={styles.panelLabel}>{PERIOD_LABEL()[period]}</Text>
           <View style={styles.totalRow}>
             <Text style={styles.total}>{fmt(stats.total)}</Text>
             {stats.change !== null && (
@@ -75,7 +76,7 @@ export default function StatsScreen() {
             )}
           </View>
           <Text style={styles.panelMeta}>
-            salawat · {stats.litDays} lit {stats.litDays === 1 ? 'day' : 'days'}
+            {t(stats.litDays === 1 ? 'salawat · {n} lit day' : 'salawat · {n} lit days', { n: stats.litDays })}
           </Text>
           <ArchBars bars={stats.bars} thin={period === 'month'} />
         </View>
@@ -89,23 +90,23 @@ export default function StatsScreen() {
             <Lantern size={34} lit={today.lit} level={streak.level} glow={false} />
             <View>
               <Text style={styles.streakNum}>{streak.current}</Text>
-              <Text style={styles.streakLabel}>current streak</Text>
+              <Text style={styles.streakLabel}>{t('current streak')}</Text>
             </View>
           </View>
-          <Text style={styles.streakMeta}>{levelName} lantern</Text>
+          <Text style={styles.streakMeta}>{t('{name} lantern', { name: levelName })}</Text>
         </Card>
         <Card style={styles.half}>
           <View style={styles.streakHead}>
             <Lantern size={34} lit level={streak.level} glow={false} />
             <View>
               <Text style={styles.streakNum}>{streak.best}</Text>
-              <Text style={styles.streakLabel}>best streak</Text>
+              <Text style={styles.streakLabel}>{t('best streak')}</Text>
             </View>
           </View>
           <View style={styles.shieldRow}>
             <ShieldIcon size={14} color={colors.saffron} />
             <Text style={styles.streakMeta}>
-              {streak.shields} {streak.shields === 1 ? 'shield' : 'shields'}
+              {t(streak.shields === 1 ? '{n} shield' : '{n} shields', { n: streak.shields })}
             </Text>
           </View>
         </Card>
@@ -113,9 +114,9 @@ export default function StatsScreen() {
 
       {/* At a glance */}
       <View style={styles.tiles}>
-        <Tile label="All time" value={fmt(today.lifetime)} />
-        <Tile label="Daily average" value={fmt(avg30)} sub="last 30 days" />
-        <Tile label="Quest days" value={String(streak.questDays)} sub={`${streak.shields} ${streak.shields === 1 ? 'shield' : 'shields'} ready`} />
+        <Tile label={t('All time')} value={fmt(today.lifetime)} />
+        <Tile label={t('Daily average')} value={fmt(avg30)} sub={t('last 30 days')} />
+        <Tile label={t('Quest days')} value={String(streak.questDays)} sub={t(streak.shields === 1 ? '{n} shield ready' : '{n} shields ready', { n: streak.shields })} />
       </View>
 
       <Card>
@@ -231,7 +232,7 @@ const styles = themedStyles(() =>
 
   calHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.md },
   calTitle: { fontFamily: fonts.display, fontSize: 24, color: colors.ink },
-  calHijri: { fontFamily: 'Amiri_400Regular', fontSize: 14, color: colors.terracotta, textAlign: 'left' },
+  calHijri: { fontFamily: 'Amiri_400Regular', fontSize: 14, color: colors.terracotta, textAlign: isRTL() ? 'right' : 'left' },
   calCount: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.muted, marginTop: 8 },
   calGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   calWeekday: { width: `${100 / 7}%`, textAlign: 'center', fontFamily: fonts.uiSemi, fontSize: 11, color: colors.muted, marginBottom: 6 },

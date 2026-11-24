@@ -14,15 +14,24 @@ import type { DayStatus } from '@/store/streaks';
 import { colors, fonts, hexA, spacing, themedStyles } from '@/theme';
 
 import { ShieldIcon } from './StreakTakeover';
+import { dateLocale, t } from '@/lib/i18n';
 
-const WEEK_HEAD = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const STATUS_LABEL: Record<DayStatus, string> = {
-  lit: 'Lantern lit',
-  shield: 'Covered by a shield',
-  repaired: 'Repaired the next day',
-  missed: 'Not lit',
-  pending: 'In progress',
+/** One-letter weekday heads, Sunday first, in the app's language. */
+const weekHead = () => {
+  try {
+    const fmt = new Intl.DateTimeFormat(dateLocale(), { weekday: 'narrow' });
+    return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(2026, 10, 22 + i, 12)));
+  } catch {
+    return ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  }
 };
+const STATUS_LABEL = (): Record<DayStatus, string> => ({
+  lit: t('Lantern lit'),
+  shield: t('Covered by a shield'),
+  repaired: t('Repaired the next day'),
+  missed: t('Not lit'),
+  pending: t('In progress'),
+});
 
 type Props = {
   today: string;
@@ -32,10 +41,10 @@ type Props = {
 };
 
 export function MonthCalendar({ today, status }: Props) {
-  const t = keyToDate(today);
+  const todayDate = keyToDate(today);
   const [offset, setOffset] = useState(0); // months back from this one
   const [picked, setPicked] = useState<string | null>(null);
-  const first = new Date(t.getFullYear(), t.getMonth() - offset, 1, 12);
+  const first = new Date(todayDate.getFullYear(), todayDate.getMonth() - offset, 1, 12);
   const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
   const cells: (string | null)[] = [
     ...Array.from({ length: first.getDay() }, () => null),
@@ -45,7 +54,7 @@ export function MonthCalendar({ today, status }: Props) {
 
   const earliest = savedDayKeys()[0];
   const canGoBack = !!earliest && earliest < toDayKey(first);
-  const monthName = first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = first.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
   let hijri = '';
   try {
     hijri = new Intl.DateTimeFormat('ar-u-ca-islamic-umalqura-nu-latn', { month: 'long', year: 'numeric' })
@@ -74,10 +83,10 @@ export function MonthCalendar({ today, status }: Props) {
         <Arrow dir="right" disabled={offset === 0} onPress={() => move(-1)} />
       </View>
       <Text style={styles.count}>
-        {litCount} lit {litCount === 1 ? 'day' : 'days'}
+        {t(litCount === 1 ? '{n} lit day' : '{n} lit days', { n: litCount })}
       </Text>
       <View style={styles.grid}>
-        {WEEK_HEAD.map((d, i) => (
+        {weekHead().map((d, i) => (
           <Text key={`h${i}`} style={styles.weekday}>
             {d}
           </Text>
@@ -101,7 +110,7 @@ export function MonthCalendar({ today, status }: Props) {
                 setPicked(isPicked ? null : key);
               }}
               accessibilityRole="button"
-              accessibilityLabel={`${keyToDate(key).toDateString()}, ${day.total} salawat`}>
+              accessibilityLabel={`${keyToDate(key).toLocaleDateString(dateLocale())}, ${t('{n} salawat', { n: day.total })}`}>
               <View
                 style={[
                   styles.dot,
@@ -124,20 +133,20 @@ export function MonthCalendar({ today, status }: Props) {
 
       {picked && pickedDay ? (
         <View style={styles.detail}>
-          <Text style={styles.detailDate}>{keyToDate(picked).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
+          <Text style={styles.detailDate}>{keyToDate(picked).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
           <Text style={styles.detailText}>
-            {pickedDay.total.toLocaleString('en-US')} of {pickedDay.goal.toLocaleString('en-US')} salawat
-            {pickedStatus ? ` · ${STATUS_LABEL[pickedStatus]}` : ''}
+            {t('{n} of {goal} salawat', { n: pickedDay.total.toLocaleString('en-US'), goal: pickedDay.goal.toLocaleString('en-US') })}
+            {pickedStatus ? ` · ${STATUS_LABEL()[pickedStatus]}` : ''}
           </Text>
         </View>
       ) : (
         <View style={styles.legend}>
           <View style={[styles.legendDot, styles.dotLit]} />
-          <Text style={styles.legendText}>Lit</Text>
+          <Text style={styles.legendText}>{t('Lit')}</Text>
           <View style={[styles.legendDot, { backgroundColor: hexA(colors.saffron, 0.3) }]} />
-          <Text style={styles.legendText}>Partly</Text>
+          <Text style={styles.legendText}>{t('Partly')}</Text>
           <ShieldIcon size={12} color={colors.saffron} />
-          <Text style={styles.legendText}>Shield or repaired</Text>
+          <Text style={styles.legendText}>{t('Shield or repaired')}</Text>
         </View>
       )}
     </View>
@@ -146,7 +155,7 @@ export function MonthCalendar({ today, status }: Props) {
 
 function Arrow({ dir, disabled, onPress }: { dir: 'left' | 'right'; disabled: boolean; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={dir === 'left' ? 'Previous month' : 'Next month'} style={[styles.arrow, disabled && { opacity: 0.25 }]} hitSlop={6}>
+    <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={dir === 'left' ? t('Previous month') : t('Next month')} style={[styles.arrow, disabled && { opacity: 0.25 }]} hitSlop={6}>
       <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={colors.ink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         <Path d={dir === 'left' ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'} />
       </Svg>

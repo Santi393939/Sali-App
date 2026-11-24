@@ -1,6 +1,7 @@
 /** User settings saved on the phone. */
 import { useSyncExternalStore } from 'react';
 
+import { deviceLanguage, setLanguage, type Lang } from '@/lib/i18n';
 import { salliDayKey, setLocation, type SavedLocation } from '@/lib/salliDay';
 
 import type { GlassId } from '@/content/extras';
@@ -34,6 +35,8 @@ export type Settings = {
   featuredBadge: number | null;
   /** Lantern glass colour (unlocked by lamps every 5,000). */
   lanternGlass: GlassId;
+  /** App language; starts from the phone's language. */
+  language: Lang;
 };
 
 const KEY = 'settings.v1';
@@ -52,6 +55,7 @@ const DEFAULTS: Settings = {
   tapSound: 'tick',
   featuredBadge: null,
   lanternGlass: 'amber',
+  language: deviceLanguage(),
 };
 
 export const GOAL_MIN = 1;
@@ -59,6 +63,7 @@ export const GOAL_MAX = 100000;
 
 const listeners = new Set<() => void>();
 let current: Settings = sanitize({ ...DEFAULTS, ...readJSON<Partial<Settings>>(KEY, {}) });
+setLanguage(current.language);
 
 /** Drop values from older versions that no longer exist. */
 function sanitize(s: Settings): Settings {
@@ -66,12 +71,13 @@ function sanitize(s: Settings): Settings {
     ...s,
     theme: s.theme in THEMES ? s.theme : 'zellige',
     tapSound: s.tapSound in SOUNDS ? s.tapSound : 'tick',
+    language: s.language === 'ar' || s.language === 'fr' || s.language === 'en' ? s.language : deviceLanguage(),
   };
 }
 
 /** Back to first-run defaults (used by Delete all my data). */
 export function resetSettings() {
-  current = { ...DEFAULTS };
+  current = { ...DEFAULTS, language: current.language };
   listeners.forEach((l) => l());
 }
 
@@ -93,6 +99,10 @@ export function updateSettings(patch: Partial<Settings>, opts: { fromServer?: bo
   current = { ...current, ...patch };
   writeJSON(KEY, current);
   if (patch.dailyGoal != null) applyGoalToToday(patch.dailyGoal);
+  if (patch.language) {
+    setLanguage(patch.language);
+    notifyChange(); // quest titles and other snapshot text rebuild in the new language
+  }
   listeners.forEach((l) => l());
   if (!opts.fromServer) changeListeners.forEach((l) => l(Object.keys(patch) as (keyof Settings)[]));
 }

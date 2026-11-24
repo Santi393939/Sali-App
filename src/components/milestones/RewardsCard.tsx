@@ -20,6 +20,7 @@ import { Lantern } from '../Lantern';
 import { eightPointStarPath, horseshoeArchPath } from '../geometry';
 import { ZelligeBand } from '../ZelligeBand';
 import { Medallion } from './Medallion';
+import { isRTL, t } from '@/lib/i18n';
 
 type Props = {
   lifetime: number;
@@ -50,9 +51,9 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
 
   return (
     <Card>
-      <Text style={styles.title}>Rewards</Text>
+      <Text style={styles.title}>{t('Rewards')}</Text>
       <Text style={styles.sub}>
-        {earned.length} of {MILESTONES.length} parts built. Each one unlocks a title, a theme and a tap sound.
+        {t('{n} of {total} parts built. Each one unlocks a title, a theme and a tap sound.', { n: earned.length, total: MILESTONES.length })}
       </Text>
 
       {latest && !wearingLatest && (
@@ -62,20 +63,20 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
           style={({ pressed }) => [styles.wearAll, { backgroundColor: latest.palette.face }, pressed && { opacity: 0.9 }]}>
           <Medallion size={40} milestone={latest} earned />
           <View style={{ flex: 1 }}>
-            <Text style={styles.wearTitle}>Wear the {latest.name.replace('The ', '')} set</Text>
+            <Text style={styles.wearTitle}>{t('Wear the {name} set', { name: latest.name.replace(/^The /, '') })}</Text>
             <Text style={styles.wearSub}>
-              {THEMES[latest.theme].name} theme · {SOUNDS[latest.sound].name} · “{latest.title}”
+              {t('{name} theme', { name: THEMES[latest.theme].name })} · {SOUNDS[latest.sound].name} · “{latest.title}”
             </Text>
           </View>
         </Pressable>
       )}
 
       {/* Badge sets: tap a badge to wear its theme, sound and title */}
-      <Section label="Badge sets" hint={active.featured ? active.featured.title : 'Tap a badge to wear its set'}>
+      <Section label={t('Badge sets')} hint={active.featured ? active.featured.title : t('Tap a badge to wear its set')}>
         <View style={styles.badgeRow}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Default Zellige look${!active.featured && active.theme === 'zellige' ? ', in use' : ''}`}
+            accessibilityLabel={t('Default Zellige look') + (!active.featured && active.theme === 'zellige' ? t(', in use') : '')}
             onPress={() => {
               feedback.medium();
               switchTheme(resetRewards, 'zellige', PALETTES.zellige.plaster);
@@ -92,7 +93,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
               <Pressable
                 key={m.amount}
                 accessibilityRole="button"
-                accessibilityLabel={`${m.name} set${selected ? ', in use' : ''}${has ? '' : ', locked'}`}
+                accessibilityLabel={t('{name} set', { name: m.name }) + (selected ? t(', in use') : '') + (has ? '' : t(', locked'))}
                 onPress={() => (has ? wear(m) : locked(m.amount))}
                 style={[styles.badgeSlot, selected && { borderColor: m.palette.rim, backgroundColor: colors.highlight }]}>
                 <Medallion size={38} milestone={m} earned={has} />
@@ -103,7 +104,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
       </Section>
 
       {/* Themes */}
-      <Section label="Themes" hint="Arch, star and tiles across the app">
+      <Section label={t('Themes')} hint={t('Arch, star and tiles across the app')}>
         <View style={styles.grid}>
           {(Object.keys(THEMES) as ThemeId[]).map((k) => {
             const t = THEMES[k];
@@ -134,7 +135,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
       </Section>
 
       {/* Lantern glass (a new colour with each lamp, every 5,000) */}
-      <Section label="Lantern glass" hint="A new colour with each lamp">
+      <Section label={t('Lantern glass')} hint={t('A new colour with each lamp')}>
         <View style={styles.grid}>
           {GLASSES.map((g) => {
             const open = lampsFor(lifetime) >= g.lamp;
@@ -160,7 +161,7 @@ export function RewardsCard({ lifetime, active, onLocked }: Props) {
       </Section>
 
       {/* Tap sounds */}
-      <Section label="Sound sets" hint="Tap, +100 and +1,000 · tap to hear" last>
+      <Section label={t('Sound sets')} hint={t('Tap, +100 and +1,000 · tap to hear')} last>
         <View style={styles.grid}>
           {(Object.keys(SOUNDS) as SoundId[]).map((k) => {
             const s = SOUNDS[k];
@@ -223,7 +224,7 @@ function Chip({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected, disabled: !!owner }}
-      accessibilityLabel={`${label}${owner ? `, unlocks at ${owner.short}` : selected ? ', in use' : ''}`}
+      accessibilityLabel={label + (owner ? t(', unlocks at {n}', { n: owner.short }) : selected ? t(', in use') : '')}
       style={({ pressed }) => [styles.chip, selected && styles.chipSelected, pressed && { transform: [{ scale: 0.97 }] }]}>
       <View style={[styles.chipArt, (owner || lockText) && { opacity: 0.3 }]}>{children}</View>
       <Text style={[styles.chipLabel, owner && { color: colors.muted }]} numberOfLines={1}>
@@ -235,9 +236,9 @@ function Chip({
           <Text style={styles.lockText}>{owner ? owner.short : lockText}</Text>
         </View>
       ) : selected ? (
-        <Text style={styles.inUse}>In use</Text>
+        <Text style={styles.inUse}>{t('In use')}</Text>
       ) : (
-        <Text style={styles.use}>Use</Text>
+        <Text style={styles.use}>{t('Use')}</Text>
       )}
     </Pressable>
   );
@@ -276,7 +277,7 @@ const styles = themedStyles(() =>
   section: { borderTopWidth: 1, borderTopColor: colors.cardBorder, marginTop: spacing.md, paddingTop: spacing.md },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: spacing.sm, gap: spacing.sm },
   sectionLabel: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.ink },
-  sectionHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, flexShrink: 1, textAlign: 'right' },
+  sectionHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, flexShrink: 1, textAlign: isRTL() ? 'left' : 'right' },
   badgeRow: { flexDirection: 'row', justifyContent: 'space-between' },
   badgeSlot: { padding: 2, borderRadius: 24, borderWidth: 2, borderColor: 'transparent' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' },

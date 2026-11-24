@@ -38,6 +38,7 @@ import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import { eightPointStarPath } from './geometry';
 import { Lantern } from './Lantern';
 import { PlasterPattern } from './PlasterPattern';
+import { t } from '@/lib/i18n';
 
 export type TakeoverData = {
   from: number; // streak before today
@@ -204,7 +205,7 @@ function TakeoverScene({ data, onClose }: { data: TakeoverData; onClose: () => v
             <Animated.Text style={[styles.number, styles.numberOverlay, newNumStyle]}>{data.to}</Animated.Text>
           </View>
           <Animated.View style={[{ alignItems: 'center' }, captionStyle]}>
-            <Text style={styles.caption}>day streak!</Text>
+            <Text style={styles.caption}>{t('day streak!')}</Text>
             <Text style={styles.arabic}>ما شاء الله، استمر</Text>
           </Animated.View>
         </View>
@@ -214,13 +215,13 @@ function TakeoverScene({ data, onClose }: { data: TakeoverData; onClose: () => v
         <GoalBar goal={data.goal} fill={bar} shields={data.shields} />
 
         <Animated.View style={[styles.buttons, uiStyle]}>
-          <ChunkyButton label="Continue" onPress={onClose} />
+          <ChunkyButton label={t('Continue')} onPress={onClose} />
           {Platform.OS !== 'web' && (
             <Pressable
               accessibilityRole="button"
               onPress={() => shareStreak(shareRef, data.to)}
               style={({ pressed }) => [styles.shareBtn, pressed && { opacity: 0.7 }]}>
-              <Text style={styles.shareText}>Share my streak</Text>
+              <Text style={styles.shareText}>{t('Share my streak')}</Text>
             </Pressable>
           )}
         </Animated.View>
@@ -235,7 +236,7 @@ async function shareStreak(view: RefObject<ComponentRef<typeof View> | null>, st
     const [{ captureRef }, Sharing] = await Promise.all([import('react-native-view-shot'), import('expo-sharing')]);
     const uri = await captureRef(view as Parameters<typeof captureRef>[0], { format: 'png', quality: 1 });
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: `My ${streak}-day Salli streak` });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: t('My {n}-day Salli streak', { n: streak }) });
     }
   } catch {
     // Sharing is optional; ignore failures.
@@ -299,8 +300,8 @@ function GoalBar({ goal, fill, shields }: { goal: GoalProgress; fill: SharedValu
   return (
     <View style={styles.goal}>
       <View style={styles.goalHead}>
-        <Text style={styles.goalLabel}>{goal.reached ? `${goal.next}-day goal reached!` : `Next goal: ${goal.next} days`}</Text>
-        {!goal.reached && <Text style={styles.goalToGo}>{goal.toGo} to go</Text>}
+        <Text style={styles.goalLabel}>{goal.reached ? t('{n}-day goal reached!', { n: goal.next }) : t('Next goal: {n} days', { n: goal.next })}</Text>
+        {!goal.reached && <Text style={styles.goalToGo}>{t('{n} to go', { n: goal.toGo })}</Text>}
       </View>
       <View style={styles.segments}>
         {Array.from({ length: goal.segments }, (_, i) => (
@@ -314,8 +315,8 @@ function GoalBar({ goal, fill, shields }: { goal: GoalProgress; fill: SharedValu
         <ShieldIcon size={14} color={shields > 0 ? colors.lightGold : 'rgba(251,246,236,0.5)'} />
         <Text style={styles.shieldText}>
           {shields > 0
-            ? `${shields} ${shields === 1 ? 'shield' : 'shields'} ready to cover a missed day`
-            : '7 lit days in a row earns a shield'}
+            ? t(shields === 1 ? '{n} shield ready to cover a missed day' : '{n} shields ready to cover a missed day', { n: shields })
+            : t('7 lit days in a row earns a shield')}
         </Text>
       </View>
     </View>

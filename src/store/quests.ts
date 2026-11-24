@@ -8,6 +8,7 @@ import { asrOn, keyToDate, salliDayKey } from '@/lib/salliDay';
 import { getDay, type DayRecord } from './days';
 import { readJSON, writeJSON } from './storage';
 import { markQuestDay, questDays } from './streaks';
+import { t } from '@/lib/i18n';
 
 export type QuestId = 'lantern' | 'tap33' | 'tap100' | 'reminder10' | 'read3' | 'afterAsr' | 'morning' | 'like' | 'jumuah';
 
@@ -80,7 +81,7 @@ export function questsFor(date: string): Quest[] {
     const def = DEFS[id];
     const target = def.target(day.goal);
     const progress = Math.min(target, def.measure(day, x, date));
-    return { id, title: def.title, progress, target, done: progress >= target };
+    return { id, title: t(def.title), progress, target, done: progress >= target };
   });
 }
 

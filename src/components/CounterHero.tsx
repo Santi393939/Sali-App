@@ -31,6 +31,7 @@ import { colors, fonts, themedStyles } from '@/theme';
 import { HorseshoeArch } from './HorseshoeArch';
 import { AnimatedCount, FloatingAmount, Sparks, type Burst } from './motion';
 import { ProgressStar } from './ProgressStar';
+import { t } from '@/lib/i18n';
 
 export type AddEvent = {
   id: number;
@@ -133,14 +134,14 @@ export function CounterHero({ total, goal, event, countDown = false, onTap }: Pr
       <Pressable
         onPress={onTap}
         accessibilityRole="button"
-        accessibilityLabel={`Add one salawat. ${total.toLocaleString('en-US')} of ${goal.toLocaleString('en-US')} today`}>
+        accessibilityLabel={t('Add one salawat. {total} of {goal} today', { total: total.toLocaleString('en-US'), goal: goal.toLocaleString('en-US') })}>
         <HorseshoeArch width={ARCH_W} height={ARCH_H} fill={arch.arch}>
           <View style={{ marginTop: STAR_TOP }}>
             <ProgressStar size={STAR} progress={progress} starFill={arch.star}>
               <Animated.View style={[styles.countBox, popStyle]}>
                 <AnimatedCount value={shown} style={[styles.count, { fontSize: size, lineHeight: size + 6 }]} />
                 <Text style={styles.countOf}>
-                  {countDown ? 'left of' : 'of'} {goal.toLocaleString('en-US')}
+                  {countDown ? t('left of') : t('of')} {goal.toLocaleString('en-US')}
                 </Text>
               </Animated.View>
             </ProgressStar>

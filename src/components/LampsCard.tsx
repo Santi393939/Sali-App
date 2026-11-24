@@ -7,6 +7,7 @@ import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from './Card';
 import { EightPointStar } from './EightPointStar';
+import { t } from '@/lib/i18n';
 
 /** Small oil lamp, lit or not. */
 export function OilLamp({ lit, size = 22 }: { lit: boolean; size?: number }) {
@@ -28,7 +29,7 @@ export function LampsCard({ lamps, nextIn, fridayStreak, fridayBadge }: Props) {
   const nextGlass = GLASSES.find((g) => g.lamp > lamps);
   return (
     <Card>
-      <Text style={styles.title}>Lamps & Jumu&apos;ah</Text>
+      <Text style={styles.title}>{t('Lamps & Jumu’ah')}</Text>
       <View style={styles.section}>
         <View style={styles.lamps}>
           {Array.from({ length: Math.max(shown, 1) + 1 }, (_, i) => (
@@ -37,11 +38,11 @@ export function LampsCard({ lamps, nextIn, fridayStreak, fridayBadge }: Props) {
           {lamps > 12 && <Text style={styles.more}>+{lamps - 12}</Text>}
         </View>
         <Text style={styles.label}>
-          {lamps} {lamps === 1 ? 'lamp' : 'lamps'} lit · one every {LAMP_STEP.toLocaleString('en-US')}
+          {t(lamps === 1 ? '{n} lamp lit · one every {step}' : '{n} lamps lit · one every {step}', { n: lamps, step: LAMP_STEP.toLocaleString('en-US') })}
         </Text>
         <Text style={styles.hint}>
-          Next lamp in {nextIn.toLocaleString('en-US')}
-          {nextGlass ? ` · unlocks ${nextGlass.name} lantern glass` : ''}
+          {t('Next lamp in {n}', { n: nextIn.toLocaleString('en-US') })}
+          {nextGlass ? t(' · unlocks {name} lantern glass', { name: nextGlass.name }) : ''}
         </Text>
       </View>
       <View style={[styles.section, styles.border]}>
@@ -50,11 +51,11 @@ export function LampsCard({ lamps, nextIn, fridayStreak, fridayBadge }: Props) {
             <EightPointStar size={46} fill={colors.lightGold} stroke={colors.saffron} strokeWidth={2} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.label}>Jumu&apos;ah Keeper</Text>
+            <Text style={styles.label}>{t('Jumu’ah Keeper')}</Text>
             <Text style={styles.hint}>
               {fridayBadge
-                ? `Earned · Friday streak ${fridayStreak}`
-                : `Light your lantern ${FRIDAY_BADGE_RUN} Fridays in a row · ${fridayStreak}/${FRIDAY_BADGE_RUN}`}
+                ? t('Earned · Friday streak {n}', { n: fridayStreak })
+                : t('Light your lantern {total} Fridays in a row · {n}/{total}', { n: fridayStreak, total: FRIDAY_BADGE_RUN })}
             </Text>
           </View>
         </View>

@@ -6,6 +6,7 @@ import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from './Card';
 import { horseshoeArchPath } from './geometry';
+import { t } from '@/lib/i18n';
 
 /** Ten arched windows, `lit` of them glowing. */
 export function ArchWindows({ lit, size = 22 }: { lit: number; size?: number }) {
@@ -27,17 +28,17 @@ export function ArchWindows({ lit, size = 22 }: { lit: number; size?: number }) 
 
 export function GroupTeaser({ onPress }: { onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Count together with family: see Groups">
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={t('Count together with family: see Groups')}>
       <Card band>
-        <Text style={styles.eyebrow}>Family Jumu&apos;ah goal</Text>
-        <Text style={styles.title}>Count together with family</Text>
-        <Text style={styles.body}>Set a shared goal each week. A window lights for every tenth of the way, until Friday at Maghrib.</Text>
+        <Text style={styles.eyebrow}>{t('Family Jumu’ah goal')}</Text>
+        <Text style={styles.title}>{t('Count together with family')}</Text>
+        <Text style={styles.body}>{t('Set a shared goal each week. A window lights for every tenth of the way, until Friday at Maghrib.')}</Text>
         <View style={{ marginTop: spacing.md }}>
           <ArchWindows lit={6} />
         </View>
         <View style={styles.foot}>
-          <Text style={styles.soon}>Arrives with accounts</Text>
-          <Text style={styles.more}>See how it works ›</Text>
+          <Text style={styles.soon}>{t('Arrives with accounts')}</Text>
+          <Text style={styles.more}>{t('See how it works ›')}</Text>
         </View>
       </Card>
     </Pressable>

@@ -12,6 +12,7 @@ import { AppState, Platform } from 'react-native';
 
 import { asrOn, maghribOn, toDayKey } from '@/lib/salliDay';
 import { getToday, onGoalLit } from '@/store/counts';
+import { t } from '@/lib/i18n';
 import { addSettingsChangeListener, getSettings } from '@/store/settings';
 
 const SUPPORTED = Platform.OS === 'ios' || Platform.OS === 'android';
@@ -34,7 +35,7 @@ export async function requestReminderPermission(): Promise<boolean> {
   try {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync(CHANNEL, {
-        name: 'Reminders',
+        name: t('Reminders'),
         // eslint-disable-next-line import/namespace -- re-exported via `export *`; TypeScript confirms it
         importance: Notifications.AndroidImportance.DEFAULT,
       });
@@ -82,8 +83,8 @@ async function schedule() {
         if (at.getTime() > now) {
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: 'Your lantern is waiting',
-              body: streak > 0 ? `A few salawat after Asr keeps your ${streak}-day streak glowing ﷺ` : 'A few salawat after Asr will light today’s lantern ﷺ',
+              title: t('Your lantern is waiting'),
+              body: streak > 0 ? t('A few salawat after Asr keeps your {n}-day streak glowing ﷺ', { n: streak }) : t('A few salawat after Asr will light today’s lantern ﷺ'),
             },
             trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId },
           });
@@ -94,8 +95,8 @@ async function schedule() {
         if (at.getTime() > now) {
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: 'An hour until Maghrib',
-              body: streak > 0 ? `Light your lantern to keep your ${streak}-day streak` : 'Send salawat before Maghrib to light today’s lantern',
+              title: t('An hour until Maghrib'),
+              body: streak > 0 ? t('Light your lantern to keep your {n}-day streak', { n: streak }) : t('Send salawat before Maghrib to light today’s lantern'),
             },
             trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId },
           });
@@ -105,7 +106,7 @@ async function schedule() {
 
     if (s.fridayReminders) {
       await Notifications.scheduleNotificationAsync({
-        content: { title: 'Jumu’ah Mubarak', body: 'Send abundant salawat on the Prophet ﷺ today' },
+        content: { title: t('Jumu’ah Mubarak'), body: t('Send abundant salawat on the Prophet ﷺ today.') },
         // weekday: 1 = Sunday … 6 = Friday
         trigger: { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, weekday: 6, hour: 9, minute: 7, channelId },
       });
@@ -125,7 +126,7 @@ export function startReminders() {
     if (state === 'active') refreshReminders();
   });
   addSettingsChangeListener((fields) => {
-    if (fields.some((f) => f === 'asrReminder' || f === 'fridayReminders' || f === 'preMaghribReminder' || f === 'onboarded')) {
+    if (fields.some((f) => f === 'asrReminder' || f === 'fridayReminders' || f === 'preMaghribReminder' || f === 'onboarded' || f === 'language')) {
       refreshReminders();
     }
   });

@@ -20,6 +20,7 @@ import {
 } from '@/store/auth';
 import { getSettings, updateSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { t } from '@/lib/i18n';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -71,17 +72,17 @@ export default function SignInScreen() {
           <PlasterPattern />
           <View style={styles.heroBody}>
             <Logo size={88} />
-            <Text style={styles.title}>Sign in to Salli</Text>
-            <Text style={styles.subtitle}>Keep your counts safe across phones, and count together with your family.</Text>
+            <Text style={styles.title}>{t('Sign in to Salli')}</Text>
+            <Text style={styles.subtitle}>{t('Keep your counts safe across phones, and count together with your family.')}</Text>
           </View>
           <ZelligeBand height={18} />
         </View>
 
         {!configured && (
           <View style={styles.notice}>
-            <Text style={styles.noticeTitle}>Accounts aren&apos;t connected yet</Text>
+            <Text style={styles.noticeTitle}>{t('Accounts aren’t connected yet')}</Text>
             <Text style={styles.noticeBody}>
-              Your counts are saved on this phone. Sign-in switches on once the Salli Supabase project is connected.
+              {t('Your counts are saved on this phone. Sign-in switches on once the Salli Supabase project is connected.')}
             </Text>
           </View>
         )}
@@ -107,12 +108,12 @@ export default function SignInScreen() {
           onPress={() => run('google', signInWithGoogle)}
           style={({ pressed }) => [styles.google, pressed && { opacity: 0.8 }, (!configured || !!busy) && styles.disabled]}>
           {busy === 'google' ? <ActivityIndicator color={colors.ink} /> : <GoogleG />}
-          <Text style={styles.googleText}>Continue with Google</Text>
+          <Text style={styles.googleText}>{t('Continue with Google')}</Text>
         </Pressable>
 
         <View style={styles.or}>
           <View style={styles.rule} />
-          <Text style={styles.orText}>or with email</Text>
+          <Text style={styles.orText}>{t('or with email')}</Text>
           <View style={styles.rule} />
         </View>
 
@@ -121,14 +122,14 @@ export default function SignInScreen() {
             <TextInput
               value={email}
               onChangeText={setEmail}
-              placeholder="you@example.com"
+              placeholder={t('you@example.com')}
               placeholderTextColor={colors.muted}
               autoCapitalize="none"
               autoComplete="email"
               keyboardType="email-address"
               textContentType="emailAddress"
               style={styles.input}
-              accessibilityLabel="Email address"
+              accessibilityLabel={t('Email address')}
               editable={configured}
               onSubmitEditing={() => validEmail && run('email', async () => {
                 await sendEmailCode(email);
@@ -136,7 +137,7 @@ export default function SignInScreen() {
               })}
             />
             <PrimaryButton
-              label={busy === 'email' ? 'Sending…' : 'Email me a code'}
+              label={busy === 'email' ? t('Sending…') : t('Email me a code')}
               disabled={!configured || !validEmail || !!busy}
               onPress={() =>
                 run('email', async () => {
@@ -149,7 +150,7 @@ export default function SignInScreen() {
         ) : (
           <>
             <Text style={styles.sent}>
-              We sent a 6-digit code to <Text style={{ fontFamily: fonts.uiSemi }}>{email.trim()}</Text>.
+              {t('We sent a 6-digit code to')} <Text style={{ fontFamily: fonts.uiSemi }}>{email.trim()}</Text>.
             </Text>
             <TextInput
               value={code}
@@ -160,17 +161,17 @@ export default function SignInScreen() {
               textContentType="oneTimeCode"
               autoComplete="one-time-code"
               style={[styles.input, styles.codeInput]}
-              accessibilityLabel="Code from the email"
+              accessibilityLabel={t('Code from the email')}
               autoFocus
             />
             <PrimaryButton
-              label={busy === 'email' ? 'Checking…' : 'Sign in'}
+              label={busy === 'email' ? t('Checking…') : t('Sign in')}
               disabled={code.length < 6 || !!busy}
               onPress={() => run('email', () => verifyEmailCode(email, code))}
             />
             <View style={styles.row}>
               <Pressable onPress={() => run('email', () => sendEmailCode(email))} hitSlop={8} accessibilityRole="button">
-                <Text style={styles.link}>Send a new code</Text>
+                <Text style={styles.link}>{t('Send a new code')}</Text>
               </Pressable>
               <Pressable
                 onPress={() => {
@@ -180,7 +181,7 @@ export default function SignInScreen() {
                 }}
                 hitSlop={8}
                 accessibilityRole="button">
-                <Text style={styles.link}>Use a different email</Text>
+                <Text style={styles.link}>{t('Use a different email')}</Text>
               </Pressable>
             </View>
           </>
@@ -193,7 +194,7 @@ export default function SignInScreen() {
         )}
 
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={styles.notNow} accessibilityRole="button">
-          <Text style={styles.notNowText}>Not now</Text>
+          <Text style={styles.notNowText}>{t('Not now')}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

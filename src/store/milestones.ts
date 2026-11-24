@@ -3,6 +3,7 @@ import { MILESTONES, type Milestone } from '@/content/milestones';
 import { addDays, keyToDate } from '@/lib/salliDay';
 
 import { getDay, savedDayKeys } from './days';
+import { dateLocale } from '@/lib/i18n';
 
 export type MilestoneState = Milestone & {
   earned: boolean;
@@ -53,7 +54,7 @@ export function milestoneProgress(today: string): MilestoneProgress {
 
 /** "Mon 30 Nov" for a date `days` after today. */
 export function etaLabel(today: string, days: number): string {
-  return keyToDate(addDays(today, days)).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+  return keyToDate(addDays(today, days)).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
 /** Milestone crossed by going from `before` to `after`, if any (the highest one). */

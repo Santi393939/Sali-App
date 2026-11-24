@@ -39,6 +39,8 @@ import { eightPointStarPath, horseshoeArchPath, tilePath } from '../geometry';
 import { Sparks, type Burst } from '../motion';
 import { PlasterPattern } from '../PlasterPattern';
 import { Medallion } from './Medallion';
+import { t } from '@/lib/i18n';
+import { sallaParts } from '@/components/sallaParts';
 
 type Props = { milestone: Milestone | null; onClose: () => void };
 
@@ -138,7 +140,7 @@ function Scene({ milestone: m, onClose }: { milestone: Milestone; onClose: () =>
 
       <Animated.View style={[styles.copy, textStyle]}>
         <Text style={[styles.eyebrow, { color: p.glow }]}>
-          Milestone reached · {m.amount.toLocaleString('en-US')} salawat <Text style={styles.salla}>ﷺ</Text>
+          {sallaParts(t('Milestone reached · {n} salawat ﷺ', { n: m.amount.toLocaleString('en-US') }), styles.salla)}
         </Text>
         <Text style={styles.name}>{m.name}</Text>
         <Text style={[styles.arabic, { color: p.glow }]}>{m.arabic}</Text>
@@ -147,20 +149,20 @@ function Scene({ milestone: m, onClose }: { milestone: Milestone; onClose: () =>
 
       {/* Reward set */}
       <Animated.View style={[styles.rewards, { borderColor: hexA(p.glow, 0.45) }, textStyle]}>
-        <Text style={[styles.rewardsLabel, { color: p.glow }]}>Rewards unlocked</Text>
+        <Text style={[styles.rewardsLabel, { color: p.glow }]}>{t('Rewards unlocked')}</Text>
         <RewardRow
           art={
             <Svg width={22} height={26}>
               <Path d={horseshoeArchPath(22, 26, 1)} fill={theme.arch} stroke={p.rim} strokeWidth={1} />
             </Svg>
           }
-          title={`${theme.name} theme`}
-          sub="Arch, star and tiles across the app"
+          title={t('{name} theme', { name: theme.name })}
+          sub={t('Arch, star and tiles across the app')}
         />
-        <Pressable onPress={() => feedback.previewSet(m.sound)} accessibilityRole="button" accessibilityLabel={`Play ${SOUNDS[m.sound].name}`}>
-          <RewardRow art={<PlayGlyph color={p.glow} />} title={SOUNDS[m.sound].name} sub="New sound set for every count · tap to hear it" />
+        <Pressable onPress={() => feedback.previewSet(m.sound)} accessibilityRole="button" accessibilityLabel={t('Play {name}', { name: SOUNDS[m.sound].name })}>
+          <RewardRow art={<PlayGlyph color={p.glow} />} title={SOUNDS[m.sound].name} sub={t('New sound set for every count · tap to hear it')} />
         </Pressable>
-        <RewardRow art={<Medallion size={26} milestone={m} earned />} title={`“${m.title}”`} sub="Your title, shown with this badge" />
+        <RewardRow art={<Medallion size={26} milestone={m} earned />} title={`“${m.title}”`} sub={t('Your title, shown with this badge')} />
       </Animated.View>
 
       <Animated.View style={[styles.buttons, textStyle]}>
@@ -169,10 +171,10 @@ function Scene({ milestone: m, onClose }: { milestone: Milestone; onClose: () =>
           disabled={worn}
           accessibilityRole="button"
           style={({ pressed }) => [styles.wear, { backgroundColor: p.rim }, pressed && { transform: [{ translateY: 3 }] }]}>
-          <Text style={[styles.wearText, { color: p.stage }]}>{worn ? 'Wearing it ✓' : 'Wear it now'}</Text>
+          <Text style={[styles.wearText, { color: p.stage }]}>{worn ? t('Wearing it ✓') : t('Wear it now')}</Text>
         </Pressable>
         <Pressable onPress={onClose} accessibilityRole="button" style={styles.later}>
-          <Text style={styles.laterText}>Continue</Text>
+          <Text style={styles.laterText}>{t('Continue')}</Text>
         </Pressable>
       </Animated.View>
     </Animated.View>

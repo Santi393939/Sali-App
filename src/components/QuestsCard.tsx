@@ -8,6 +8,7 @@ import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from './Card';
 import { ShieldIcon } from './StreakTakeover';
+import { isRTL, t } from '@/lib/i18n';
 
 export function QuestsCard({ quests, questDays }: { quests: Quest[]; questDays: number }) {
   const done = quests.filter((q) => q.done).length;
@@ -17,10 +18,10 @@ export function QuestsCard({ quests, questDays }: { quests: Quest[]; questDays: 
     <Card>
       <View style={styles.head}>
         <View>
-          <Text style={styles.title}>Today&apos;s quests</Text>
-          <Text style={styles.sub}>{allDone ? 'All done today · ما شاء الله' : `${done} of ${quests.length} done`}</Text>
+          <Text style={styles.title}>{t('Today’s quests')}</Text>
+          <Text style={styles.sub}>{allDone ? t('All done today · ما شاء الله') : t('{n} of {total} done', { n: done, total: quests.length })}</Text>
         </View>
-        <View style={styles.meter} accessibilityLabel={`${towardShield} of ${QUEST_DAYS_PER_SHIELD} quest days toward a shield`}>
+        <View style={styles.meter} accessibilityLabel={t('{n} of {total} quest days toward a shield', { n: towardShield, total: QUEST_DAYS_PER_SHIELD })}>
           {Array.from({ length: QUEST_DAYS_PER_SHIELD }, (_, i) => (
             <View key={i} style={[styles.pip, i < towardShield && styles.pipOn]} />
           ))}
@@ -48,7 +49,7 @@ export function QuestsCard({ quests, questDays }: { quests: Quest[]; questDays: 
         </View>
       ))}
       <Text style={styles.foot}>
-        Finish all three on {QUEST_DAYS_PER_SHIELD} days to earn a streak shield · {towardShield}/{QUEST_DAYS_PER_SHIELD}
+        {t('Finish all three on {total} days to earn a streak shield · {n}/{total}', { n: towardShield, total: QUEST_DAYS_PER_SHIELD })}
       </Text>
     </Card>
   );
@@ -69,7 +70,7 @@ const styles = themedStyles(() =>
     questDone: { color: colors.muted, textDecorationLine: 'line-through' },
     track: { height: 5, borderRadius: 3, backgroundColor: colors.plaster, marginTop: 5, overflow: 'hidden' },
     fill: { height: '100%', borderRadius: 3, backgroundColor: colors.saffron },
-    count: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta, minWidth: 54, textAlign: 'right' },
+    count: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta, minWidth: 54, textAlign: isRTL() ? 'left' : 'right' },
     foot: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginTop: spacing.sm },
   }),
 );

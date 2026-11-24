@@ -11,6 +11,7 @@ import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 
 import { PrimaryButton } from '../PrimaryButton';
 import { Medallion } from './Medallion';
+import { dateLocale, t } from '@/lib/i18n';
 
 type Props = {
   milestone: MilestoneState | null;
@@ -61,14 +62,14 @@ export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow
     <Modal visible={!!shown} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.root}>
         <Animated.View style={[styles.backdrop, shadeStyle]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('Close')} />
         </Animated.View>
         {m && (
           <Animated.View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }, sheetStyle]}>
             <View style={styles.grabber} />
             <View style={styles.center}>
               <Medallion size={132} milestone={m} earned={m.earned} next={isNext} progress={isNext ? progress.fraction : 0} />
-              <Text style={styles.amount}>{fmt(m.amount)} salawat</Text>
+              <Text style={styles.amount}>{t('{n} salawat', { n: fmt(m.amount) })}</Text>
               <Text style={styles.name}>{m.name}</Text>
               <Text style={styles.arabic}>{m.arabic}</Text>
               <Text style={styles.line}>{m.earned ? m.earnedLine : m.goalLine}</Text>
@@ -78,8 +79,8 @@ export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow
               <View style={styles.stat}>
                 <Text style={styles.statText}>
                   {m.earnedOn
-                    ? `Reached on ${keyToDate(m.earnedOn).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`
-                    : 'Reached'}
+                    ? t('Reached on {date}', { date: keyToDate(m.earnedOn).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) })
+                    : t('Reached')}
                 </Text>
               </View>
             ) : (
@@ -91,34 +92,38 @@ export function MilestoneSheet({ milestone, progress, today, onClose, onCountNow
                   <Text style={styles.small}>
                     {fmt(progress.lifetime)} / {fmt(m.amount)}
                   </Text>
-                  <Text style={[styles.small, { color: colors.terracotta, fontFamily: fonts.uiSemi }]}>{fmt(left)} to go</Text>
+                  <Text style={[styles.small, { color: colors.terracotta, fontFamily: fonts.uiSemi }]}>{t('{n} to go', { n: fmt(left) })}</Text>
                 </View>
                 <Text style={styles.statText}>
                   {etaAll
-                    ? `At about ${fmt(progress.pace)} a day: ${etaAll === 1 ? 'within a day' : `around ${etaLabel(today, etaAll)}`}${etaAll > 60 ? ` (${Math.round(etaAll / 30)} months)` : ''}.`
-                    : 'Count today and we will estimate when you will get here.'}
+                    ? etaAll === 1
+                      ? t('At about {n} a day: within a day.', { n: fmt(progress.pace) })
+                      : etaAll > 60
+                        ? t('At about {n} a day: around {date} ({months} months).', { n: fmt(progress.pace), date: etaLabel(today, etaAll), months: Math.round(etaAll / 30) })
+                        : t('At about {n} a day: around {date}.', { n: fmt(progress.pace), date: etaLabel(today, etaAll) })
+                    : t('Count today and we will estimate when you will get here.')}
                 </Text>
-                {!isNext && progress.next && <Text style={styles.small}>Comes after {progress.next.name}.</Text>}
+                {!isNext && progress.next && <Text style={styles.small}>{t('Comes after {name}.', { name: progress.next.name })}</Text>}
               </View>
             )}
 
             {m.earned && (
               <View style={styles.titleBox}>
-                <Text style={styles.small}>Title</Text>
+                <Text style={styles.small}>{t('Title')}</Text>
                 <Text style={[styles.titleText, { color: m.palette.face }]}>{m.title}</Text>
               </View>
             )}
             {m.earned && onWear ? (
               <View style={{ gap: spacing.xs }}>
-                <PrimaryButton label="Wear this set" onPress={() => onWear(m)} />
+                <PrimaryButton label={t('Wear this set')} onPress={() => onWear(m)} />
                 {onReplay && (
                   <Pressable onPress={() => onReplay(m)} accessibilityRole="button" style={styles.replay}>
-                    <Text style={styles.replayText}>Replay the moment</Text>
+                    <Text style={styles.replayText}>{t('Replay the moment')}</Text>
                   </Pressable>
                 )}
               </View>
             ) : (
-              <PrimaryButton label={m.earned ? 'Close' : 'Count now'} onPress={m.earned ? onClose : onCountNow} />
+              <PrimaryButton label={m.earned ? t('Close') : t('Count now')} onPress={m.earned ? onClose : onCountNow} />
             )}
           </Animated.View>
         )}

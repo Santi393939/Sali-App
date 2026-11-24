@@ -5,14 +5,15 @@ import type { Entry, EntrySource } from '@/store/counts';
 import { colors, fonts, spacing, themedStyles } from '@/theme';
 
 import { Card } from './Card';
+import { dateLocale, t } from '@/lib/i18n';
 
-const SOURCE_LABEL: Record<EntrySource, string> = {
-  tap: 'Tap counter',
-  quick: 'Quick add',
-  pad: 'Number pad',
-  reminder: 'From a reminder',
-  telegram: 'Telegram bot',
-};
+const SOURCE_LABEL = (): Record<EntrySource, string> => ({
+  tap: t('Tap counter'),
+  quick: t('Quick add'),
+  pad: t('Number pad'),
+  reminder: t('From a reminder'),
+  telegram: t('Telegram bot'),
+});
 
 type Props = {
   entries: Entry[]; // newest first
@@ -20,7 +21,7 @@ type Props = {
 };
 
 const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
+  new Date(iso).toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit' }).toLowerCase();
 
 /** Today's latest entries: source, time and amount. */
 export function TodayLog({ entries, limit = 8 }: Props) {
@@ -28,21 +29,21 @@ export function TodayLog({ entries, limit = 8 }: Props) {
   return (
     <Card>
       <View style={styles.head}>
-        <Text style={styles.title}>Today&apos;s log</Text>
+        <Text style={styles.title}>{t('Today’s log')}</Text>
         {entries.length > 0 && (
           <Text style={styles.count}>
-            {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+            {t(entries.length === 1 ? '{n} entry' : '{n} entries', { n: entries.length })}
           </Text>
         )}
       </View>
       {shown.length === 0 ? (
-        <Text style={styles.empty}>Nothing yet. Tap the arch or use a quick-add button to begin.</Text>
+        <Text style={styles.empty}>{t('Nothing yet. Tap the arch or use a quick-add button to begin.')}</Text>
       ) : (
         shown.map((e, i) => (
           <View key={e.clientId} style={[styles.row, i > 0 && styles.divider]}>
             <SourceIcon source={e.source} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.source}>{SOURCE_LABEL[e.source]}</Text>
+              <Text style={styles.source}>{SOURCE_LABEL()[e.source]}</Text>
               <Text style={styles.time}>
                 {time(e.createdAt) !== time(e.updatedAt)
                   ? `${time(e.createdAt)} – ${time(e.updatedAt)}`

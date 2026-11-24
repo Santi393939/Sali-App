@@ -2,6 +2,7 @@
 import { addDays, keyToDate, toDayKey } from '@/lib/salliDay';
 
 import { getDay, isLit, savedDayKeys } from './days';
+import { dateLocale } from '@/lib/i18n';
 
 export type Period = 'week' | 'month' | 'year';
 
@@ -27,7 +28,15 @@ const sumDays = (from: string, to: string) => {
   return { total, lit };
 };
 
-const WEEKDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+/** Short weekday / month labels in the app's language (Latin digits kept). */
+function shortName(d: Date, opt: Intl.DateTimeFormatOptions, fallback: string) {
+  try {
+    return new Intl.DateTimeFormat(dateLocale(), opt).format(d);
+  } catch {
+    return fallback;
+  }
+}
+const WEEKDAY_EN = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const MONTH = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 /** `_version` is unused: it tells the React Compiler the result depends on saved counts. */
@@ -39,7 +48,7 @@ export function periodStats(period: Period, today: string, _version?: number): P
       const start = new Date(t.getFullYear(), t.getMonth() - i, 1, 12);
       const end = new Date(t.getFullYear(), t.getMonth() - i + 1, 0, 12);
       const to = i === 0 ? today : toDayKey(end);
-      bars.push({ key: toDayKey(start), label: MONTH[start.getMonth()], total: sumDays(toDayKey(start), to).total, current: i === 0 });
+      bars.push({ key: toDayKey(start), label: shortName(start, { month: 'narrow' }, MONTH[start.getMonth()]), total: sumDays(toDayKey(start), to).total, current: i === 0 });
     }
     const from = bars[0].key;
     const prevFrom = toDayKey(new Date(t.getFullYear() - 1, t.getMonth() - 11, 1, 12));
@@ -56,7 +65,7 @@ export function periodStats(period: Period, today: string, _version?: number): P
     const d = keyToDate(key);
     return {
       key,
-      label: period === 'week' ? WEEKDAY[d.getDay()] : i % 5 === 4 || i === days - 1 ? String(d.getDate()) : '',
+      label: period === 'week' ? shortName(d, { weekday: 'narrow' }, WEEKDAY_EN[d.getDay()]) : i % 5 === 4 || i === days - 1 ? String(d.getDate()) : '',
       total: getDay(key).total,
       current: key === today,
     };

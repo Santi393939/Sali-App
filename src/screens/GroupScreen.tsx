@@ -11,6 +11,7 @@ import Svg, { Path } from 'react-native-svg';
 import { ArchWindows, Card, EightPointStar, PlasterPattern, PrimaryButton, ScreenHeader, ZelligeBand } from '@/components';
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { t } from '@/lib/i18n';
 
 const MEMBERS = [
   { name: 'Amina', streak: 23, logged: true },
@@ -20,25 +21,25 @@ const MEMBERS = [
   { name: 'Omar', streak: 15, logged: true },
 ];
 
-const ACTIVITY = [
-  { who: 'Amina', what: 'lit her lantern · 23-day streak', when: '12 min', reactions: ['Ameen 3', 'MashaAllah 2'] },
-  { who: 'Omar', what: 'logged salawat after Asr', when: '1 h', reactions: ['Ameen 1'] },
-  { who: 'The family', what: 'passed 6,000 toward the Jumu’ah goal', when: '2 h', reactions: ['MashaAllah 4'] },
+const ACTIVITY = () => [
+  { who: t('Amina'), what: t('lit her lantern · 23-day streak'), when: t('12 min'), reactions: [t('Ameen 3'), t('MashaAllah 2')] },
+  { who: t('Omar'), what: t('logged salawat after Asr'), when: t('1 h'), reactions: [t('Ameen 1')] },
+  { who: t('The family'), what: t('passed 6,000 toward the Jumu’ah goal'), when: t('2 h'), reactions: [t('MashaAllah 4')] },
 ];
 
 export default function GroupScreen() {
   const insets = useSafeAreaInsets();
   const settings = useSettings();
-  const you = settings.name.trim() || 'You';
+  const you = settings.name.trim() || t('You');
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
       <ScreenHeader
-        title="Group"
+        title={t('Group')}
         arabic="العائلة"
         right={
           <View style={styles.previewPill}>
-            <Text style={styles.previewText}>Preview</Text>
+            <Text style={styles.previewText}>{t('Preview')}</Text>
           </View>
         }
       />
@@ -47,23 +48,23 @@ export default function GroupScreen() {
       <View style={styles.goal}>
         <PlasterPattern color={colors.lightGold} opacity={0.1} cell={44} />
         <View style={styles.goalBody}>
-          <Text style={styles.goalEyebrow}>Family · Jumu&apos;ah goal</Text>
+          <Text style={styles.goalEyebrow}>{t('Family · Jumu’ah goal')}</Text>
           <View style={styles.goalRow}>
             <Text style={styles.goalNum}>6,200</Text>
             <Text style={styles.goalOf}> / 10,000</Text>
           </View>
-          <Text style={styles.goalMeta}>Ends Friday at Maghrib · 5 members</Text>
+          <Text style={styles.goalMeta}>{t('Ends Friday at Maghrib · 5 members')}</Text>
           <View style={styles.windows}>
             <ArchWindows lit={6} size={24} />
           </View>
-          <Text style={styles.goalHint}>A window lights for every 1,000 the family sends together.</Text>
+          <Text style={styles.goalHint}>{t('A window lights for every 1,000 the family sends together.')}</Text>
         </View>
         <ZelligeBand height={16} />
       </View>
 
       {/* Logged today */}
       <Card>
-        <Text style={styles.cardTitle}>Logged today</Text>
+        <Text style={styles.cardTitle}>{t('Logged today')}</Text>
         <View style={styles.members}>
           {MEMBERS.map((m) => (
             <View key={m.name} style={styles.member}>
@@ -74,19 +75,19 @@ export default function GroupScreen() {
                 <Text style={[styles.initial, !m.logged && { color: colors.muted }]}>{(m.name === 'You' ? you : m.name).charAt(0)}</Text>
               </View>
               <Text style={styles.memberName} numberOfLines={1}>
-                {m.name === 'You' ? 'You' : m.name}
+                {m.name === 'You' ? t('You') : m.name}
               </Text>
-              <Text style={styles.memberStreak}>{m.logged ? `${m.streak || '•'} days` : 'not yet'}</Text>
+              <Text style={styles.memberStreak}>{m.logged ? (m.streak ? t('{n} days', { n: m.streak }) : '•') : t('not yet')}</Text>
             </View>
           ))}
         </View>
-        <Text style={styles.note}>Members see the family total and each other&apos;s streaks, never each other&apos;s counts, unless someone turns sharing on.</Text>
+        <Text style={styles.note}>{t('Members see the family total and each other’s streaks, never each other’s counts, unless someone turns sharing on.')}</Text>
       </Card>
 
       {/* Activity */}
       <Card>
-        <Text style={styles.cardTitle}>Activity</Text>
-        {ACTIVITY.map((a, i) => (
+        <Text style={styles.cardTitle}>{t('Activity')}</Text>
+        {ACTIVITY().map((a, i) => (
           <View key={i} style={[styles.event, i > 0 && styles.eventBorder]}>
             <Text style={styles.eventText}>
               <Text style={styles.eventWho}>{a.who}</Text> {a.what}
@@ -105,15 +106,15 @@ export default function GroupScreen() {
 
       {/* How it works */}
       <Card>
-        <Text style={styles.cardTitle}>How groups work</Text>
-        <Point icon="code" text="Create a group and share its 6-letter invite code with family." />
-        <Point icon="live" text="Everyone's salawat add up live toward the week's goal, until Friday at Maghrib." />
-        <Point icon="lock" text="Your own count stays private. Sharing is off unless you switch it on in Me." />
-        <Point icon="chat" text="Log from your family's Telegram group too, with the Salli bot." />
+        <Text style={styles.cardTitle}>{t('How groups work')}</Text>
+        <Point icon="code" text={t('Create a group and share its 6-letter invite code with family.')} />
+        <Point icon="live" text={t('Everyone’s salawat add up live toward the week’s goal, until Friday at Maghrib.')} />
+        <Point icon="lock" text={t('Your own count stays private. Sharing is off unless you switch it on in Me.')} />
+        <Point icon="chat" text={t('Log from your family’s Telegram group too, with the Salli bot.')} />
         <View style={{ marginTop: spacing.md }}>
-          <PrimaryButton label="Sign in to create a group" onPress={() => router.push('/sign-in')} />
+          <PrimaryButton label={t('Sign in to create a group')} onPress={() => router.push('/sign-in')} />
         </View>
-        <Text style={styles.foot}>Groups switch on once accounts are connected.</Text>
+        <Text style={styles.foot}>{t('Groups switch on once accounts are connected.')}</Text>
       </Card>
     </ScrollView>
   );
