@@ -30,7 +30,8 @@ const sumDays = (from: string, to: string) => {
 const WEEKDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const MONTH = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
-export function periodStats(period: Period, today: string): PeriodStats {
+/** `_version` is unused: it tells the React Compiler the result depends on saved counts. */
+export function periodStats(period: Period, today: string, _version?: number): PeriodStats {
   if (period === 'year') {
     const t = keyToDate(today);
     const bars: Bar[] = [];

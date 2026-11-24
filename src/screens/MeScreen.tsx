@@ -1,19 +1,20 @@
 /** Me: profile, milestone badges and settings. */
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { Card, EightPointStar, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented, Toggle } from '@/components';
-import { JourneyCard, MilestoneSheet } from '@/components/milestones';
+import { JourneyCard, Medallion, MilestoneSheet, RewardsCard } from '@/components/milestones';
+import { MILESTONES } from '@/content/milestones';
+import { useRewards } from '@/store/rewards';
 import { useTabs } from '@/components/tabs';
 import { feedback } from '@/lib/feedback';
 import { signOut, useAuth } from '@/store/auth';
 import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle } from '@/store/settings';
-import { milestoneProgress, type MilestoneState } from '@/store/milestones';
-import { lifetimeTotals } from '@/store/stats';
+import type { MilestoneState } from '@/store/milestones';
 import { useSyncStatus } from '@/store/sync';
 import { colors, fonts, radius, spacing } from '@/theme';
 
@@ -24,8 +25,10 @@ export default function MeScreen() {
   const today = useToday();
   const settings = useSettings();
   const [goalOpen, setGoalOpen] = useState(false);
-  const totals = useMemo(() => lifetimeTotals(today.date), [today.date, today.total]); // eslint-disable-line react-hooks/exhaustive-deps
-  const journey = useMemo(() => milestoneProgress(today.date), [today.date, today.total]); // eslint-disable-line react-hooks/exhaustive-deps
+  const totals = { lifetime: today.lifetime, year: today.yearTotal };
+  const journey = today.milestones;
+  const rewards = useRewards();
+  const featured = MILESTONES.find((m) => m.amount === rewards.featuredBadge);
   const [openMilestone, setOpenMilestone] = useState<MilestoneState | null>(null);
   const tabs = useTabs();
   const initial = settings.name.trim().charAt(0).toUpperCase();
@@ -45,6 +48,11 @@ export default function MeScreen() {
               <View style={[StyleSheet.absoluteFill, styles.center]}>
                 {initial ? <Text style={styles.initial}>{initial}</Text> : <PersonGlyph />}
               </View>
+              {featured && (
+                <View style={styles.featured} accessibilityLabel={`Featured badge: ${featured.name}`}>
+                  <Medallion size={36} icon={featured.icon} earned />
+                </View>
+              )}
             </View>
             <View style={{ flex: 1 }}>
               <TextInput
@@ -61,6 +69,7 @@ export default function MeScreen() {
                 {fmt(totals.year)} salawat in {today.date.slice(0, 4)}
               </Text>
               <Text style={styles.lifetime}>{fmt(totals.lifetime)} all time</Text>
+              {featured && <Text style={styles.featuredName}>{featured.name} · {featured.arabic}</Text>}
             </View>
           </View>
         </Card>
@@ -69,6 +78,12 @@ export default function MeScreen() {
 
         {/* Milestones: the masjid journey */}
         <JourneyCard progress={journey} today={today.date} onOpen={setOpenMilestone} />
+
+        <RewardsCard
+          lifetime={today.lifetime}
+          active={rewards}
+          onLocked={(amount) => setOpenMilestone(journey.list.find((m) => m.amount === amount) ?? null)}
+        />
 
         {/* Settings */}
         <Card padded={false}>
@@ -253,6 +268,8 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   profile: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   avatar: { width: 84, height: 84 },
+  featured: { position: 'absolute', right: -8, bottom: -6 },
+  featuredName: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.saffron, marginTop: 4 },
   initial: { fontFamily: fonts.display, fontSize: 34, color: colors.card },
   name: { fontFamily: fonts.display, fontSize: 28, color: colors.ink, padding: 0, minHeight: 36, outlineStyle: 'none' } as object,
   yearTotal: { fontFamily: fonts.uiMedium, fontSize: 14, color: colors.ink },

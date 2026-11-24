@@ -10,7 +10,7 @@ import { nextMaghrib, previousDayKey, salliDayKey } from '@/lib/salliDay';
 
 import { getDay, isLit, saveDay, type Entry, type EntrySource } from './days';
 import { storage } from './storage';
-import { crossedMilestone } from './milestones';
+import { crossedMilestone, milestoneProgress, type MilestoneProgress } from './milestones';
 import { lifetimeTotals } from './stats';
 import { queueEntry } from './syncQueue';
 import type { Milestone } from '@/content/milestones';
@@ -129,6 +129,12 @@ export type TodaySnapshot = {
   week: string[];
   /** Yesterday's key when a shield saved it and the user hasn't been told yet. */
   shieldNotice: string | null;
+  /** Everything ever logged, and this calendar year's total. */
+  lifetime: number;
+  yearTotal: number;
+  milestones: MilestoneProgress;
+  /** Changes on every count; pass it to anything that reads saved days. */
+  version: number;
 };
 
 let cache: { version: number; date: string; snap: TodaySnapshot } | null = null;
@@ -154,7 +160,14 @@ function snapshot(): TodaySnapshot {
     goalBar: goalProgress(streak.current),
     week: weekKeys(date),
     shieldNotice,
+    lifetime: 0,
+    yearTotal: 0,
+    milestones: milestoneProgress(date),
+    version,
   };
+  const totals = lifetimeTotals(date);
+  snap.lifetime = totals.lifetime;
+  snap.yearTotal = totals.year;
   cache = { version, date, snap };
   return snap;
 }

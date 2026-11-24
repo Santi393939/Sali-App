@@ -3,6 +3,8 @@ import { useSyncExternalStore } from 'react';
 
 import { salliDayKey } from '@/lib/salliDay';
 
+import type { ArchTheme, BandTheme, TapSound } from '@/content/rewards';
+
 import { notifyChange } from './counts';
 import { DEFAULT_DAILY_GOAL, getDay, saveDay } from './days';
 import { readJSON, writeJSON } from './storage';
@@ -17,6 +19,12 @@ export type Settings = {
   asrReminder: boolean;
   fridayReminders: boolean;
   shareCountWithGroup: boolean;
+  /** Rewards (each needs its milestone; checked where used). */
+  archTheme: ArchTheme;
+  bandTheme: BandTheme;
+  tapSound: TapSound;
+  /** Amount of the milestone shown on the profile, or null. */
+  featuredBadge: number | null;
 };
 
 const KEY = 'settings.v1';
@@ -27,6 +35,10 @@ const DEFAULTS: Settings = {
   asrReminder: true,
   fridayReminders: true,
   shareCountWithGroup: false, // off by default, per the brief
+  archTheme: 'zellige',
+  bandTheme: 'cobalt',
+  tapSound: 'tick',
+  featuredBadge: null,
 };
 
 export const GOAL_MIN = 1;

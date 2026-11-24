@@ -23,7 +23,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { ARCH_THEMES } from '@/content/rewards';
 import type { AddKind } from '@/lib/feedback';
+import { useRewards } from '@/store/rewards';
 import { colors, fonts } from '@/theme';
 
 import { HorseshoeArch } from './HorseshoeArch';
@@ -59,6 +61,7 @@ const countSize = (n: number) => (n < 1000 ? 44 : n < 10000 ? 38 : n < 100000 ? 
 
 export function CounterHero({ total, goal, event, countDown = false, onTap }: Props) {
   const reduceMotion = useReducedMotion();
+  const arch = ARCH_THEMES[useRewards().arch];
   const displayed = useSharedValue(total);
   const pop = useSharedValue(1);
   const pulse = useSharedValue(1); // 0 → 1 plays the ring; 1 = hidden
@@ -131,9 +134,9 @@ export function CounterHero({ total, goal, event, countDown = false, onTap }: Pr
         onPress={onTap}
         accessibilityRole="button"
         accessibilityLabel={`Add one salawat. ${total.toLocaleString('en-US')} of ${goal.toLocaleString('en-US')} today`}>
-        <HorseshoeArch width={ARCH_W} height={ARCH_H}>
+        <HorseshoeArch width={ARCH_W} height={ARCH_H} fill={arch.arch}>
           <View style={{ marginTop: STAR_TOP }}>
-            <ProgressStar size={STAR} progress={progress}>
+            <ProgressStar size={STAR} progress={progress} starFill={arch.star}>
               <Animated.View style={[styles.countBox, popStyle]}>
                 <AnimatedCount value={shown} style={[styles.count, { fontSize: size, lineHeight: size + 6 }]} />
                 <Text style={styles.countOf}>

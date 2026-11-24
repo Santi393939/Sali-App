@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, G, Line, Path, Rect } from 'react-native-svg';
 
+import { BAND_THEMES, type BandTheme } from '@/content/rewards';
+import { useRewards } from '@/store/rewards';
 import { colors, size as sizes } from '@/theme';
 
 import { diamondPath, eightPointStarPath } from './geometry';
@@ -9,6 +11,8 @@ import { diamondPath, eightPointStarPath } from './geometry';
 type Props = {
   /** Strip height in px, 14–28. */
   height?: number;
+  /** Show a specific colourway (reward previews) instead of the one in use. */
+  theme?: BandTheme;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -16,9 +20,11 @@ type Props = {
  * Zellige tile strip: cobalt 8-point stars with saffron centres and small
  * green diamonds between them, on cream, edged with thin saffron lines.
  */
-export function ZelligeBand({ height = 20, style }: Props) {
+export function ZelligeBand({ height = 20, theme, style }: Props) {
   const h = Math.min(sizes.zelligeBandMax, Math.max(sizes.zelligeBandMin, height));
   const [width, setWidth] = useState(0);
+  const active = useRewards().band;
+  const band = BAND_THEMES[theme ?? active];
   const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
 
   const edge = 1.5; // saffron line top and bottom
@@ -42,9 +48,9 @@ export function ZelligeBand({ height = 20, style }: Props) {
               const cx = offset + i * tile;
               return (
                 <G key={i}>
-                  <Path d={eightPointStarPath(cx, cy, starR)} fill={colors.cobalt} />
-                  <Circle cx={cx} cy={cy} r={dotR} fill={colors.saffron} />
-                  <Path d={diamondPath(cx + tile / 2, cy, diamondR)} fill={colors.zelligeGreen} />
+                  <Path d={eightPointStarPath(cx, cy, starR)} fill={band.star} />
+                  <Circle cx={cx} cy={cy} r={dotR} fill={band.centre} />
+                  <Path d={diamondPath(cx + tile / 2, cy, diamondR)} fill={band.diamond} />
                 </G>
               );
             })}

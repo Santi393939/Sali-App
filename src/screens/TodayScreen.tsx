@@ -2,7 +2,7 @@
  * Today: the daily counter. Counts are saved on the phone instantly (MMKV).
  * Every add plays its motion, haptic and sound together (see CounterHero).
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -36,7 +36,6 @@ import {
   takeoverShown,
   useToday,
 } from '@/store/counts';
-import { milestoneProgress } from '@/store/milestones';
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, type } from '@/theme';
 
@@ -77,7 +76,7 @@ export default function TodayScreen() {
   const [takeover, setTakeover] = useState<TakeoverData | null>(null);
   const [unlock, setUnlock] = useState<Milestone | null>(null);
   const { streak } = today;
-  const journey = useMemo(() => milestoneProgress(today.date), [today.date, today.total]); // eslint-disable-line react-hooks/exhaustive-deps
+  const journey = today.milestones;
 
   // Celebrations play one at a time: the streak takeover first, then a
   // milestone reached on the same add.

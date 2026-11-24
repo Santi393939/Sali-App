@@ -1,5 +1,5 @@
 /** Stats: totals per week / month / year, streak cards and a month heatmap. */
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -19,8 +19,8 @@ export default function StatsScreen() {
   const insets = useSafeAreaInsets();
   const today = useToday();
   const [period, setPeriod] = useState<Period>('week');
-  // Recompute when counts change (today.total) or the day rolls over.
-  const stats = useMemo(() => periodStats(period, today.date), [period, today.date, today.total]); // eslint-disable-line react-hooks/exhaustive-deps
+  // `today.version` changes on every count, so the numbers stay live.
+  const stats = periodStats(period, today.date, today.version);
   const { streak } = today;
   const levelName = LEVELS.find((l) => l.level === streak.level)!.name;
 

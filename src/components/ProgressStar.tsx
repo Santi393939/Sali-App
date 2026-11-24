@@ -14,11 +14,13 @@ type Props = {
   /** 0–1, animated on the UI thread. */
   progress: SharedValue<number>;
   ringWidth?: number;
+  /** Fill of the star inside the ring. */
+  starFill?: string;
   children?: ReactNode;
 };
 
 /** 8-point star inside a gold progress ring; children (the count) sit in the centre. */
-export function ProgressStar({ size, progress, ringWidth = 5, children }: Props) {
+export function ProgressStar({ size, progress, ringWidth = 5, starFill = colors.deepGreen, children }: Props) {
   const c = size / 2;
   const ringR = c - ringWidth / 2;
   const circumference = 2 * Math.PI * ringR;
@@ -45,7 +47,7 @@ export function ProgressStar({ size, progress, ringWidth = 5, children }: Props)
           animatedProps={ringProps}
           transform={`rotate(-90 ${c} ${c})`}
         />
-        <Path d={eightPointStarPath(c, c, starR)} fill={colors.deepGreen} stroke={colors.saffron} strokeWidth={1.25} />
+        <Path d={eightPointStarPath(c, c, starR)} fill={starFill} stroke={colors.saffron} strokeWidth={1.25} />
         <Path
           d={eightPointStarPath(c, c, starR - 6)}
           fill="none"

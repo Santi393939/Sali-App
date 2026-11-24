@@ -7,16 +7,19 @@
 import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 
-type SoundName = 'tick' | 'cluster' | 'chime' | 'success';
+import { getRewards } from '@/store/rewards';
+
+type SoundName = 'tick' | 'cluster' | 'chime' | 'success' | 'drop';
 
 const SOURCES: Record<SoundName, number> = {
   tick: require('../../assets/sounds/tick.wav'),
   cluster: require('../../assets/sounds/tick-cluster.wav'),
   chime: require('../../assets/sounds/chime.wav'),
   success: require('../../assets/sounds/success.wav'),
+  drop: require('../../assets/sounds/drop.wav'),
 };
 
-const VOLUME: Record<SoundName, number> = { tick: 0.35, cluster: 0.45, chime: 0.55, success: 0.6 };
+const VOLUME: Record<SoundName, number> = { tick: 0.35, cluster: 0.45, chime: 0.55, success: 0.6, drop: 0.45 };
 
 const players: Partial<Record<SoundName, AudioPlayer>> = {};
 
@@ -55,7 +58,7 @@ export const feedback = {
     switch (kind) {
       case 'tap':
         safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
-        play('tick');
+        play(getRewards().sound === 'drop' ? 'drop' : 'tick');
         break;
       case 'small':
         safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
@@ -105,6 +108,10 @@ export const feedback = {
   /** Toggles, landing on a tab and other medium taps. */
   medium() {
     safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+  },
+  /** Preview a tap sound (Rewards on Me). */
+  previewSound(sound: 'tick' | 'drop') {
+    play(sound);
   },
   /** Opening the number pad sheet. */
   sheetOpen() {

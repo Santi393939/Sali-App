@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import type { Milestone } from '@/content/milestones';
+import { REWARD_FOR_MILESTONE } from '@/content/rewards';
 import { feedback } from '@/lib/feedback';
 import { colors, fonts, spacing } from '@/theme';
 
@@ -104,6 +105,13 @@ function Scene({ milestone, onClose }: { milestone: Milestone; onClose: () => vo
           {milestone.amount.toLocaleString('en-US')} salawat <Text style={styles.salla}>ﷺ</Text>
         </Text>
         <Text style={styles.line}>{milestone.earnedLine}</Text>
+        {REWARD_FOR_MILESTONE[milestone.amount] && (
+          <View style={styles.reward}>
+            <Text style={styles.rewardLabel}>Reward unlocked</Text>
+            <Text style={styles.rewardText}>{REWARD_FOR_MILESTONE[milestone.amount]}</Text>
+            <Text style={styles.rewardHint}>Use it in Me › Rewards</Text>
+          </View>
+        )}
       </Animated.View>
 
       <Animated.View style={[styles.buttons, textStyle]}>
@@ -126,4 +134,17 @@ const styles = StyleSheet.create({
   salla: { fontFamily: fonts.arabic, fontSize: 18 },
   line: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, color: 'rgba(251,246,236,0.8)', textAlign: 'center', maxWidth: 300, marginTop: spacing.xs },
   buttons: { width: '100%', maxWidth: 360 },
+  reward: {
+    marginTop: spacing.md,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(233,184,96,0.55)',
+    backgroundColor: 'rgba(233,184,96,0.1)',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+  },
+  rewardLabel: { fontFamily: fonts.uiSemi, fontSize: 11, color: colors.lightGold, textTransform: 'uppercase', letterSpacing: 1 },
+  rewardText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.card, marginTop: 2 },
+  rewardHint: { fontFamily: fonts.ui, fontSize: 12, color: 'rgba(251,246,236,0.7)', marginTop: 2 },
 });
