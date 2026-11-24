@@ -8,7 +8,6 @@
     "scheme": "salli",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon",
       "usesAppleSignIn": true,
       "bundleIdentifier": "com.salli.app"
     },
@@ -38,7 +37,7 @@
         {
           "backgroundColor": "#1E5C46",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 180
         }
       ],
       "expo-audio",
@@ -48,6 +47,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "backgroundColor": "#F3EADB"
   }
 }
