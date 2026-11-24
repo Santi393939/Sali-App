@@ -15,8 +15,9 @@
  */
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -74,7 +75,7 @@ export default function Tasbih() {
   const flash = useSharedValue(0);
   const spin = useSharedValue(0);
   const fill = useSharedValue(0);
-  const holdingRef = useRef(false);
+  const holding = useSharedValue(false);
 
   // Keep the screen on while counting (quietly skipped where unsupported).
   useEffect(() => {
@@ -134,23 +135,41 @@ export default function Tasbih() {
     );
   };
   const onCycle = () => {
-    if (!holdingRef.current) return;
+    if (!holding.get()) return;
     countOne(true);
     cycle();
   };
   const startHold = () => {
-    holdingRef.current = true;
+    holding.set(true);
     feedback.selection();
     cycle();
   };
   const stopHold = () => {
-    holdingRef.current = false;
+    holding.set(false);
     cancelAnimation(fill);
     fill.set(withTiming(0, { duration: 200 }));
   };
-  useEffect(() => () => {
-    holdingRef.current = false;
-  }, []);
+  useEffect(
+    () => () => {
+      holding.set(false);
+    },
+    [holding],
+  );
+
+  // Gestures: a tap counts once; a hold keeps counting until the finger lifts,
+  // however much it drifts (a plain press would cancel on movement).
+  const tapGesture = Gesture.Tap()
+    .maxDuration(5000)
+    .runOnJS(true)
+    .onEnd((_e, success) => {
+      if (success) countOne(false);
+    });
+  const holdGesture = Gesture.LongPress()
+    .minDuration(0)
+    .maxDistance(100000)
+    .runOnJS(true)
+    .onStart(() => startHold())
+    .onFinalize(() => stopHold());
 
   const orbStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulse.value }] }));
   const glowStyle = useAnimatedStyle(() => ({ opacity: 0.35 + glow.value * 0.65 }));
@@ -228,14 +247,15 @@ export default function Tasbih() {
       )}
 
       {/* The counting surface: the whole middle of the screen */}
-      <Pressable
-        style={styles.surface}
-        accessibilityRole="button"
-        accessibilityLabel={mode === 'tap' ? t('Tap to count one salawat') : t('Hold to count, one salawat per pulse')}
-        onPress={() => mode === 'tap' && countOne(false)}
-        onPressIn={() => mode === 'hold' && startHold()}
-        onPressOut={() => mode === 'hold' && stopHold()}>
-        <View style={{ width: stage, height: stage, alignItems: 'center', justifyContent: 'center' }}>
+      <GestureDetector gesture={mode === 'tap' ? tapGesture : holdGesture} userSelect="none">
+        <View
+          style={styles.surface}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={mode === 'tap' ? t('Tap to count one salawat') : t('Hold to count, one salawat per pulse')}
+          onAccessibilityTap={() => countOne(false)}>
+        {/* Visuals never take the touch, so a hold over the circle isn't interrupted when they redraw. */}
+        <View pointerEvents="none" style={{ width: stage, height: stage, alignItems: 'center', justifyContent: 'center' }}>
           {/* Ripples */}
           {ripples.map((id) => (
             <Ripple key={id} size={orb} onDone={() => setRipples((r) => r.filter((x) => x !== id))} />
@@ -291,8 +311,13 @@ export default function Tasbih() {
           </View>
         </View>
 
-        {roundBanner && <Text style={styles.banner}>{roundBanner}</Text>}
-      </Pressable>
+        {roundBanner && (
+          <Text pointerEvents="none" style={styles.banner}>
+            {roundBanner}
+          </Text>
+        )}
+        </View>
+      </GestureDetector>
 
       {/* Bottom: the words, and today's progress */}
       <View pointerEvents="none" style={[styles.bottom, { paddingBottom: insets.bottom + spacing.lg }]}>

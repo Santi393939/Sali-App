@@ -1,70 +1,133 @@
 /**
- * Group (preview until accounts): what a family group looks like — the
- * Jumu'ah goal with ten arched windows, who logged today, the activity feed
- * with reactions — and how privacy works. Sample names, clearly marked.
+ * Groups: count together with family and friends.
+ *
+ * Built to read at a glance:
+ *  - your groups as chips at the top (switch like chats, + New);
+ *  - the group's weekly goal: ten arch windows and one number;
+ *  - one leaderboard with three tabs (Streak, Days lit, Salawat), top three
+ *    with medals, a lantern by each name showing who has lit today, and a
+ *    gentle Nudge for those who haven't;
+ *  - the activity feed with Ameen / MashaAllah.
+ *
+ * Until accounts are connected this is a preview: the other members are
+ * samples, your own row uses your real numbers. Counts stay private unless a
+ * member turns on "Show my count to group".
  */
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
 
-import { ArchWindows, Card, EightPointStar, PlasterPattern, PrimaryButton, ScreenHeader, ZelligeBand } from '@/components';
+import { ArchWindows, Card, EightPointStar, Lantern, PlasterPattern, PrimaryButton, ScreenHeader, Segmented, ZelligeBand } from '@/components';
 import { Medallion } from '@/components/milestones/Medallion';
 import { milestoneByAmount } from '@/content/milestones';
 import { feedback } from '@/lib/feedback';
-import { addDays } from '@/lib/salliDay';
+import { t } from '@/lib/i18n';
+import { addDays, keyToDate } from '@/lib/salliDay';
+import { showToast } from '@/lib/toast';
 import { useToday } from '@/store/counts';
 import { getDay, isLit } from '@/store/days';
 import { weekEnd } from '@/store/growth';
 import { useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
-import { t } from '@/lib/i18n';
 
-const MEMBERS = [
-  { name: 'Amina', streak: 23, logged: true },
-  { name: 'Yusuf', streak: 9, logged: true },
-  { name: 'You', streak: 0, logged: true },
-  { name: 'Khadija', streak: 4, logged: false },
-  { name: 'Omar', streak: 15, logged: true },
-];
-
+type Board = 'streak' | 'days' | 'salawat';
 type Reaction = 'ameen' | 'mashallah';
-type Activity = { id: string; who: string; what: string; when: string; milestone?: number; reactions: Record<Reaction, number> };
 
-const ACTIVITY = (): Activity[] => [
-  { id: 'a1', who: 'Yusuf', what: t('built The Courtyard · 10,000 salawat'), when: t('8 min'), milestone: 10000, reactions: { ameen: 4, mashallah: 3 } },
-  { id: 'a2', who: 'Amina', what: t('lit her lantern · 23-day streak'), when: t('12 min'), reactions: { ameen: 3, mashallah: 2 } },
-  { id: 'a3', who: 'Omar', what: t('logged salawat after Asr'), when: t('1 h'), reactions: { ameen: 1, mashallah: 0 } },
-  { id: 'a4', who: t('The family'), what: t('passed 6,000 toward the Jumu’ah goal'), when: t('2 h'), reactions: { ameen: 0, mashallah: 4 } },
+type Member = { name: string; streak: number; litDays: number; litToday: boolean; salawat: number | null; me?: boolean };
+type Activity = { id: string; who: string; what: string; when: string; milestone?: number; reactions: Record<Reaction, number> };
+type Group = { id: string; name: string; goal: number; progress: number; members: Member[]; activity: () => Activity[] };
+
+/** Preview groups. `salawat: null` = that member keeps their count private. */
+const GROUPS: Group[] = [
+  {
+    id: 'family',
+    name: 'Family',
+    goal: 10000,
+    progress: 6200,
+    members: [
+      { name: 'Amina', streak: 23, litDays: 6, litToday: true, salawat: 4200 },
+      { name: 'Omar', streak: 15, litDays: 5, litToday: true, salawat: 3100 },
+      { name: 'Yusuf', streak: 9, litDays: 4, litToday: true, salawat: null },
+      { name: 'Khadija', streak: 4, litDays: 2, litToday: false, salawat: 600 },
+    ],
+    activity: () => [
+      { id: 'f1', who: 'Yusuf', what: t('built The Courtyard · 10,000 salawat'), when: t('8 min'), milestone: 10000, reactions: { ameen: 4, mashallah: 3 } },
+      { id: 'f2', who: 'Amina', what: t('lit her lantern · 23-day streak'), when: t('12 min'), reactions: { ameen: 3, mashallah: 2 } },
+      { id: 'f3', who: t('The family'), what: t('passed 6,000 toward the weekly goal'), when: t('2 h'), reactions: { ameen: 0, mashallah: 4 } },
+    ],
+  },
+  {
+    id: 'friends',
+    name: 'Friends',
+    goal: 25000,
+    progress: 14300,
+    members: [
+      { name: 'Bilal', streak: 41, litDays: 7, litToday: true, salawat: 7000 },
+      { name: 'Hamza', streak: 12, litDays: 5, litToday: false, salawat: null },
+      { name: 'Zayd', streak: 7, litDays: 4, litToday: true, salawat: 2500 },
+      { name: 'Ibrahim', streak: 3, litDays: 3, litToday: false, salawat: 900 },
+      { name: 'Musa', streak: 0, litDays: 1, litToday: false, salawat: null },
+    ],
+    activity: () => [
+      { id: 'r1', who: 'Bilal', what: t('reached a 41-day streak'), when: t('30 min'), reactions: { ameen: 2, mashallah: 5 } },
+      { id: 'r2', who: 'Zayd', what: t('lit his lantern after Asr'), when: t('1 h'), reactions: { ameen: 1, mashallah: 0 } },
+    ],
+  },
 ];
 
-/** Sample lit days this Jumu'ah week for the preview family (yours are real). */
-const SAMPLE_LIT: Record<string, number> = { Amina: 6, Omar: 5, Yusuf: 4, Khadija: 2 };
-
-/** Lit days so far this Jumu'ah week (Saturday to Friday), and how many days have passed. */
+/** This Jumu'ah week (Saturday to Friday) for you: lit days, days passed, total, days left. */
 function yourWeek(today: string) {
   const end = weekEnd(today);
   let lit = 0;
   let days = 0;
+  let total = 0;
   for (let k = addDays(end, -6); k <= today; k = addDays(k, 1)) {
+    const day = getDay(k);
     days++;
-    if (isLit(getDay(k))) lit++;
+    total += day.total;
+    if (isLit(day)) lit++;
   }
-  return { lit, days };
+  const left = Math.round((keyToDate(end).getTime() - keyToDate(today).getTime()) / 86400000) + 1;
+  return { lit, days, total, left };
 }
+
+const fmt = (n: number) => n.toLocaleString('en-US');
+const MEDAL = ['#E9B860', '#C9CED6', '#C98A5A'];
 
 export default function GroupScreen() {
   const insets = useSafeAreaInsets();
   const settings = useSettings();
-  const you = settings.name.trim() || t('You');
   const today = useToday();
-  const week = yourWeek(today.date);
-  const board = [
-    ...Object.entries(SAMPLE_LIT).map(([name, lit]) => ({ name, lit: Math.min(lit, week.days), me: false })),
-    { name: you, lit: week.lit, me: true },
-  ].sort((a, b) => b.lit - a.lit || Number(b.me) - Number(a.me));
+  const [groupId, setGroupId] = useState(GROUPS[0].id);
+  const [board, setBoard] = useState<Board>('streak');
+  const [nudged, setNudged] = useState<Record<string, boolean>>({});
   const [mine, setMine] = useState<Record<string, Reaction | undefined>>({});
+
+  const group = GROUPS.find((g) => g.id === groupId) ?? GROUPS[0];
+  const week = yourWeek(today.date);
+  const you: Member = {
+    name: settings.name.trim() || t('You'),
+    streak: today.streak.current,
+    litDays: week.lit,
+    litToday: today.lit,
+    salawat: week.total,
+    me: true,
+  };
+  const members = [...group.members.map((m) => ({ ...m, litDays: Math.min(m.litDays, week.days) })), you];
+  const progress = group.progress + week.total;
+  const pct = Math.min(1, progress / group.goal);
+
+  // Private counts sit at the bottom of the Salawat board (your own always shows to you).
+  const value = (m: Member) => (board === 'streak' ? m.streak : board === 'days' ? m.litDays : m.me || m.salawat !== null ? (m.salawat ?? -1) : -1);
+  const ranked = [...members].sort((a, b) => value(b) - value(a) || Number(!!b.me) - Number(!!a.me));
+  const litTodayCount = members.filter((m) => m.litToday).length;
+
+  const nudge = (name: string) => {
+    feedback.selection();
+    setNudged((n) => ({ ...n, [`${group.id}:${name}`]: true }));
+    showToast({ tone: 'quest', title: t('Nudge sent to {name}', { name }), sub: t('A gentle reminder, never pressure.') });
+  };
   const react = (id: string, r: Reaction) => {
     feedback.selection();
     setMine((m) => ({ ...m, [id]: m[id] === r ? undefined : r }));
@@ -73,8 +136,8 @@ export default function GroupScreen() {
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]}>
       <ScreenHeader
-        title={t('Group')}
-        arabic="العائلة"
+        title={t('Groups')}
+        arabic="الجماعة"
         right={
           <View style={styles.previewPill}>
             <Text style={styles.previewText}>{t('Preview')}</Text>
@@ -82,76 +145,121 @@ export default function GroupScreen() {
         }
       />
 
-      {/* Goal card */}
+      {/* Your groups */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        {GROUPS.map((g) => {
+          const on = g.id === group.id;
+          return (
+            <Pressable
+              key={g.id}
+              onPress={() => {
+                feedback.selection();
+                setGroupId(g.id);
+              }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: on }}
+              style={({ pressed }) => [styles.chip, on && styles.chipOn, pressed && { transform: [{ scale: 0.96 }] }]}>
+              <Text style={[styles.chipText, on && { color: colors.onPrimary }]}>{t(g.name)}</Text>
+              <Text style={[styles.chipCount, on && { color: colors.lightGold }]}>{g.members.length + 1}</Text>
+            </Pressable>
+          );
+        })}
+        <Pressable onPress={() => router.push('/sign-in')} accessibilityRole="button" style={({ pressed }) => [styles.chip, styles.chipNew, pressed && { opacity: 0.7 }]}>
+          <Text style={styles.chipNewText}>{t('+ New group')}</Text>
+        </Pressable>
+      </ScrollView>
+
+      {/* Weekly goal */}
       <View style={styles.goal}>
         <PlasterPattern color={colors.lightGold} opacity={0.1} cell={44} />
         <View style={styles.goalBody}>
-          <Text style={styles.goalEyebrow}>{t('Family · Jumu’ah goal')}</Text>
+          <View style={styles.goalTop}>
+            <Text style={styles.goalEyebrow}>{t('Weekly goal')}</Text>
+            <Text style={styles.goalLeft}>{t(week.left === 1 ? 'Ends today at Maghrib' : '{n} days left', { n: week.left })}</Text>
+          </View>
           <View style={styles.goalRow}>
-            <Text style={styles.goalNum}>6,200</Text>
-            <Text style={styles.goalOf}> / 10,000</Text>
+            <Text style={styles.goalNum}>{fmt(progress)}</Text>
+            <Text style={styles.goalOf}> / {fmt(group.goal)}</Text>
           </View>
-          <Text style={styles.goalMeta}>{t('Ends Friday at Maghrib · 5 members')}</Text>
           <View style={styles.windows}>
-            <ArchWindows lit={6} size={24} />
+            <ArchWindows lit={Math.floor(pct * 10)} size={24} />
           </View>
-          <Text style={styles.goalHint}>{t('A window lights for every 1,000 the family sends together.')}</Text>
+          <View style={styles.goalStats}>
+            <Text style={styles.goalStat}>{pct >= 1 ? `${t('Goal reached ✓')} ما شاء الله` : t('{p}% there', { p: Math.round(pct * 100) })}</Text>
+            <Text style={styles.goalStat}>{t('Your part: {n}', { n: fmt(week.total) })}</Text>
+            <Text style={styles.goalStat}>{t('{n} of {total} lit today', { n: litTodayCount, total: members.length })}</Text>
+          </View>
         </View>
         <ZelligeBand height={16} />
       </View>
 
-      {/* Logged today */}
+      {/* Leaderboard */}
       <Card>
-        <Text style={styles.cardTitle}>{t('Logged today')}</Text>
-        <View style={styles.members}>
-          {MEMBERS.map((m) => (
-            <View key={m.name} style={styles.member}>
-              <View style={[styles.avatar, !m.logged && styles.avatarDashed]}>
-                {m.logged ? (
-                  <EightPointStar size={46} fill={m.name === 'You' ? colors.saffron : colors.zelligeGreen} stroke={colors.saffron} strokeWidth={1.5} />
-                ) : null}
-                <Text style={[styles.initial, !m.logged && { color: colors.muted }]}>{(m.name === 'You' ? you : m.name).charAt(0)}</Text>
+        <Text style={styles.cardTitle}>{t('Leaderboard')}</Text>
+        <Segmented<Board>
+          options={[
+            { value: 'streak', label: t('Streak') },
+            { value: 'days', label: t('Days lit') },
+            { value: 'salawat', label: t('Salawat') },
+          ]}
+          value={board}
+          onChange={setBoard}
+        />
+        <Text style={styles.boardCaption}>
+          {board === 'streak' ? t('Days in a row') : board === 'days' ? t('This week, Saturday to Friday') : t('This week · private counts stay hidden')}
+        </Text>
+        {ranked.map((m, i) => {
+          const hidden = board === 'salawat' && !m.me && m.salawat === null;
+          const canNudge = !m.me && !m.litToday;
+          const sent = nudged[`${group.id}:${m.name}`];
+          return (
+            <View key={m.name + (m.me ? '-me' : '')} style={[styles.row, m.me && styles.rowMe]}>
+              <View style={[styles.rank, i < 3 && !hidden && { backgroundColor: MEDAL[i] }]}>
+                <Text style={[styles.rankText, i < 3 && !hidden && { color: '#2A1E10' }]}>{i + 1}</Text>
               </View>
-              <Text style={styles.memberName} numberOfLines={1}>
-                {m.name === 'You' ? t('You') : m.name}
+              <View style={styles.avatar}>
+                <EightPointStar size={38} fill={m.me ? colors.saffron : colors.zelligeGreen} stroke={colors.saffron} strokeWidth={1.2} />
+                <Text style={styles.initial}>{m.name.charAt(0)}</Text>
+                <View style={styles.lanternBadge}>
+                  <Lantern size={16} lit={m.litToday} glow={false} />
+                </View>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {m.me ? t('{name} (you)', { name: m.name }) : m.name}
+                </Text>
+                {board === 'days' ? (
+                  <View style={styles.dots}>
+                    {Array.from({ length: 7 }, (_, d) => (
+                      <View key={d} style={[styles.dot, d < m.litDays && styles.dotOn, d >= week.days && styles.dotLater]} />
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={[styles.status, m.litToday && { color: colors.link }]}>{m.litToday ? t('Lit today') : t('Not yet today')}</Text>
+                )}
+              </View>
+              <Text style={[styles.value, hidden && styles.valueHidden]}>
+                {board === 'streak' ? `🔥 ${m.streak}` : board === 'days' ? `${m.litDays}` : hidden ? '🔒' : fmt(m.salawat ?? 0)}
               </Text>
-              <Text style={styles.memberStreak}>{m.logged ? (m.streak ? t('{n} days', { n: m.streak }) : '•') : t('not yet')}</Text>
+              {canNudge && (
+                <Pressable
+                  onPress={() => !sent && nudge(m.name)}
+                  disabled={sent}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('Nudge {name}', { name: m.name })}
+                  style={({ pressed }) => [styles.nudge, sent && styles.nudgeSent, pressed && { opacity: 0.7 }]}>
+                  <Text style={[styles.nudgeText, sent && { color: colors.muted }]}>{sent ? t('Sent') : t('Nudge')}</Text>
+                </Pressable>
+              )}
             </View>
-          ))}
-        </View>
-        <Text style={styles.note}>{t('Members see the family total and each other’s streaks, never each other’s counts, unless someone turns sharing on.')}</Text>
-      </Card>
-
-      {/* Consistency board: lit days, not counts, so every lantern weighs the same */}
-      <Card>
-        <Text style={styles.cardTitle}>{t('This week’s lanterns')}</Text>
-        <Text style={styles.boardSub}>{t('Ranked by lit days this Jumu’ah week, not by how many. Every lantern counts the same.')}</Text>
-        {board.map((m, i) => (
-          <View key={m.name + i} style={[styles.boardRow, m.me && styles.boardMe]}>
-            <Text style={styles.rank}>{i + 1}</Text>
-            <View style={styles.boardAvatar}>
-              <EightPointStar size={34} fill={m.me ? colors.saffron : colors.zelligeGreen} stroke={colors.saffron} strokeWidth={1.2} />
-              <Text style={styles.boardInitial}>{m.name.charAt(0)}</Text>
-            </View>
-            <Text style={styles.boardName} numberOfLines={1}>
-              {m.me ? t('{name} (you)', { name: m.name }) : m.name}
-            </Text>
-            <View style={styles.lamps}>
-              {Array.from({ length: 7 }, (_, d) => (
-                <View key={d} style={[styles.lampDot, d < m.lit && styles.lampDotOn, d >= week.days && styles.lampDotFuture]} />
-              ))}
-            </View>
-            <Text style={styles.boardCount}>
-              {m.lit}/{week.days}
-            </Text>
-          </View>
-        ))}
+          );
+        })}
       </Card>
 
       {/* Activity */}
       <Card>
         <Text style={styles.cardTitle}>{t('Activity')}</Text>
-        {ACTIVITY().map((a, i) => {
+        {group.activity().map((a, i) => {
           const m = a.milestone ? milestoneByAmount(a.milestone) : undefined;
           return (
             <View key={a.id} style={[styles.event, i > 0 && styles.eventBorder]}>
@@ -186,38 +294,15 @@ export default function GroupScreen() {
         })}
       </Card>
 
-      {/* How it works */}
+      {/* Going live */}
       <Card>
-        <Text style={styles.cardTitle}>{t('How groups work')}</Text>
-        <Point icon="code" text={t('Create a group and share its 6-letter invite code with family.')} />
-        <Point icon="live" text={t('Everyone’s salawat add up live toward the week’s goal, until Friday at Maghrib.')} />
-        <Point icon="lock" text={t('Your own count stays private. Sharing is off unless you switch it on in Me.')} />
-        <Point icon="chat" text={t('Log from your family’s Telegram group too, with the Salli bot.')} />
+        <Text style={styles.liveTitle}>{t('Start a group for real')}</Text>
+        <Text style={styles.liveText}>{t('Invite family or friends with a 6-letter code. Your count stays private unless you choose to share it in Me.')}</Text>
         <View style={{ marginTop: spacing.md }}>
           <PrimaryButton label={t('Sign in to create a group')} onPress={() => router.push('/sign-in')} />
         </View>
-        <Text style={styles.foot}>{t('Groups switch on once accounts are connected.')}</Text>
       </Card>
     </ScrollView>
-  );
-}
-
-function Point({ icon, text }: { icon: 'code' | 'live' | 'lock' | 'chat'; text: string }) {
-  const d = {
-    code: 'M8 8 4 12l4 4M16 8l4 4-4 4M13.5 6l-3 12',
-    live: 'M3 12h3l3-7 4 14 3-7h5',
-    lock: 'M6 11h12v9H6Z M8.5 11V8a3.5 3.5 0 0 1 7 0v3',
-    chat: 'M21 4 3 11l6 2 2 6 3-4 5 4Z M9 13l9-6',
-  }[icon];
-  return (
-    <View style={styles.point}>
-      <View style={styles.pointIcon}>
-        <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={colors.link} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-          <Path d={d} />
-        </Svg>
-      </View>
-      <Text style={styles.pointText}>{text}</Text>
-    </View>
   );
 }
 
@@ -226,49 +311,65 @@ const styles = themedStyles(() =>
     content: { paddingHorizontal: spacing.lg, paddingBottom: 32, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
     previewPill: { borderRadius: 999, borderWidth: 1, borderColor: colors.saffron, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 6 },
     previewText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta },
+    chips: { gap: spacing.sm, paddingVertical: 2 },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: colors.cardBorder,
+      backgroundColor: colors.card,
+      paddingHorizontal: 16,
+      height: 40,
+    },
+    chipOn: { backgroundColor: colors.zelligeGreen, borderColor: colors.saffron },
+    chipText: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.ink },
+    chipCount: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.muted },
+    chipNew: { borderStyle: 'dashed' },
+    chipNewText: { fontFamily: fonts.uiSemi, fontSize: 14, color: colors.link },
     goal: { backgroundColor: colors.zelligeGreen, borderRadius: radius.card, borderWidth: 1, borderColor: colors.saffron, overflow: 'hidden' },
     goalBody: { padding: spacing.lg },
+    goalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     goalEyebrow: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.lightGold, textTransform: 'uppercase', letterSpacing: 0.8 },
+    goalLeft: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.onPrimary, opacity: 0.85 },
     goalRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 2 },
     goalNum: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 48, color: colors.onPrimary },
     goalOf: { fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 24, color: colors.lightGold },
-    goalMeta: { fontFamily: fonts.ui, fontSize: 13, color: colors.onPrimary, opacity: 0.85 },
-    windows: { marginTop: spacing.lg, marginBottom: spacing.sm },
-    goalHint: { fontFamily: fonts.ui, fontSize: 12, color: colors.onPrimary, opacity: 0.75 },
+    windows: { marginTop: spacing.md, marginBottom: spacing.md },
+    goalStats: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
+    goalStat: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.onPrimary, opacity: 0.9 },
     cardTitle: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, marginBottom: spacing.sm },
-    members: { flexDirection: 'row', justifyContent: 'space-between' },
-    member: { alignItems: 'center', width: 60 },
-    avatar: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
-    avatarDashed: { borderRadius: 23, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.cardBorder },
-    initial: { position: 'absolute', fontFamily: fonts.display, fontSize: 20, color: colors.onPrimary },
-    memberName: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.ink, marginTop: 4 },
-    memberStreak: { fontFamily: fonts.ui, fontSize: 11, color: colors.terracotta },
-    note: { fontFamily: fonts.ui, fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: spacing.md },
+    boardCaption: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginTop: spacing.sm, marginBottom: 4 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 8, paddingHorizontal: 6, borderRadius: 14 },
+    rowMe: { backgroundColor: colors.highlight },
+    rank: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    rankText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.muted },
+    avatar: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+    initial: { position: 'absolute', fontFamily: fonts.display, fontSize: 16, color: colors.onPrimary },
+    lanternBadge: { position: 'absolute', right: -6, bottom: -6 },
+    name: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.ink },
+    status: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted },
+    dots: { flexDirection: 'row', gap: 4, marginTop: 4, direction: 'ltr' },
+    dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.cardBorder },
+    dotOn: { backgroundColor: colors.saffron },
+    dotLater: { opacity: 0.35 },
+    value: { minWidth: 44, fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 20, color: colors.terracotta, textAlign: 'center' },
+    valueHidden: { fontSize: 16, opacity: 0.7 },
+    nudge: { borderRadius: 999, borderWidth: 1, borderColor: colors.saffron, paddingHorizontal: 10, paddingVertical: 5 },
+    nudgeSent: { borderColor: colors.cardBorder },
+    nudgeText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.link },
     event: { paddingVertical: 10 },
     eventBorder: { borderTopWidth: 1, borderTopColor: colors.cardBorder },
+    eventRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     eventText: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 20, color: colors.ink },
     eventWho: { fontFamily: fonts.uiSemi },
     reactions: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+    reaction: { borderRadius: 999, backgroundColor: colors.highlight, paddingHorizontal: 10, paddingVertical: 4 },
     reactionOn: { backgroundColor: colors.zelligeGreen },
-    eventRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-    boardSub: { fontFamily: fonts.ui, fontSize: 12, lineHeight: 17, color: colors.muted, marginTop: -4, marginBottom: spacing.sm },
-    boardRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 8, paddingHorizontal: 6, borderRadius: 12 },
-    boardMe: { backgroundColor: colors.highlight },
-    rank: { width: 18, fontFamily: fonts.display, fontVariant: ['lining-nums'], fontSize: 20, color: colors.terracotta, textAlign: 'center' },
-    boardAvatar: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
-    boardInitial: { position: 'absolute', fontFamily: fonts.display, fontSize: 15, color: colors.onPrimary },
-    boardName: { flex: 1, fontFamily: fonts.uiMedium, fontSize: 14, color: colors.ink },
-    lamps: { flexDirection: 'row', gap: 3, direction: 'ltr' },
-    lampDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.cardBorder },
-    lampDotOn: { backgroundColor: colors.saffron },
-    lampDotFuture: { opacity: 0.35 },
-    boardCount: { width: 30, fontFamily: fonts.uiSemi, fontSize: 12, color: colors.muted, textAlign: 'right' },
-    reaction: { borderRadius: 999, backgroundColor: colors.highlight, paddingHorizontal: 10, paddingVertical: 3 },
     reactionText: { fontFamily: fonts.uiMedium, fontSize: 12, color: colors.terracotta },
     when: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, marginLeft: 'auto' },
-    point: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 6 },
-    pointIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.plaster, borderWidth: 1, borderColor: colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
-    pointText: { flex: 1, fontFamily: fonts.ui, fontSize: 14, lineHeight: 20, color: colors.ink },
-    foot: { fontFamily: fonts.ui, fontSize: 12, color: colors.muted, textAlign: 'center', marginTop: spacing.sm },
+    liveTitle: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.ink },
+    liveText: { fontFamily: fonts.ui, fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 4 },
   }),
 );

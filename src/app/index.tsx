@@ -21,7 +21,7 @@ import { t } from '@/lib/i18n';
 const TABS = (): Tab[] => [
   { key: 'today', label: t('Today'), Icon: TodayIcon, render: () => <TodayScreen /> },
   { key: 'reminders', label: t('Reminders'), Icon: RemindersIcon, dark: true, render: () => <RemindersScreen /> },
-  { key: 'group', label: t('Group'), Icon: GroupIcon, render: () => <GroupScreen /> },
+  { key: 'group', label: t('Groups'), Icon: GroupIcon, render: () => <GroupScreen /> },
   { key: 'stats', label: t('Stats'), Icon: StatsIcon, render: () => <StatsScreen /> },
   { key: 'me', label: t('Me'), Icon: MeIcon, render: () => <MeScreen /> },
 ];
