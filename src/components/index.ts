@@ -12,3 +12,7 @@ export { NumberPadSheet } from './NumberPadSheet';
 export { TodayLog } from './TodayLog';
 export { ShieldNotice } from './ShieldNotice';
 export { StreakTakeover, type TakeoverData } from './StreakTakeover';
+export { ScreenHeader } from './ScreenHeader';
+export { Segmented } from './Segmented';
+export { ShieldIcon } from './StreakTakeover';
+export { Toggle } from './Toggle';

@@ -21,11 +21,18 @@ export type DayRecord = {
 };
 
 export const DEFAULT_DAILY_GOAL = 1000;
-const GOAL_KEY = 'settings.dailyGoal';
 const PREFIX = 'day.';
 
+/** The goal new days start with (read straight from saved settings to avoid an import cycle). */
 export function getDailyGoal(): number {
-  return storage.getNumber(GOAL_KEY) ?? DEFAULT_DAILY_GOAL;
+  const raw = storage.getString('settings.v1');
+  if (raw) {
+    try {
+      const goal = JSON.parse(raw).dailyGoal;
+      if (typeof goal === 'number' && goal > 0) return goal;
+    } catch {}
+  }
+  return DEFAULT_DAILY_GOAL;
 }
 
 export function getDay(date: string): DayRecord {

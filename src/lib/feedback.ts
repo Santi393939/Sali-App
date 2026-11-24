@@ -98,7 +98,11 @@ export const feedback = {
     const timers = steps.map(([ms, fn]) => setTimeout(fn, ms));
     return () => timers.forEach(clearTimeout);
   },
-  /** Toggles and other medium taps. */
+  /** Crossing into a new tab mid-swipe. */
+  selection() {
+    safe(() => Haptics.selectionAsync());
+  },
+  /** Toggles, landing on a tab and other medium taps. */
   medium() {
     safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
   },

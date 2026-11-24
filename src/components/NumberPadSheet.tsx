@@ -22,13 +22,25 @@ type Props = {
   visible: boolean;
   onAdd: (amount: number) => void;
   onClose: () => void;
+  /** Heading above the number. */
+  title?: string;
+  /** Button text for a typed amount, e.g. "Add 250" or "Set goal to 500". */
+  actionLabel?: (amount: string) => string;
+  max?: number;
 };
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', 'del'] as const;
 const OFFSCREEN = 700;
 
 /** Bottom sheet for typing any amount. Caps at MAX_SINGLE_ADD. */
-export function NumberPadSheet({ visible, onAdd, onClose }: Props) {
+export function NumberPadSheet({
+  visible,
+  onAdd,
+  onClose,
+  title = 'Add salawat',
+  actionLabel = (a) => `Add ${a}`,
+  max = MAX_SINGLE_ADD,
+}: Props) {
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
   const [digits, setDigits] = useState('');
@@ -69,7 +81,7 @@ export function NumberPadSheet({ visible, onAdd, onClose }: Props) {
     }
     setDigits((d) => {
       const next = (d + key).replace(/^0+/, '');
-      return Number(next || '0') > MAX_SINGLE_ADD ? d : next;
+      return Number(next || '0') > max ? d : next;
     });
   };
 
@@ -87,7 +99,7 @@ export function NumberPadSheet({ visible, onAdd, onClose }: Props) {
         </Animated.View>
         <Animated.View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }, sheetStyle]}>
           <View style={styles.grabber} />
-          <Text style={styles.label}>Add salawat</Text>
+          <Text style={styles.label}>{title}</Text>
           <Text
             style={[styles.display, amount === 0 && styles.displayEmpty]}
             accessibilityLiveRegion="polite"
@@ -95,7 +107,7 @@ export function NumberPadSheet({ visible, onAdd, onClose }: Props) {
             adjustsFontSizeToFit>
             {amount.toLocaleString('en-US')}
           </Text>
-          <Text style={styles.hint}>Up to {MAX_SINGLE_ADD.toLocaleString('en-US')} at a time</Text>
+          <Text style={styles.hint}>Up to {max.toLocaleString('en-US')}</Text>
 
           <View style={styles.grid}>
             {KEYS.map((key) => (
@@ -106,7 +118,7 @@ export function NumberPadSheet({ visible, onAdd, onClose }: Props) {
           </View>
 
           <PrimaryButton
-            label={amount > 0 ? `Add ${amount.toLocaleString('en-US')}` : 'Add'}
+            label={amount > 0 ? actionLabel(amount.toLocaleString('en-US')) : actionLabel('').trim()}
             onPress={add}
             disabled={amount === 0}
           />

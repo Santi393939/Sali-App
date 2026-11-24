@@ -42,6 +42,8 @@ type Props = {
   total: number;
   goal: number;
   event?: AddEvent;
+  /** Show what's left to the goal instead of what's done. */
+  countDown?: boolean;
   onTap: () => void;
 };
 
@@ -55,7 +57,7 @@ const SPARK_CANVAS = 300;
 
 const countSize = (n: number) => (n < 1000 ? 44 : n < 10000 ? 38 : n < 100000 ? 32 : 26);
 
-export function CounterHero({ total, goal, event, onTap }: Props) {
+export function CounterHero({ total, goal, event, countDown = false, onTap }: Props) {
   const reduceMotion = useReducedMotion();
   const displayed = useSharedValue(total);
   const pop = useSharedValue(1);
@@ -65,39 +67,40 @@ export function CounterHero({ total, goal, event, onTap }: Props) {
   const lastEventId = useRef<number | undefined>(event?.id);
 
   const progress = useDerivedValue(() => displayed.value / goal);
+  const shown = useDerivedValue(() => (countDown ? Math.max(0, goal - displayed.value) : displayed.value));
 
   useEffect(() => {
     const isNew = event && event.id !== lastEventId.current;
     if (!isNew) {
       // Total changed without an add (first load, day rollover): just show it.
-      displayed.value = total;
+      displayed.set(total);
       return;
     }
     lastEventId.current = event.id;
     const delay = event.delay ?? 0;
 
     if (reduceMotion) {
-      displayed.value = total;
+      displayed.set(total);
       return;
     }
 
     if (event.kind === 'tap') {
-      displayed.value = total;
-      pop.value = withSequence(
+      displayed.set(total);
+      pop.set(withSequence(
         withTiming(1.18, { duration: 110, easing: Easing.out(Easing.quad) }),
         withSpring(1, { damping: 9, stiffness: 320, mass: 0.6, reduceMotion: ReduceMotion.System }),
-      );
+      ));
     } else {
-      displayed.value = withDelay(
+      displayed.set(withDelay(
         delay,
         withTiming(total, { duration: 750, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.System }),
-      );
-      pulse.value = 0;
-      pulse.value = withDelay(delay, withTiming(1, { duration: 750, easing: Easing.out(Easing.quad) }));
-      pop.value = withDelay(
+      ));
+      pulse.set(0);
+      pulse.set(withDelay(delay, withTiming(1, { duration: 750, easing: Easing.out(Easing.quad) })));
+      pop.set(withDelay(
         delay,
         withSequence(withTiming(1.08, { duration: 120 }), withSpring(1, { damping: 10, stiffness: 260 })),
-      );
+      ));
     }
 
     const spawn = () => {
@@ -120,7 +123,7 @@ export function CounterHero({ total, goal, event, onTap }: Props) {
     transform: [{ scale: 1 + 0.6 * pulse.value }],
   }));
 
-  const size = countSize(total);
+  const size = countSize(countDown ? Math.max(0, goal - total) : total);
 
   return (
     <View style={styles.wrap}>
@@ -132,8 +135,10 @@ export function CounterHero({ total, goal, event, onTap }: Props) {
           <View style={{ marginTop: STAR_TOP }}>
             <ProgressStar size={STAR} progress={progress}>
               <Animated.View style={[styles.countBox, popStyle]}>
-                <AnimatedCount value={displayed} style={[styles.count, { fontSize: size, lineHeight: size + 6 }]} />
-                <Text style={styles.countOf}>of {goal.toLocaleString('en-US')}</Text>
+                <AnimatedCount value={shown} style={[styles.count, { fontSize: size, lineHeight: size + 6 }]} />
+                <Text style={styles.countOf}>
+                  {countDown ? 'left of' : 'of'} {goal.toLocaleString('en-US')}
+                </Text>
               </Animated.View>
             </ProgressStar>
           </View>
