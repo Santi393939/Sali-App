@@ -21,7 +21,7 @@ create table public.profiles (
   city text,
   latitude double precision,
   longitude double precision,
-  daily_goal integer not null default 1000 check (daily_goal between 1 and 100000),
+  daily_goal integer not null default 10 check (daily_goal between 1 and 100000),
   share_count_with_group boolean not null default false,
   telegram_user_id bigint unique,
   created_at timestamptz not null default now(),
