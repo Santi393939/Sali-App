@@ -103,7 +103,7 @@ export default function Tasbih() {
     setSession((s) => s + 1);
     const total = getToday().taps;
     const roundDone = total % ROUND === 0 || litNow;
-    if (strong) feedback.medium();
+    if (strong) feedback.pulse();
     else feedback.add('tap');
     if (litNow) {
       feedback.add('large');

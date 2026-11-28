@@ -683,4 +683,8 @@ export const FR: Record<string, string> = {
   "Join group": "Rejoindre le groupe",
   "Sign in, then create a group and share its 6-letter code with family or friends. Your count stays private unless you choose to share it in Me.": "Connectez-vous, puis créez un groupe et partagez son code à 6 lettres avec famille ou amis. Votre compte reste privé, sauf si vous choisissez de le partager dans Moi.",
   "Edit": "Modifier",
+  "A sample group, to show how it works": "Un groupe d’exemple, pour montrer le fonctionnement",
+  "Close preview": "Fermer l’aperçu",
+  "No groups yet": "Pas encore de groupe",
+  "See the preview again": "Revoir l’aperçu",
 };

@@ -674,4 +674,8 @@ export const AR: Record<string, string> = {
   "Join group": "انضم إلى المجموعة",
   "Sign in, then create a group and share its 6-letter code with family or friends. Your count stays private unless you choose to share it in Me.": "سجّل الدخول، ثم أنشئ مجموعة وشارك رمزها المكوّن من 6 أحرف مع عائلتك أو أصدقائك. عددك يبقى خاصًا إلا إذا اخترت مشاركته في صفحة أنا.",
   "Edit": "تعديل",
+  "A sample group, to show how it works": "مجموعة تجريبية، لتوضيح طريقة العمل",
+  "Close preview": "إغلاق المعاينة",
+  "No groups yet": "لا توجد مجموعات بعد",
+  "See the preview again": "اعرض المعاينة مجددًا",
 };

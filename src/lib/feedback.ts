@@ -6,6 +6,7 @@
  */
 import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
 
 import { getRewards } from '@/store/rewards';
 import { getSettings } from '@/store/settings';
@@ -104,72 +105,80 @@ export function addKind(amount: number, source: 'tap' | 'quick' | 'pad'): AddKin
   return 'small';
 }
 
+/**
+ * Haptics, used mindfully: counting gets one crisp "press" click (the
+ * system key click on Android, a rigid tap on iOS), celebrations get a short
+ * confirm, and ordinary navigation (tabs, chips, toggles, sheets, reactions)
+ * stays silent.
+ */
+const click = () =>
+  safe(() => (Platform.OS === 'android' ? Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Virtual_Key) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)));
+/** A firmer single press, for one count in hold mode and bigger adds. */
+const press = () =>
+  safe(() => (Platform.OS === 'android' ? Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Long_Press) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)));
+/** A celebration: lantern lit, round done, milestone. */
+const confirm = () =>
+  safe(() => (Platform.OS === 'android' ? Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Confirm) : Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)));
+
 export const feedback = {
   add(kind: AddKind) {
     switch (kind) {
       case 'tap':
-        safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
+        click();
         play(soundSet().tap);
         break;
       case 'small':
-        safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-        play(soundSet().burst);
-        break;
       case 'medium':
-        safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
+        click();
         play(soundSet().burst);
         break;
       case 'large':
-        safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+        press();
         play(soundSet().big);
         break;
     }
   },
+  /** One count in hold mode: a single firm press, felt without looking. */
+  pulse() {
+    press();
+    play(soundSet().tap);
+  },
   /** Number pad key press. */
   key() {
-    safe(() => Haptics.selectionAsync());
+    click();
   },
   /**
-   * Streak takeover sequence (times from the moment it opens):
-   * Light 0 s · Heavy 0.35 s + chime (lantern ignites) · Success 0.9 s + success
-   * sound (number flips) · Medium 1.4 s (check stamps) · Light 1.75 s (goal bar).
-   * Returns a cancel function.
+   * Streak takeover: one press as the lantern ignites, one confirm as the
+   * number flips (with the chime and success sound). Returns a cancel function.
    */
   takeover(): () => void {
     const steps: [number, () => void][] = [
-      [0, () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light))],
       [350, () => {
-        safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
+        press();
         play('chime');
       }],
       [900, () => {
-        safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+        confirm();
         play('success');
       }],
-      [1400, () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium))],
-      [1750, () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light))],
     ];
     const timers = steps.map(([ms, fn]) => setTimeout(fn, ms));
     return () => timers.forEach(clearTimeout);
   },
   /** A tasbih round of 33 taps completed. */
   round(big = false) {
-    safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
+    confirm();
     play(big ? soundSet().big : soundSet().burst);
   },
-  /** A daily quest completed. */
+  /** A daily quest completed (a haptic only when all three are done). */
   quest(all = false) {
-    safe(() => (all ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success) : Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)));
+    if (all) confirm();
     play(all ? 'success' : 'cluster');
   },
-  /** Crossing into a new tab mid-swipe. */
-  selection() {
-    safe(() => Haptics.selectionAsync());
-  },
-  /** Toggles, landing on a tab and other medium taps. */
-  medium() {
-    safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-  },
+  /** Navigation ticks (tabs, chips, segmented controls): silent by design. */
+  selection() {},
+  /** Toggles, landing on a tab and other ordinary taps: silent by design. */
+  medium() {},
   /** Preview a tap sound (Rewards on Me). */
   previewSound(sound: SoundName) {
     play(sound);
@@ -190,11 +199,22 @@ export const feedback = {
    * Returns a cancel function.
    */
   milestone(effect: 'doors' | 'tiles' | 'fountain' | 'beam' | 'rings' | 'petals', sound: SoundName): () => void {
-    const L = () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
-    const M = () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
-    const H = () => safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
-    const S = () => safe(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
-    const T = () => safe(() => Haptics.selectionAsync());
+    // Milestones keep their rhythm in sound; touch is limited to a couple of
+    // presses and one confirm so it never feels like buzzing.
+    let presses = 0;
+    const L = () => {};
+    const M = () => {
+      if (presses++ < 2) press();
+    };
+    const H = M;
+    const S = (() => {
+      let done = false;
+      return () => {
+        if (!done) confirm();
+        done = true;
+      };
+    })();
+    const T = () => {};
     const own = () => play(sound);
     const chime = () => play('chime');
     const success = () => play('success');
@@ -216,7 +236,5 @@ export const feedback = {
     return () => timers.forEach(clearTimeout);
   },
   /** Opening the number pad sheet. */
-  sheetOpen() {
-    safe(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light));
-  },
+  sheetOpen() {},
 };

@@ -21,6 +21,7 @@ import { t } from '@/lib/i18n';
 import { addDays, keyToDate } from '@/lib/salliDay';
 import { showToast } from '@/lib/toast';
 import { useAuth } from '@/store/auth';
+import { storage } from '@/store/storage';
 import { useToday } from '@/store/counts';
 import { getDay, isLit } from '@/store/days';
 import {
@@ -70,18 +71,8 @@ export default function GroupScreen() {
   const live = auth.configured && !!auth.session;
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]} keyboardShouldPersistTaps="handled">
-      <ScreenHeader
-        title={t('Groups')}
-        arabic="الجماعة"
-        right={
-          live ? undefined : (
-            <View style={styles.previewPill}>
-              <Text style={styles.previewText}>{t('Preview')}</Text>
-            </View>
-          )
-        }
-      />
-      {live ? <LiveGroups userId={auth.session!.user.id} /> : <PreviewGroups />}
+      <ScreenHeader title={t('Groups')} arabic="الجماعة" />
+      {live ? <LiveGroups userId={auth.session!.user.id} /> : <SignedOutGroups />}
     </ScrollView>
   );
 }
@@ -119,6 +110,7 @@ function LiveGroups({ userId }: { userId: string }) {
   if (!groups.length) {
     return (
       <>
+        <PreviewFrame />
         {loading ? (
           <ActivityIndicator color={colors.saffron} style={{ marginTop: spacing.xl }} />
         ) : (
@@ -366,6 +358,76 @@ function NewGroupSheet({ visible, onClose, onDone }: { visible: boolean; onClose
 
 // ============================ preview ============================
 
+const PREVIEW_KEY = 'groups.previewDismissed';
+
+/** The sample group, framed and clearly labelled, with a close button. */
+function PreviewFrame() {
+  const [hidden, setHidden] = useState(() => storage.getBoolean(PREVIEW_KEY) ?? false);
+  useEffect(() => onPreviewToggle(setHidden), []);
+  if (hidden) return null;
+  return (
+    <View style={styles.frame}>
+      <View style={styles.frameHead}>
+        <View style={styles.framePill}>
+          <Text style={styles.framePillText}>{t('Preview')}</Text>
+        </View>
+        <Text style={styles.frameTitle} numberOfLines={2}>
+          {t('A sample group, to show how it works')}
+        </Text>
+        <Pressable
+          onPress={() => setPreviewHidden(true)}
+          accessibilityRole="button"
+          accessibilityLabel={t('Close preview')}
+          hitSlop={10}
+          style={styles.frameClose}>
+          <Text style={styles.frameCloseText}>✕</Text>
+        </Pressable>
+      </View>
+      <View style={styles.frameBody}>
+        <PreviewGroups />
+      </View>
+      <PrimaryButton label={t('Close preview')} variant="secondary" onPress={() => setPreviewHidden(true)} />
+    </View>
+  );
+}
+
+const previewListeners = new Set<(hidden: boolean) => void>();
+function setPreviewHidden(hidden: boolean) {
+  storage.set(PREVIEW_KEY, hidden);
+  previewListeners.forEach((l) => l(hidden));
+}
+function onPreviewToggle(fn: (hidden: boolean) => void) {
+  previewListeners.add(fn);
+  return () => {
+    previewListeners.delete(fn);
+  };
+}
+
+/** Signed out: the preview (until closed), then the real, empty Groups page. */
+function SignedOutGroups() {
+  const [previewHidden, setHidden] = useState(() => storage.getBoolean(PREVIEW_KEY) ?? false);
+  useEffect(() => onPreviewToggle(setHidden), []);
+  return (
+    <>
+      <PreviewFrame />
+      <Card>
+        <Text style={styles.emptyTitle}>{t('No groups yet')}</Text>
+        <Text style={styles.emptyText}>
+          {t('Sign in, then create a group and share its 6-letter code with family or friends. Your count stays private unless you choose to share it in Me.')}
+        </Text>
+        <View style={{ marginTop: spacing.md }}>
+          <PrimaryButton label={t('Sign in to create a group')} onPress={() => router.push('/sign-in')} />
+        </View>
+        {previewHidden && (
+          <Pressable onPress={() => setPreviewHidden(false)} accessibilityRole="button" style={styles.showPreview}>
+            <Text style={styles.showPreviewText}>{t('See the preview again')}</Text>
+          </Pressable>
+        )}
+      </Card>
+    </>
+  );
+}
+
 type SampleGroup = { id: string; name: string; goal: number; progress: number; members: Omit<BoardMember, 'key'>[]; activity: () => FeedItem[] };
 
 /** Preview groups. `salawat: null` = that member keeps their count private. */
@@ -409,7 +471,6 @@ const SAMPLES: SampleGroup[] = [
 function PreviewGroups() {
   const settings = useSettings();
   const today = useToday();
-  const auth = useAuth();
   const [groupId, setGroupId] = useState(SAMPLES[0].id);
   const [nudged, setNudged] = useState<Record<string, boolean>>({});
   const [mine, setMine] = useState<Record<string, Reaction[]>>({});
@@ -422,11 +483,10 @@ function PreviewGroups() {
     const m = mine[a.id] ?? [];
     return { ...a, mine: m, reactions: { ameen: a.reactions.ameen + (m.includes('ameen') ? 1 : 0), mashallah: a.reactions.mashallah + (m.includes('mashallah') ? 1 : 0) } };
   });
-  const goToSignIn = () => router.push('/sign-in');
 
   return (
     <>
-      <GroupChips groups={SAMPLES.map((g) => ({ id: g.id, name: t(g.name), count: g.members.length + 1 }))} selected={group.id} onSelect={setGroupId} onNew={goToSignIn} />
+      <GroupChips groups={SAMPLES.map((g) => ({ id: g.id, name: t(g.name), count: g.members.length + 1 }))} selected={group.id} onSelect={setGroupId} onNew={() => router.push('/sign-in')} />
       <GoalCard
         progress={group.progress + week.total}
         goal={group.goal}
@@ -454,17 +514,6 @@ function PreviewGroups() {
           })
         }
       />
-      <Card>
-        <Text style={styles.liveTitle}>{t('Start a group for real')}</Text>
-        <Text style={styles.liveText}>
-          {auth.configured
-            ? t('Sign in, then create a group and share its 6-letter code with family or friends. Your count stays private unless you choose to share it in Me.')
-            : t('Invite family or friends with a 6-letter code. Your count stays private unless you choose to share it in Me.')}
-        </Text>
-        <View style={{ marginTop: spacing.md }}>
-          <PrimaryButton label={t('Sign in to create a group')} onPress={goToSignIn} />
-        </View>
-      </Card>
     </>
   );
 }
@@ -472,8 +521,24 @@ function PreviewGroups() {
 const styles = themedStyles(() =>
   StyleSheet.create({
     content: { paddingHorizontal: spacing.lg, paddingBottom: 32, gap: spacing.lg, maxWidth: 520, width: '100%', alignSelf: 'center' },
-    previewPill: { borderRadius: 999, borderWidth: 1, borderColor: colors.saffron, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 6 },
-    previewText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.terracotta },
+    frame: {
+      borderRadius: radius.card + 6,
+      borderWidth: 2,
+      borderStyle: 'dashed',
+      borderColor: colors.saffron,
+      padding: spacing.md,
+      gap: spacing.md,
+      backgroundColor: colors.highlight,
+    },
+    frameHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    framePill: { backgroundColor: colors.saffron, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+    framePillText: { fontFamily: fonts.uiSemi, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', color: '#2A1E10' },
+    frameTitle: { flex: 1, fontFamily: fonts.uiMedium, fontSize: 13, color: colors.ink },
+    frameClose: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card },
+    frameCloseText: { fontSize: 16, color: colors.ink },
+    frameBody: { gap: spacing.lg, opacity: 0.92 },
+    showPreview: { alignSelf: 'center', paddingVertical: spacing.sm, marginTop: spacing.sm },
+    showPreviewText: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.link },
     emptyTitle: { fontFamily: fonts.display, fontSize: 26, color: colors.ink },
     emptyText: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 21, color: colors.muted, marginTop: 4 },
     error: { fontFamily: fonts.uiMedium, fontSize: 13, color: colors.terracotta, marginTop: spacing.sm, textAlign: 'center' },
