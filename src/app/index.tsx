@@ -17,10 +17,11 @@ import StatsScreen from '@/screens/StatsScreen';
 import TodayScreen from '@/screens/TodayScreen';
 import { useSettings } from '@/store/settings';
 import { t } from '@/lib/i18n';
+import { isDarkMode } from '@/theme';
 
 const TABS = (): Tab[] => [
   { key: 'today', label: t('Today'), Icon: TodayIcon, render: () => <TodayScreen /> },
-  { key: 'reminders', label: t('Reminders'), Icon: RemindersIcon, dark: true, render: () => <RemindersScreen /> },
+  { key: 'reminders', label: t('Reminders'), Icon: RemindersIcon, dark: isDarkMode(), render: () => <RemindersScreen /> },
   { key: 'group', label: t('Groups'), Icon: GroupIcon, render: () => <GroupScreen /> },
   { key: 'stats', label: t('Stats'), Icon: StatsIcon, render: () => <StatsScreen /> },
   { key: 'me', label: t('Me'), Icon: MeIcon, render: () => <MeScreen /> },

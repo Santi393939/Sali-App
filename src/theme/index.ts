@@ -86,31 +86,32 @@ function mix(a: string, b: string, t: number) {
 }
 
 /**
- * Dark mode: the same theme at night. Backgrounds come from the theme's own
- * night colour, text turns light, and the accents are lifted just enough to
- * read on the dark surfaces. Midnight is already a night theme.
+ * Dark mode: true black. Backgrounds and surfaces are neutral blacks and
+ * greys (so it never looks like the Midnight theme or a dimmed theme), text
+ * is a soft warm white, and only the accents come from the theme you wear,
+ * lifted just enough to read on black.
  */
 function darkOf(p: Palette): Palette {
-  const page = mix(p.night, '#000000', 0.15);
-  const card = mix(p.night, '#FFFFFF', 0.06);
+  const card = '#121212';
   return {
     ...p,
-    plaster: page,
+    plaster: '#000000',
     card,
-    cardBorder: mix(p.night, '#FFFFFF', 0.16),
-    ink: '#F1E9DB',
-    muted: '#ADA493',
-    night: mix(p.night, '#000000', 0.4),
-    terracotta: mix(p.terracotta, '#FFFFFF', 0.38),
-    cobalt: mix(p.cobalt, '#FFFFFF', 0.35),
+    cardBorder: '#262626',
+    ink: '#F2EEE8',
+    muted: '#9C9890',
+    night: '#000000',
+    onPrimary: '#FBF6EC',
+    terracotta: mix(p.terracotta, '#FFFFFF', 0.4),
+    cobalt: mix(p.cobalt, '#FFFFFF', 0.4),
     link: mix(p.zelligeGreen, '#FFFFFF', 0.5),
-    highlight: mix(card, p.saffron, 0.2),
+    highlight: mix(card, p.saffron, 0.16),
     statusBar: 'light',
   };
 }
 
 const DARK_PALETTES = Object.fromEntries(
-  (Object.keys(PALETTES) as ThemeId[]).map((id) => [id, id === 'midnight' ? PALETTES.midnight : darkOf(PALETTES[id])]),
+  (Object.keys(PALETTES) as ThemeId[]).map((id) => [id, darkOf(PALETTES[id])]),
 ) as Record<ThemeId, Palette>;
 
 let activeTheme: ThemeId = 'zellige';

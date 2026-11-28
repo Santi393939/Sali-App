@@ -42,7 +42,7 @@ import { feedback } from '@/lib/feedback';
 import { addSalawat } from '@/store/counts';
 import { recordReminderLike, recordReminderView } from '@/store/quests';
 import { toggleAction, useReminderActions } from '@/store/reminderActions';
-import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
+import { colors, fonts, hexA, isDarkMode, radius, spacing, themedStyles } from '@/theme';
 import { getLanguage, t } from '@/lib/i18n';
 
 const TAB_INDEX = 1;
@@ -88,7 +88,7 @@ export default function RemindersScreen() {
 
   return (
     <View style={styles.page} onLayout={onLayout}>
-      {tabs.index === TAB_INDEX && <StatusBar style="light" />}
+      {tabs.index === TAB_INDEX && <StatusBar style={isDarkMode() ? 'light' : 'dark'} />}
       {height > 0 && filter === 'saved' && data.length === 0 && (
         <View style={[styles.emptySaved, { height }]}>
           <BookmarkIcon filled={false} size={44} />
@@ -193,7 +193,7 @@ function ReminderCard({ reminder, height, topInset, active, liked, saved, positi
 
   return (
     <View style={[styles.card, { height }]}>
-      <PlasterPattern color={colors.lightGold} opacity={0.05} cell={56} />
+      <PlasterPattern color={feedColors().accent} opacity={feedColors().light ? 0.07 : 0.05} cell={56} />
 
       {/* Top: type tag */}
       <View style={[styles.top, { paddingTop: topInset + spacing.md }]}>
@@ -305,7 +305,7 @@ function SendTen() {
         {() => (
           <>
             <Animated.View style={[styles.sendFill, fillStyle]} />
-            <Text style={[styles.sendText, busy && { color: colors.night }]}>
+            <Text style={[styles.sendText, busy && { color: isDarkMode() ? colors.night : colors.onPrimary }]}>
               {busy ? `${t('{n} salawat sent', { n: SEND_AMOUNT })} · ما شاء الله` : t('Send 10 salawat now')}
             </Text>
           </>
@@ -380,7 +380,7 @@ function VideoSlot() {
 }
 
 function TagIcon({ kind }: { kind: Reminder['kind'] }) {
-  const stroke = colors.lightGold;
+  const stroke = feedColors().accent;
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       {kind === 'quran' && <Path d="M12 6.5C10.3 5 7.7 4.5 4 4.5v13c3.7 0 6.3.5 8 2 1.7-1.5 4.3-2 8-2v-13c-3.7 0-6.3.5-8 2Zm0 0v13" />}
@@ -392,7 +392,7 @@ function TagIcon({ kind }: { kind: Reminder['kind'] }) {
 
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
-    <Svg width={26} height={26} viewBox="0 0 24 24" fill={filled ? '#E0604A' : 'none'} stroke={filled ? '#E0604A' : '#FBF6EC'} strokeWidth={1.8} strokeLinejoin="round">
+    <Svg width={26} height={26} viewBox="0 0 24 24" fill={filled ? '#E0604A' : 'none'} stroke={filled ? '#E0604A' : feedColors().ink(1)} strokeWidth={1.8} strokeLinejoin="round">
       <Path d="M12 20s-7.5-4.6-9.2-9.3C1.7 7.6 3.6 4.5 6.9 4.5c2 0 3.4 1.1 5.1 3 1.7-1.9 3.1-3 5.1-3 3.3 0 5.2 3.1 4.1 6.2C19.5 15.4 12 20 12 20Z" />
     </Svg>
   );
@@ -400,7 +400,7 @@ function HeartIcon({ filled }: { filled: boolean }) {
 
 function BookmarkIcon({ filled, size = 24 }: { filled: boolean; size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? colors.lightGold : 'none'} stroke={filled ? colors.lightGold : '#FBF6EC'} strokeWidth={1.8} strokeLinejoin="round">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? feedColors().accent : 'none'} stroke={filled ? feedColors().accent : feedColors().ink(1)} strokeWidth={1.8} strokeLinejoin="round">
       <Path d="M6 3.5h12v17l-6-4-6 4Z" />
     </Svg>
   );
@@ -408,7 +408,7 @@ function BookmarkIcon({ filled, size = 24 }: { filled: boolean; size?: number })
 
 function ShareIcon() {
   return (
-    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#FBF6EC" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={feedColors().ink(1)} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
       <Path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
     </Svg>
   );
@@ -416,21 +416,39 @@ function ShareIcon() {
 
 const RAIL_W = 64;
 
-const styles = themedStyles(() =>
-  StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.night },
+/**
+ * The feed follows the app's appearance: a night feed in dark mode, a warm
+ * plaster feed in light mode. `ink(a)` is the main text colour at an opacity,
+ * `accent` the gold (or the theme's link colour on light backgrounds).
+ */
+const feedColors = () => {
+  const light = !isDarkMode();
+  return {
+    light,
+    bg: light ? colors.plaster : colors.night,
+    ink: (a: number) => (light ? hexA(colors.ink, a) : `rgba(251,246,236,${a})`),
+    accent: light ? colors.link : colors.lightGold,
+    arabic: light ? colors.terracotta : colors.lightGold,
+    soft: (a: number) => (light ? hexA(colors.saffron, a) : `rgba(233,184,96,${a})`),
+  };
+};
+
+const styles = themedStyles(() => {
+  const f = feedColors();
+  return StyleSheet.create({
+  page: { flex: 1, backgroundColor: f.bg },
   switchWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  switch: { flexDirection: 'row', borderRadius: 999, backgroundColor: 'rgba(251,246,236,0.1)', padding: 3 },
+  switch: { flexDirection: 'row', borderRadius: 999, backgroundColor: f.ink(0.1), padding: 3 },
   switchBtn: { paddingHorizontal: 16, height: 34, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
-  switchBtnOn: { backgroundColor: 'rgba(233,184,96,0.22)' },
-  switchText: { fontFamily: fonts.uiSemi, fontSize: 13, color: 'rgba(251,246,236,0.65)' },
-  switchTextOn: { color: colors.lightGold },
+  switchBtnOn: { backgroundColor: f.soft(0.22) },
+  switchText: { fontFamily: fonts.uiSemi, fontSize: 13, color: f.ink(0.65) },
+  switchTextOn: { color: f.accent },
   emptySaved: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl, gap: spacing.sm },
-  emptyTitle: { fontFamily: fonts.display, fontSize: 28, color: '#FBF6EC', marginTop: spacing.sm },
-  emptyText: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, color: 'rgba(251,246,236,0.7)', textAlign: 'center', maxWidth: 280 },
+  emptyTitle: { fontFamily: fonts.display, fontSize: 28, color: f.ink(1), marginTop: spacing.sm },
+  emptyText: { fontFamily: fonts.ui, fontSize: 15, lineHeight: 22, color: f.ink(0.7), textAlign: 'center', maxWidth: 280 },
   emptyBtn: { marginTop: spacing.md, height: 46, paddingHorizontal: spacing.xl, borderRadius: radius.button, borderWidth: 1.5, borderColor: colors.saffron, alignItems: 'center', justifyContent: 'center' },
-  emptyBtnText: { fontFamily: fonts.uiSemi, fontSize: 15, color: colors.lightGold },
-  card: { backgroundColor: colors.night, overflow: 'hidden' },
+  emptyBtnText: { fontFamily: fonts.uiSemi, fontSize: 15, color: f.accent },
+  card: { backgroundColor: f.bg, overflow: 'hidden' },
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
   tag: {
     flexDirection: 'row',
@@ -438,14 +456,14 @@ const styles = themedStyles(() =>
     gap: 6,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(233,184,96,0.55)',
+    borderColor: f.soft(0.55),
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  tagText: { fontFamily: fonts.uiSemi, fontSize: 12, color: colors.lightGold, letterSpacing: 0.4 },
-  review: { borderRadius: radius.pill, backgroundColor: 'rgba(251,246,236,0.08)', paddingHorizontal: 10, paddingVertical: 5 },
-  reviewText: { fontFamily: fonts.uiMedium, fontSize: 11, color: 'rgba(251,246,236,0.6)' },
-  counter: { fontFamily: fonts.uiMedium, fontSize: 12, color: 'rgba(251,246,236,0.45)' },
+  tagText: { fontFamily: fonts.uiSemi, fontSize: 12, color: f.accent, letterSpacing: 0.4 },
+  review: { borderRadius: radius.pill, backgroundColor: f.ink(0.08), paddingHorizontal: 10, paddingVertical: 5 },
+  reviewText: { fontFamily: fonts.uiMedium, fontSize: 11, color: f.ink(0.6) },
+  counter: { fontFamily: fonts.uiMedium, fontSize: 12, color: f.ink(0.45) },
 
   middle: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg },
   arabic: {
@@ -453,14 +471,14 @@ const styles = themedStyles(() =>
     fontFamily: fonts.arabic,
     fontSize: 30,
     lineHeight: 58,
-    color: colors.lightGold,
+    color: f.arabic,
     textAlign: 'center',
     writingDirection: 'rtl',
   },
   arabicLong: { fontSize: 26, lineHeight: 50 },
   ornament: { alignItems: 'center', marginVertical: spacing.lg },
   englishBlock: { alignSelf: 'stretch', alignItems: 'center' },
-  english: { fontFamily: fonts.ui, fontSize: 17, lineHeight: 27, color: 'rgba(251,246,236,0.92)', textAlign: 'center' },
+  english: { fontFamily: fonts.ui, fontSize: 17, lineHeight: 27, color: f.ink(0.92), textAlign: 'center' },
   salla: { fontFamily: fonts.arabic, fontSize: 18 },
   source: { fontFamily: fonts.uiSemi, fontSize: 13, color: colors.saffron, textAlign: 'center', marginTop: spacing.md, letterSpacing: 0.3 },
 
@@ -470,11 +488,11 @@ const styles = themedStyles(() =>
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(251,246,236,0.08)',
+    backgroundColor: f.ink(0.08),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  railLabel: { fontFamily: fonts.uiMedium, fontSize: 12, color: 'rgba(251,246,236,0.8)' },
+  railLabel: { fontFamily: fonts.uiMedium, fontSize: 12, color: f.ink(0.8) },
 
   bottom: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, alignItems: 'center' },
   plusTen: {
@@ -486,7 +504,7 @@ const styles = themedStyles(() =>
     fontFamily: fonts.display,
     fontVariant: ['lining-nums'],
     fontSize: 28,
-    color: colors.lightGold,
+    color: f.accent,
   },
   sendBtn: {
     height: 54,
@@ -498,12 +516,12 @@ const styles = themedStyles(() =>
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  sendFill: { ...StyleSheet.absoluteFill, backgroundColor: colors.lightGold, transformOrigin: 'left' },
-  sendText: { fontFamily: fonts.uiSemi, fontSize: 16, color: colors.lightGold },
+  sendFill: { ...StyleSheet.absoluteFill, backgroundColor: f.accent, transformOrigin: 'left' },
+  sendText: { fontFamily: fonts.uiSemi, fontSize: 16, color: f.accent },
 
   video: { alignItems: 'center', gap: spacing.md },
-  play: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.lightGold, alignItems: 'center', justifyContent: 'center', paddingLeft: 4 },
-  videoTitle: { fontFamily: fonts.display, fontSize: 26, color: '#FBF6EC' },
-  videoBody: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 21, color: 'rgba(251,246,236,0.7)', textAlign: 'center', maxWidth: 260 },
-}),
-);
+  play: { width: 64, height: 64, borderRadius: 32, backgroundColor: f.accent, alignItems: 'center', justifyContent: 'center', paddingLeft: 4 },
+  videoTitle: { fontFamily: fonts.display, fontSize: 26, color: f.ink(1) },
+  videoBody: { fontFamily: fonts.ui, fontSize: 14, lineHeight: 21, color: f.ink(0.7), textAlign: 'center', maxWidth: 260 },
+});
+});
