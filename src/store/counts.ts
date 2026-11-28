@@ -1,6 +1,6 @@
 /**
  * Offline-first salawat counts. Every change is written to the phone
- * (MMKV) synchronously, so nothing waits on the network. Each entry carries a
+ * (key-value store) synchronously, so nothing waits on the network. Each entry carries a
  * client_id so the later Supabase sync can never double-count it.
  */
 import { useEffect, useSyncExternalStore } from 'react';

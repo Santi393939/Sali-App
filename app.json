@@ -46,7 +46,10 @@
       ],
       "expo-audio",
       "expo-sharing",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-sqlite",
+      "expo-asset",
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true,

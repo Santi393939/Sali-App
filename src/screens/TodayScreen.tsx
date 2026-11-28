@@ -1,5 +1,5 @@
 /**
- * Today: the daily counter. Counts are saved on the phone instantly (MMKV).
+ * Today: the daily counter. Counts are saved on the phone instantly.
  * Every add plays its motion, haptic and sound together (see CounterHero).
  */
 import { router } from 'expo-router';

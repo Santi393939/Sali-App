@@ -4,7 +4,7 @@
  * the data private). Until they are set, `supabase` is null and the app runs
  * fully offline, exactly as before.
  *
- * The sign-in session is stored with MMKV (the app's existing on-phone store)
+ * The sign-in session is stored in the app's own key-value store
  * so it also works in the web preview.
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
