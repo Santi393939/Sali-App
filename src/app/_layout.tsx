@@ -18,12 +18,14 @@ import { ThemeVeil } from '@/components/ThemeVeil';
 import { ToastHost } from '@/components/ToastHost';
 import { startReminders } from '@/lib/notifications';
 import { useActiveThemeId } from '@/store/rewards';
+import { startGroups } from '@/store/groups';
 import { startSync } from '@/store/sync';
 import { paletteFor, setActiveTheme } from '@/theme';
 import { setLanguage } from '@/lib/i18n';
 import { useSettings } from '@/store/settings';
 
 startSync();
+startGroups();
 startReminders();
 
 SplashScreen.preventAutoHideAsync();
