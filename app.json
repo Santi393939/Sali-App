@@ -76,7 +76,7 @@
     },
     "owner": "salliapp",
     "runtimeVersion": {
-      "policy": "sdkVersion"
+      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/d3620a0a-21b7-4613-b299-12cd4f059380"
