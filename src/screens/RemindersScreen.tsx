@@ -7,7 +7,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  FlatList,
   Platform,
   Pressable,
   Share,
@@ -18,6 +17,9 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
+// The gesture-handler list cooperates with the tab pager's sideways swipe, so
+// vertical swipes start at once instead of feeling sticky.
+import { FlatList } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -114,12 +116,16 @@ export default function RemindersScreen() {
             />
           )}
           getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-          pagingEnabled
+          // One swipe, one reminder (like Reels). Phones: a single snap
+          // setting, fast deceleration, no skipping past the next card. The
+          // browser only snaps with pagingEnabled (CSS scroll-snap).
+          pagingEnabled={Platform.OS === 'web'}
           snapToInterval={height}
           snapToAlignment="start"
           decelerationRate="fast"
           disableIntervalMomentum
           showsVerticalScrollIndicator={false}
+          overScrollMode="never"
           onScroll={onScroll}
           scrollEventThrottle={16}
           windowSize={3}

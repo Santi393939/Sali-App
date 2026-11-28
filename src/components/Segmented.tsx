@@ -18,7 +18,8 @@ export function Segmented<T extends string>({ options, value, onChange }: Props<
   const seg = w / options.length;
   const thumb = useAnimatedStyle(() => ({
     width: seg - 4,
-    transform: [{ translateX: withSpring(index * seg + 2, { damping: 20, stiffness: 260 }) }],
+    // Quick and crisp: settles in about a fifth of a second with a tiny overshoot.
+    transform: [{ translateX: withSpring(index * seg + 2, { damping: 26, stiffness: 620, mass: 0.6 }) }],
   }));
   return (
     <View style={[styles.wrap, { direction: 'ltr' }]} onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)} accessibilityRole="tablist">
