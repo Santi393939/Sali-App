@@ -14,7 +14,7 @@
  * movement.
  */
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -39,6 +39,7 @@ import type { Burst } from '@/components/motion/particles';
 import { ROUND } from '@/components/TasbihBeads';
 import { feedback } from '@/lib/feedback';
 import { t } from '@/lib/i18n';
+import { flush, contribute, useCommunity } from '@/store/community';
 import { addSalawat, getToday, useToday } from '@/store/counts';
 import { colors, fonts, spacing, themedStyles } from '@/theme';
 
@@ -59,6 +60,18 @@ export default function Tasbih() {
   const { width, height } = useWindowDimensions();
   const reduce = useReducedMotion();
   const today = useToday();
+  const params = useLocalSearchParams<{ request?: string; title?: string }>();
+  const requestId = typeof params.request === 'string' ? params.request : null;
+  const community = useCommunity();
+  const request = requestId ? community.feed.find((r) => r.id === requestId) : undefined;
+  const requestTitle = request?.title ?? (typeof params.title === 'string' ? params.title : '');
+  // Send any counts still waiting when the counter closes.
+  useEffect(
+    () => () => {
+      if (requestId) void flush();
+    },
+    [requestId],
+  );
   const [mode, setMode] = useState<Mode>(lastMode);
   const [pace, setPace] = useState<Pace>(lastPace);
   const [session, setSession] = useState(0);
@@ -99,7 +112,8 @@ export default function Tasbih() {
 
   /** One salawat: save it, then let everything answer. */
   const countOne = (strong: boolean) => {
-    const { litNow } = addSalawat(1, 'tap');
+    // Counting for a community request: the count is yours and the request's.
+    const { litNow } = requestId ? contribute(requestId, 1, 'tap') : addSalawat(1, 'tap');
     setSession((s) => s + 1);
     const total = getToday().taps;
     const roundDone = total % ROUND === 0 || litNow;
@@ -319,6 +333,21 @@ export default function Tasbih() {
         </View>
       </GestureDetector>
 
+      {requestId ? (
+        <View pointerEvents="none" style={styles.forRequest}>
+          <Text style={styles.forLabel}>{t('Counting for')}</Text>
+          <Text style={styles.forTitle} numberOfLines={2}>
+            {requestTitle}
+          </Text>
+          {request && (
+            <Text style={styles.forProgress}>
+              {request.total.toLocaleString('en-US')} / {request.goal.toLocaleString('en-US')}
+              {request.status === 'completed' ? ` · ${t('Goal reached ✓')}` : ''}
+            </Text>
+          )}
+        </View>
+      ) : null}
+
       {/* Bottom: the words, and today's progress */}
       <View pointerEvents="none" style={[styles.bottom, { paddingBottom: insets.bottom + spacing.lg }]}>
         <Text style={styles.arabic}>اللهم صل وسلم على نبينا محمد</Text>
@@ -372,6 +401,10 @@ const styles = themedStyles(() =>
     countLabel: { fontFamily: fonts.uiSemi, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase', color: colors.lightGold },
     ripple: { position: 'absolute', borderWidth: 2, borderColor: colors.lightGold },
     banner: { position: 'absolute', bottom: spacing.lg, fontFamily: fonts.display, fontSize: 28, color: colors.lightGold },
+    forRequest: { alignItems: 'center', paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
+    forLabel: { fontFamily: fonts.uiSemi, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: colors.lightGold },
+    forTitle: { fontFamily: fonts.display, fontSize: 22, color: '#FBF6EC', textAlign: 'center' },
+    forProgress: { fontFamily: fonts.uiMedium, fontSize: 13, color: 'rgba(251,246,236,0.75)', marginTop: 2 },
     bottom: { alignItems: 'center', paddingHorizontal: spacing.lg, gap: 6 },
     arabic: { fontFamily: fonts.arabic, fontSize: 24, lineHeight: 44, color: colors.lightGold, textAlign: 'center' },
     today: { fontFamily: fonts.uiMedium, fontSize: 14, color: '#FBF6EC', textAlign: 'center' },

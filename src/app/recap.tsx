@@ -40,6 +40,7 @@ export default function Recap() {
     pad: t('Number pad'),
     reminder: t('From a reminder'),
     telegram: t('Telegram bot'),
+    community: t('For a community request'),
   };
   const earned = MILESTONES.filter((m) => r.milestones.includes(m.name));
 

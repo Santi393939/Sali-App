@@ -1,7 +1,7 @@
 /** Per-day records saved on the phone. One record per Salli day. */
 import { readJSON, storage, writeJSON } from './storage';
 
-export type EntrySource = 'tap' | 'quick' | 'pad' | 'reminder' | 'telegram';
+export type EntrySource = 'tap' | 'quick' | 'pad' | 'reminder' | 'telegram' | 'community';
 
 export type Entry = {
   clientId: string;

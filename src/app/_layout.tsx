@@ -18,6 +18,7 @@ import { ThemeVeil } from '@/components/ThemeVeil';
 import { ToastHost } from '@/components/ToastHost';
 import { startReminders } from '@/lib/notifications';
 import { useActiveThemeId } from '@/store/rewards';
+import { startCommunity } from '@/store/community';
 import { startGroups } from '@/store/groups';
 import { startSync } from '@/store/sync';
 import { paletteFor, setActiveTheme } from '@/theme';
@@ -26,6 +27,7 @@ import { useSettings } from '@/store/settings';
 
 startSync();
 startGroups();
+startCommunity();
 startReminders();
 
 SplashScreen.preventAutoHideAsync();

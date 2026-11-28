@@ -14,7 +14,10 @@
 
 ## Database
 - Run once in the SQL Editor, in order: `supabase/migrations/20261124000000_init.sql`
-  (done), then `supabase/migrations/20261128000000_groups_live.sql` (live groups).
+  (done), then `supabase/migrations/20261128000000_groups_live.sql` (live groups), then
+  `supabase/migrations/20261129000000_community.sql` (community requests).
+- Make yourself the admin who approves community requests (after signing in to the app once):
+  `insert into public.app_admins (user_id) select id from auth.users where email = 'YOUR EMAIL';`
 
 ## Later
 - Apple Developer account (iPhone builds, Sign in with Apple), Google Play Console.

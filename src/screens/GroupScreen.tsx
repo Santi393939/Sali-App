@@ -15,6 +15,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, Share, StyleSheet, Tex
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, NumberPadSheet, PrimaryButton, ScreenHeader, Segmented } from '@/components';
+import { CommunityView } from '@/components/community/CommunityView';
 import { ActivityFeed, GoalCard, GroupChips, Leaderboard, type BoardMember, type FeedItem, type Reaction } from '@/components/groups/GroupParts';
 import { feedback } from '@/lib/feedback';
 import { t } from '@/lib/i18n';
@@ -65,14 +66,30 @@ function ago(iso: string) {
   return t('{n} d', { n: Math.round(s / 86400) });
 }
 
+type Section = 'groups' | 'community';
+/** The sub-tab you were on, kept while the app is open. */
+let lastSection: Section = 'groups';
+
 export default function GroupScreen() {
   const auth = useAuth();
+  const [section, setSection] = useState<Section>(lastSection);
   const insets = useSafeAreaInsets();
   const live = auth.configured && !!auth.session;
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.md }]} keyboardShouldPersistTaps="handled">
       <ScreenHeader title={t('Groups')} arabic="الجماعة" />
-      {live ? <LiveGroups userId={auth.session!.user.id} /> : <SignedOutGroups />}
+      <Segmented<Section>
+        options={[
+          { value: 'groups', label: t('My groups') },
+          { value: 'community', label: t('Community') },
+        ]}
+        value={section}
+        onChange={(v) => {
+          lastSection = v;
+          setSection(v);
+        }}
+      />
+      {section === 'community' ? <CommunityView /> : live ? <LiveGroups userId={auth.session!.user.id} /> : <SignedOutGroups />}
     </ScrollView>
   );
 }

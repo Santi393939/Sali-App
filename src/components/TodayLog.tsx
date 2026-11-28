@@ -13,6 +13,7 @@ const SOURCE_LABEL = (): Record<EntrySource, string> => ({
   pad: t('Number pad'),
   reminder: t('From a reminder'),
   telegram: t('Telegram bot'),
+  community: t('For a community request'),
 });
 
 type Props = {
@@ -83,6 +84,7 @@ function SourceIcon({ source }: { source: EntrySource }) {
         )}
         {source === 'reminder' && <Path d="M5 4h11a3 3 0 0 1 3 3v13l-4-2.5L11 20V7a3 3 0 0 0-3-3" />}
         {source === 'telegram' && <Path d="M21 4 3 11l6 2 2 6 3-4 5 4Z M9 13l9-6" />}
+        {source === 'community' && <Path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />}
       </Svg>
     </View>
   );
