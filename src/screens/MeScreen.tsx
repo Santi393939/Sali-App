@@ -6,14 +6,14 @@
  */
 import { router } from 'expo-router';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, Appearance as SystemAppearance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { Card, EightPointStar, LampsCard, Logo, NumberPadSheet, RewardsBanner, ScreenHeader, Segmented, ShareSheet, Toggle, YearBanner } from '@/components';
 import { JourneyCard, Medallion, MilestoneSheet, MilestoneUnlock, RewardsCard } from '@/components/milestones';
 import type { Milestone } from '@/content/milestones';
-import { switchTheme } from '@/lib/themeSwitch';
+import { switchTheme, veilChange } from '@/lib/themeSwitch';
 import { applyMilestoneRewards, useRewards } from '@/store/rewards';
 import { useTabs } from '@/components/tabs';
 import { feedback } from '@/lib/feedback';
@@ -25,7 +25,7 @@ import { useToday } from '@/store/counts';
 import { GOAL_MAX, updateSettings, useSettings, type CountingStyle, type Appearance } from '@/store/settings';
 import type { MilestoneState } from '@/store/milestones';
 import { useSyncStatus } from '@/store/sync';
-import { colors, fonts, isDarkMode, paletteFor, radius, spacing, themedStyles } from '@/theme';
+import { colors, fonts, getActiveTheme, isDarkMode, paletteFor, radius, spacing, themedStyles } from '@/theme';
 import { LANGUAGES, dateLocale, t, type Lang } from '@/lib/i18n';
 import { recapAsOf } from '@/store/recap';
 
@@ -213,7 +213,10 @@ export default function MeScreen({ view = 'main' }: { view?: MeView }) {
                     { value: 'dark', label: t('Dark') },
                   ]}
                   value={settings.appearance}
-                  onChange={(appearance) => updateSettings({ appearance })}
+                  onChange={(appearance) => {
+                    const dark = appearance === 'dark' || (appearance === 'system' && SystemAppearance.getColorScheme() === 'dark');
+                    veilChange(() => updateSettings({ appearance }), paletteFor(getActiveTheme(), dark).plaster);
+                  }}
                 />
               </View>
 
@@ -225,7 +228,7 @@ export default function MeScreen({ view = 'main' }: { view?: MeView }) {
                     label: l.name,
                   }))}
                   value={settings.language}
-                  onChange={(language) => updateSettings({ language })}
+                  onChange={(language) => veilChange(() => updateSettings({ language }), colors.plaster)}
                 />
               </View>
 

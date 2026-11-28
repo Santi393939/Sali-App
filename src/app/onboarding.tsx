@@ -17,6 +17,7 @@ import { updateSettings, useSettings } from '@/store/settings';
 import { colors, fonts, radius, spacing, themedStyles } from '@/theme';
 import { LANGUAGES, t, type Lang } from '@/lib/i18n';
 import { sallaParts } from '@/components/sallaParts';
+import { veilChange } from '@/lib/themeSwitch';
 
 const STEPS = 5;
 
@@ -100,7 +101,7 @@ export default function Onboarding() {
             <Segmented<Lang>
               options={LANGUAGES.map((l) => ({ value: l.id, label: l.name }))}
               value={settings.language}
-              onChange={(language) => updateSettings({ language })}
+              onChange={(language) => veilChange(() => updateSettings({ language }), colors.plaster)}
             />
             <View style={styles.hero}>
               <PlasterPattern />

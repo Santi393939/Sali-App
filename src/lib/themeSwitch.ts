@@ -49,3 +49,27 @@ export function switchTheme(apply: () => void, toTheme: ThemeId, background: str
     }, 120);
   }, VEIL_IN_MS);
 }
+
+/**
+ * A change that rebuilds the screens without changing the badge theme
+ * (appearance, language): wait for the tapped switch to slide, then wash to
+ * the new background, apply it underneath, and clear.
+ */
+export function veilChange(apply: () => void, background: string, afterMs = 260) {
+  if (busy) {
+    apply();
+    return;
+  }
+  busy = true;
+  setTimeout(() => {
+    set({ visible: true, color: background, badge: null, id: state.id + 1 });
+    setTimeout(() => {
+      apply();
+      setTimeout(() => {
+        set({ visible: false });
+        busy = false;
+      }, 120);
+    }, VEIL_IN_MS);
+  }, afterMs);
+}
+

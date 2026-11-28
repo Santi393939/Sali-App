@@ -70,9 +70,9 @@ export default function RemindersScreen() {
     setFilter(f);
   };
 
-  const onLayout = (e: LayoutChangeEvent) => setHeight(Math.round(e.nativeEvent.layout.height));
+  const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
 
-  const onScroll = useCallback(
+  const onSettle = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (!height) return;
       const i = Math.round(e.nativeEvent.contentOffset.y / height);
@@ -116,19 +116,17 @@ export default function RemindersScreen() {
             />
           )}
           getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-          // One swipe, one reminder (like Reels). Phones: a single snap
-          // setting, fast deceleration, no skipping past the next card. The
-          // browser only snaps with pagingEnabled (CSS scroll-snap).
-          pagingEnabled={Platform.OS === 'web'}
-          snapToInterval={height}
-          snapToAlignment="start"
+          // One swipe, one reminder (like Reels): the phone's own page
+          // swiping (the same physics as the home screen), and the active card
+          // is only worked out once a swipe settles, so nothing re-renders mid-swipe.
+          pagingEnabled
           decelerationRate="fast"
-          disableIntervalMomentum
           showsVerticalScrollIndicator={false}
           overScrollMode="never"
-          onScroll={onScroll}
+          onMomentumScrollEnd={onSettle}
+          onScrollEndDrag={Platform.OS === 'web' ? onSettle : undefined}
           scrollEventThrottle={16}
-          windowSize={3}
+          windowSize={5}
           initialNumToRender={2}
           maxToRenderPerBatch={2}
         />
