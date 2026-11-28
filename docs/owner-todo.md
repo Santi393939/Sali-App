@@ -5,14 +5,13 @@
    add your Gmail as a test user) → Clients → Web application with the redirect URI
    `https://wvlmhgrqvptqlcgjkjzw.supabase.co/auth/v1/callback`.
 2. Supabase → Authentication → Providers → Google: switch on, paste the Client ID and secret.
-3. Supabase → Authentication → URL Configuration → Redirect URLs: add `salli://auth-callback`.
+3. (Done) Redirect URL `salli://auth-callback` is already allowed.
 
-## Email sign-in codes
-- Supabase → Authentication → Emails → Templates: in **Magic Link** and **Confirm signup**,
-  the message must contain `{{ .Token }}` (the 6-digit code the app asks for).
+## Email sign-in codes (done)
+- Both email templates contain `{{ .Token }}`, codes are 6 digits, subject "Your Salli code".
 - Custom SMTP (Gmail app password) is set up, so family members can receive codes too.
 
-## Database
+## Database (done: all three files have run, and you are the admin)
 - Run once in the SQL Editor, in order: `supabase/migrations/20261124000000_init.sql`
   (done), then `supabase/migrations/20261128000000_groups_live.sql` (live groups), then
   `supabase/migrations/20261129000000_community.sql` (community requests).
